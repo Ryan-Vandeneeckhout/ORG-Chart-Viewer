@@ -4,6 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CGP</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23243656'/><text x='50%25' y='54%25' text-anchor='middle' dominant-baseline='middle' font-size='18' font-family='system-ui' fill='%234ea8ff'>C</text></svg>">
+  <meta name="description" content="Command Gird Pro (CGP) is a browser-based org chart and command visualization tool for exploring CSV personnel structures, filtering records, validating data, and reviewing supervisor chains in a clean interactive layout." />
+  
+  
+  
 
   <!-- =========================
        CSS (styles.css)
@@ -809,7 +814,7 @@ html, body {
 
 body {
   min-height: 100vh;
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -1766,12 +1771,12 @@ body::-webkit-scrollbar-corner,
       .pro-page-main, .pro-page-actions{ width:100%; }
       .pro-page-actions{ justify-content:space-between; gap:10px; }
       .pro-page-body{ min-height: calc(175vh - 132px); }
-      .pro-toolbar{ grid-template-columns: 1fr 1fr; }
+      .pro-action-bar{ flex-direction:column; align-items:stretch; }
     }
     @media (max-width: 640px){
       .pro-page-body{ min-height: calc(175vh - 176px); }
       .pro-page-actions{ flex-direction:column; align-items:stretch; }
-      .pro-toolbar{ grid-template-columns: 1fr; }
+      .pro-action-bar-right{ flex-wrap:wrap; }
       .pro-page-actions .nav-group,
       .pro-page-actions button{ width:100%; }
     }
@@ -2710,6 +2715,60 @@ button,
 #sidebarTop input#searchInput {
   background: rgba(255,255,255,.045);
   border-color: var(--adaptive-border);
+}
+.search-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.search-status-label {
+  font-size: .72rem;
+  font-weight: 500;
+  color: var(--muted);
+  transition: color .15s ease;
+}
+.search-status-label.state-found {
+  color: var(--accent-a, #4ea8ff);
+}
+.search-status-label.state-not-found {
+  color: #e05555;
+}
+input#searchInput.search-not-found-active {
+  border-color: rgba(220, 80, 80, .55) !important;
+  box-shadow: 0 0 0 3px rgba(220, 80, 80, .13) !important;
+}
+.search-results-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  margin: 0 0 8px 0;
+  font-size: .76rem;
+  color: var(--muted);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-a) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-a) 18%, transparent);
+  animation: searchResultsBarIn .15s ease;
+}
+.search-results-bar strong {
+  color: var(--text);
+  font-weight: 700;
+}
+.search-results-bar .srb-clear {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: .72rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+  opacity: .7;
+}
+.search-results-bar .srb-clear:hover { opacity: 1; color: var(--text); }
+@keyframes searchResultsBarIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 #orgScroller {
@@ -3728,87 +3787,59 @@ button.primary#renderButton:hover,
 }
 
 
+    /* ── Pro Page: full viewport layout ── */
     .pro-page{
       position: fixed;
       inset: 0;
       z-index: 9997;
       display: none;
-      height: 100vh;
-      --pro-body-pad: 16px;
-      --pro-frame-height: clamp(640px, calc(100vh - 250px), 820px);
+      flex-direction: column;
+      height: 100dvh;
+      overflow: hidden;
       background:
         radial-gradient(1200px 600px at 20% -10%, color-mix(in srgb, var(--accent-a) 18%, transparent), transparent 55%),
         radial-gradient(900px 500px at 90% 10%, color-mix(in srgb, var(--accent-b) 16%, transparent), transparent 60%),
         linear-gradient(180deg, color-mix(in srgb, var(--background) 96%, black 4%), color-mix(in srgb, var(--background) 90%, black 10%));
       color: var(--text);
-      overflow-x: hidden;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior-y: contain;
-      cursor: grab;
-      scrollbar-width: thin;
-      scrollbar-color: var(--scrollbar-thumb-a) var(--scrollbar-track);
     }
-    .pro-page:active{ cursor: grabbing; }
-    .pro-page::-webkit-scrollbar{
-      width: 12px;
-      height: 12px;
-    }
-    .pro-page::-webkit-scrollbar-track{
-      background: var(--scrollbar-track);
-      border-radius: 999px;
-      border: 1px solid var(--scrollbar-track-border);
-    }
-    .pro-page::-webkit-scrollbar-thumb{
-      border-radius: 999px;
-      border: 2px solid var(--scrollbar-thumb-border);
-      background: linear-gradient(180deg, var(--scrollbar-thumb-a), var(--scrollbar-thumb-b));
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.10), 0 0 14px var(--scrollbar-thumb-glow);
-    }
-    .pro-page::-webkit-scrollbar-thumb:hover{
-      background: linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--scrollbar-thumb-a) 90%, white 10%),
-        color-mix(in srgb, var(--scrollbar-thumb-b) 90%, white 10%)
-      );
-    }
-    body.page-pro .pro-page{ display:block; }
+    body.page-pro .pro-page{ display: flex; }
+
+    /* ── Header: always full-width, never scrolls ── */
     .pro-page-header{
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      display:flex;
+      flex: 0 0 auto;
+      display: flex;
       justify-content: space-between;
-      align-items:center;
+      align-items: center;
       gap: 14px;
-      padding: 14px 20px;
+      width: 100%;
+      padding: 12px 20px;
       border-bottom: 1px solid var(--adaptive-border, var(--border));
-      backdrop-filter: blur(12px);
-      background: linear-gradient(to bottom, var(--page-top-a), var(--page-top-b));
-      box-shadow: 0 10px 24px rgba(0,0,0,.16);
+      background: linear-gradient(to bottom, rgba(11,16,32,.97), rgba(11,16,32,.90));
+      box-shadow: 0 4px 20px rgba(0,0,0,.28);
+      z-index: 2;
     }
     .pro-page-main{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-      flex:1 1 auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1 1 auto;
     }
     .pro-page-title{
-      font-weight:700;
-      letter-spacing:.18px;
+      font-weight: 700;
+      letter-spacing: .18px;
       font-size: clamp(.98rem, .92rem + .22vw, 1.1rem);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .pro-page-actions{
-      display:flex;
-      align-items:center;
-      justify-content:flex-end;
-      gap:10px;
-      flex:0 1 auto;
-      margin-left:auto;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex: 0 1 auto;
+      margin-left: auto;
     }
     .pro-page-actions .nav-group{
       padding: 6px;
@@ -3818,22 +3849,92 @@ button.primary#renderButton:hover,
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
     }
     .pro-page-actions .nav-group,
-    .pro-page-actions button{
-      min-height: 40px;
-    }
+    .pro-page-actions button{ min-height: 40px; }
+
+    /* ── Content area: row layout with sticky minimap sidebar ── */
     .pro-page-body{
-      width: min(94vw, 1480px);
-      max-width: none;
-      min-height: auto;
-      margin: 0 auto;
-      padding: 14px var(--pro-body-pad) 18px;
-      padding-bottom: max(18px, env(safe-area-inset-bottom));
-      display: grid;
-      grid-template-rows: auto auto;
-      align-content: start;
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: row;
+      min-height: 0;
+      overflow: hidden;
       gap: 12px;
-      overflow: visible;
-      transition: width .2s ease, padding .2s ease, gap .2s ease;
+      padding: 14px 16px 14px;
+      transition: padding .2s ease;
+    }
+
+    /* ── Main content column (toolbar + frame) ── */
+    .pro-page-main-col {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── Sticky minimap sidebar ── */
+    .pro-minimap-sidebar {
+      flex: 0 0 220px;
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-self: flex-start;
+      position: sticky;
+      top: 0;
+    }
+
+    .pro-minimap-panel {
+      border: 1px solid var(--adaptive-border, var(--border));
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(18,26,51,.94), rgba(15,23,48,.9));
+      box-shadow: 0 14px 30px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
+      overflow: hidden;
+    }
+
+    .pro-minimap-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      font-size: 10px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    #proMiniMapCanvas {
+      display: block;
+      width: 100%;
+      height: 120px;
+      cursor: crosshair;
+      background: rgba(255,255,255,.03);
+    }
+
+    .pro-minimap-footer {
+      padding: 6px 10px;
+      font-size: 10px;
+      color: var(--muted);
+      border-top: 1px solid rgba(255,255,255,.05);
+      text-align: center;
+    }
+
+    /* expanded mode: hide sidebar, use full width */
+    body.pro-expanded .pro-minimap-sidebar { display: none; }
+    body.pro-expanded .pro-page-main-col { gap: 0; }
+    .pro-page-body::-webkit-scrollbar{ width: 10px; }
+    .pro-page-body::-webkit-scrollbar-track{
+      background: var(--scrollbar-track);
+      border-radius: 999px;
+      border: 1px solid var(--scrollbar-track-border);
+    }
+    .pro-page-body::-webkit-scrollbar-thumb{
+      border-radius: 999px;
+      border: 2px solid var(--scrollbar-thumb-border);
+      background: linear-gradient(180deg, var(--scrollbar-thumb-a), var(--scrollbar-thumb-b));
     }
     .pro-page-body > .panel{
       margin-top: 0;
@@ -3843,75 +3944,113 @@ button.primary#renderButton:hover,
       background: linear-gradient(180deg, color-mix(in srgb, var(--panel-soft) 78%, transparent), color-mix(in srgb, var(--panel) 68%, transparent));
       box-shadow: 0 10px 25px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
     }
-    .pro-page-body .sidebar-section-head{
-      margin-bottom: 8px;
+    /* ── Hide legend and minimap inside the iframe — moved to outer sidebar ── */
+    .legend-overlay,
+    .mini-map {
+      display: none !important;
     }
-    .pro-page-body .sidebar-section-title{
-      font-size: 12px;
-      letter-spacing: .3px;
-      color: var(--adaptive-text-strong, var(--text));
+
+    /* ── Pro layout: side-by-side toolbar + minimap sidebar ── */
+    .pro-toolbar-panel{
+      flex: 0 0 auto;
     }
-    .pro-page-body .sidebar-section-copy{
-      font-size: 11px;
-      line-height: 1.4;
-      max-width: 72ch;
+    .pro-action-bar{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 16px;
+      border: 1px solid var(--adaptive-border, var(--border));
+      background: linear-gradient(135deg, rgba(18,26,51,.88), rgba(11,16,32,.82));
+      box-shadow: 0 4px 16px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.05);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .pro-action-bar-left{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .pro-action-bar-right{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .pro-action-bar-label{
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--accent-a, #6ea8ff);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .pro-action-status{
+      font-size: .72rem;
       color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
     }
-    .pro-toolbar{
-      display:grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap:10px;
-      margin-bottom: 10px;
+    .pro-action-bar button{
+      padding: 8px 14px;
+      font-size: .78rem;
+      border-radius: 12px;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    .pro-toolbar button{
-      min-height: 42px;
-      padding: 9px 12px;
-      font-size: .84rem;
-      border-radius: 14px;
-    }
-    .pro-status{
-      padding:9px 11px;
-      border-radius:12px;
-      border:1px solid var(--adaptive-border, var(--border));
-      background: var(--theme-surface);
-      color:var(--muted);
-      font-size:.75rem;
-      margin-bottom: 0;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
-    }
+
+    /* ── Frame shell: fixed-height container that clips the iframe ── */
     .pro-frame-shell{
-      display:grid;
-      grid-template-rows: minmax(0, 1fr) auto;
-      min-height: var(--pro-frame-height);
-      height: var(--pro-frame-height);
-      max-height: var(--pro-frame-height);
-      border:1px solid var(--adaptive-border, var(--border));
-      border-radius:18px;
-      background:linear-gradient(180deg, color-mix(in srgb, var(--panel-soft) 76%, transparent), color-mix(in srgb, var(--panel) 60%, transparent));
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      height: clamp(520px, calc(100vh - 180px), 1400px);
+      min-height: 520px;
+      max-height: 1400px;
+      border: 1px solid var(--adaptive-border, var(--border));
+      border-radius: 18px;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--panel-soft) 76%, transparent), color-mix(in srgb, var(--panel) 60%, transparent));
       box-shadow: 0 14px 30px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
-      overflow:hidden;
+      overflow: hidden;
+      isolation: isolate;
     }
+
+    /* ── iframe: explicit 100% height, never auto-sizes to content ── */
     .pro-frame{
-      width:100%;
-      min-height: 0;
+      flex: 1 1 0;
+      width: 100%;
       height: 100%;
-      max-height: none;
-      border:0;
-      border-radius:0;
+      min-height: 0;
+      max-height: 100%;
+      border: 0;
+      display: block;
       background: color-mix(in srgb, var(--background) 72%, transparent);
-      overflow:auto;
-      display:block;
-      transition: height .2s ease, min-height .2s ease, border-radius .2s ease, box-shadow .2s ease;
     }
     .pro-hem-footer{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
+      margin-top:auto;
+      flex: 0 0 auto;
       padding: 10px 12px;
       border-top: 1px solid var(--adaptive-border, var(--border));
       background: linear-gradient(180deg, var(--theme-surface), color-mix(in srgb, var(--panel-soft) 55%, transparent));
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+      position: relative;
+      z-index: 1;
     }
     .pro-hem-title{
       display:flex;
@@ -3964,62 +4103,51 @@ button.primary#renderButton:hover,
     .pro-expand-toggle{
       min-width: 124px;
     }
-    body.pro-expanded .pro-page{
-      overflow: hidden;
-    }
-    body.pro-expanded .pro-page-header{
-      border-bottom-color: var(--adaptive-border-strong, var(--adaptive-border, var(--border)));
-    }
+    /* ── Expanded: shell fills body absolutely, iframe fills shell ── */
     body.pro-expanded .pro-page-body{
-      width: 100vw;
-      min-height: calc(100vh - 76px);
-      margin: 0;
       padding: 0;
       gap: 0;
-      grid-template-rows: minmax(0, 1fr);
+      overflow: hidden;
+      position: relative;
     }
-    body.pro-expanded .pro-page-body > .panel{
+    body.pro-expanded .pro-toolbar-panel{
       display: none;
     }
     body.pro-expanded .pro-frame-shell{
-      min-height: calc(100vh - 76px);
-      height: calc(100vh - 76px);
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      max-height: 100%;
+      flex: none;
       border-radius: 0;
-      border-left: 0;
-      border-right: 0;
-      border-bottom: 0;
+      border: 0;
       box-shadow: none;
     }
     body.pro-expanded .pro-frame{
-      min-height: 0;
-      height: 100%;
+      /* JS sets explicit px height = shell height minus hem footer height */
+      height: var(--pro-frame-computed-height, calc(100% - 48px));
+      max-height: none;
+      flex: none;
     }
+
+    /* ── Responsive ── */
     @media (max-width: 980px){
-      .pro-page{
-        --pro-body-pad: 12px;
-        --pro-frame-height: clamp(600px, calc(100vh - 265px), 760px);
-      }
-      .pro-page-header{ flex-wrap:wrap; align-items:stretch; }
-      .pro-page-main, .pro-page-actions{ width:100%; }
-      .pro-page-actions{ justify-content:space-between; gap:10px; }
-      .pro-page-body{ width:min(100vw - 20px, 1480px); min-height: auto; padding: 12px; }
-      .pro-toolbar{ grid-template-columns: 1fr 1fr; }
-      .pro-frame-shell{ min-height: var(--pro-frame-height); height: var(--pro-frame-height); max-height: var(--pro-frame-height); }
-      .pro-frame{ min-height: 0; height: 100%; }
+      .pro-page-header{ flex-wrap: wrap; align-items: stretch; }
+      .pro-page-main, .pro-page-actions{ width: 100%; }
+      .pro-page-actions{ justify-content: space-between; gap: 10px; }
+      .pro-page-body{ padding: 12px 12px 0; }
+      .pro-action-bar{ flex-direction: column; align-items: stretch; }
     }
     @media (max-width: 640px){
-      .pro-page{
-        --pro-body-pad: 6px;
-        --pro-frame-height: clamp(540px, calc(100vh - 290px), 680px);
-      }
-      .pro-page-header{ padding: 12px 14px; }
-      .pro-page-actions{ flex-direction:column; align-items:stretch; }
-      .pro-toolbar{ grid-template-columns: 1fr; }
+      .pro-page-header{ padding: 10px 14px; }
+      .pro-page-actions{ flex-direction: column; align-items: stretch; }
+      .pro-action-bar-right{ flex-wrap: wrap; }
       .pro-page-actions .nav-group,
-      .pro-page-actions button{ width:100%; }
-      .pro-page-body{ width: calc(100vw - 12px); padding: 10px 6px 12px; }
-      .pro-frame-shell{ min-height: var(--pro-frame-height); height: var(--pro-frame-height); max-height: var(--pro-frame-height); border-radius: 14px; }
-      .pro-frame{ min-height: 0; height: 100%; }
+      .pro-page-actions button{ width: 100%; }
+      .pro-page-body{ padding: 10px 8px 0; }
+      .pro-frame-shell{ border-radius: 14px; }
       .pro-hem-footer{ flex-direction: column; align-items: stretch; }
       .pro-hem-stats{ justify-content: flex-start; }
     }
@@ -4394,8 +4522,10 @@ button.primary#renderButton:hover,
                 <div class="sidebar-section-title">Search</div>
               </div>
             </div>
-            <div class="label">Search (Position / Name / Title / Section / Rank + any extra fields in Details)</div>
-            <input id="searchInput" placeholder="e.g., 1200 or 'Log' or 'Singh'..." />
+            <div class="search-input-wrap">
+              <div class="search-status-label" id="searchStatusLabel" aria-live="polite">Awaiting input</div>
+              <input id="searchInput" placeholder="Enter position number or name…" autocomplete="off" />
+            </div>
           </section>
 
           <section class="sidebar-section">
@@ -4493,6 +4623,7 @@ button.primary#renderButton:hover,
       </div>
 
       <div id="cardsScroller">
+        <div id="searchResultsBar" class="search-results-bar" hidden></div>
         <div id="orgView"></div>
       </div>
 
@@ -4856,19 +4987,25 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       </div>
     </div>
     <div class="pro-page-body">
-      <div class="panel">
-        <div class="sidebar-section-head">
-          <div>
-            <div class="sidebar-section-title">Merged Org Chart Workspace</div>
-            <div class="sidebar-section-copy">This is the uploaded org chart tool as its own page inside the app. Load the sample CSV or send the current uploaded CSV from the main app. The page now follows the app theme automatically and the outer page handles scrolling.</div>
+      <div class="pro-page-main-col">
+      <div class="pro-toolbar-panel">
+        <div class="pro-action-bar">
+          <div class="pro-action-bar-left">
+            <span class="pro-action-bar-label">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 8h5M8 5.5v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Org Chart Pro
+            </span>
+            <span id="proPageStatus" class="pro-action-status">Loading…</span>
+          </div>
+          <div class="pro-action-bar-right">
+            <button id="proLoadSampleButton" class="primary" type="button">Load Sample</button>
+            <button id="proLoadCurrentCsvButton" type="button">Load Current CSV</button>
+            <button id="proReloadFrameButton" type="button">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13.5 8A5.5 5.5 0 1 1 8 2.5c1.8 0 3.4.87 4.4 2.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 2v3h-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Reload
+            </button>
           </div>
         </div>
-        <div class="pro-toolbar">
-          <button id="proLoadSampleButton" class="primary" type="button">Load Sample in Pro</button>
-          <button id="proLoadCurrentCsvButton" type="button">Load Current App CSV</button>
-          <button id="proReloadFrameButton" type="button">Reload Pro Page</button>
-        </div>
-        <div id="proPageStatus" class="pro-status">Org Chart Pro is loading…</div>
       </div>
       <div class="pro-frame-shell">
         <iframe id="proPageFrame" class="pro-frame" title="Org Chart Pro" scrolling="auto" srcdoc="&lt;!DOCTYPE html&gt;
@@ -4919,7 +5056,7 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
     }
 
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0}
+    html,body{margin:0;padding:0;height:100%;overflow:hidden}
     body{
       font-family:Inter,Segoe UI,Arial,sans-serif;
       color:var(--text);
@@ -4927,6 +5064,8 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
         radial-gradient(1200px 600px at 18% -10%, rgba(110,168,255,.12), transparent 52%),
         radial-gradient(1000px 560px at 100% 0%, rgba(180,110,255,.10), transparent 45%),
         linear-gradient(180deg, rgba(11,16,32,.98) 0%, var(--bg) 100%);
+      display:flex;
+      flex-direction:column;
     }
 
     body::-webkit-scrollbar,
@@ -4951,54 +5090,96 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       scrollbar-color: var(--scrollbar-thumb-a) var(--scrollbar-track);
     }
 
-    .app{max-width:none;margin:0 auto;padding:16px 16px 20px;min-height:0}
-    .header{
-      background:linear-gradient(135deg, rgba(110,168,255,.16), rgba(180,110,255,.12));
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:22px;
-      padding:18px 20px;
-      box-shadow:var(--shadow);
-      margin-bottom:16px;
-      backdrop-filter:blur(12px);
-    }
-    .header h1{margin:0 0 8px;font-size:30px}
-    .header p{margin:0;color:var(--muted)}
+    .app{max-width:none;margin:0 auto;padding:12px 14px 20px;min-height:0;flex:1 1 0;display:flex;flex-direction:column;overflow:hidden}
 
-    .toolbar, .toolbar2{
-      display:grid;
-      gap:12px;
-      background:linear-gradient(180deg, rgba(18,26,51,.94), rgba(15,23,48,.88));
+    /* ── Unified control bar ── */
+    .ctrl-bar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:linear-gradient(180deg, rgba(18,26,51,.96), rgba(13,20,42,.92));
       border:1px solid rgba(255,255,255,.08);
-      border-radius:18px;
-      padding:14px;
-      margin-bottom:16px;
-      box-shadow:var(--shadow);
-      backdrop-filter:blur(10px);
+      border-radius:16px;
+      padding:8px 10px;
+      margin-bottom:6px;
+      box-shadow:0 4px 18px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06);
     }
-    .toolbar{grid-template-columns:1.2fr 1fr 1fr 1fr auto auto}
-    .toolbar2{grid-template-columns:repeat(7, minmax(120px, 1fr))}
-    .field{display:flex;flex-direction:column;gap:8px;min-width:0}
-    .field label{
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:.08em;
+    .ctrl-tabs{display:flex;gap:4px;flex:1 1 auto;flex-wrap:wrap}
+    .ctrl-tab{
+      padding:7px 14px;
+      border-radius:10px;
+      border:1px solid transparent;
+      background:transparent;
       color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.04em;
+      cursor:pointer;
+      transition:background .15s, color .15s, border-color .15s;
+      white-space:nowrap;
     }
+    .ctrl-tab:hover{
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+    }
+    .ctrl-tab.active{
+      background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 68%, white 14%), color-mix(in srgb, var(--accent2) 52%, var(--accent) 48%));
+      color:#0b1220;
+      border-color:color-mix(in srgb, var(--accent) 52%, rgba(255,255,255,.2));
+      box-shadow:0 8px 20px color-mix(in srgb, var(--accent) 20%, transparent);
+    }
+    .ctrl-actions{display:flex;gap:6px;flex-shrink:0;align-items:center}
+    .ctrl-actions .btn{min-height:34px;padding:7px 14px;font-size:12px;border-radius:10px}
+
+    /* ── Control panels (one per tab) ── */
+    .ctrl-panel{
+      display:flex;
+      flex-direction:column;
+      gap:0;
+      background:linear-gradient(180deg, rgba(15,23,48,.92), rgba(11,16,32,.88));
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:14px;
+      padding:12px 14px;
+      margin-bottom:12px;
+      box-shadow:0 4px 14px rgba(0,0,0,.22);
+    }
+    .ctrl-panel[hidden]{display:none}
+    .ctrl-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:flex-end;
+    }
+    .field{display:flex;flex-direction:column;gap:6px;min-width:120px;flex:1 1 120px}
+    .ctrl-field-grow{flex:2 1 180px}
+    .ctrl-field-auto{flex:0 0 auto}
+    .ctrl-field-color{flex:0 0 52px;min-width:52px}
+    .field label{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.07em;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .ctrl-btn-group{display:flex;gap:6px;flex-wrap:wrap}
+    .ctrl-btn-group .btn{min-height:38px;padding:8px 12px;font-size:12px;border-radius:10px;white-space:nowrap}
 
     input[type=&quot;text&quot;], select, input[type=&quot;color&quot;]{
       width:100%;
       background:var(--control-surface);
       color:var(--control-text);
       border:1px solid var(--control-border);
-      border-radius:14px;
-      padding:12px 14px;
+      border-radius:10px;
+      padding:8px 11px;
       outline:none;
       box-shadow:var(--control-shadow);
-      transition:border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .12s ease;
+      font-size:12px;
+      transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
     input[type=&quot;color&quot;]{
-      min-height:46px;
-      padding:6px;
+      min-height:36px;
+      padding:4px 5px;
       cursor:pointer;
     }
     input[type=&quot;text&quot;]::placeholder{
@@ -5014,10 +5195,11 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
     }
 
     .upload-btn, .btn, .tab, .view-controls button, .zoom-controls button{
-      min-height:46px;
-      padding:12px 16px;
-      border-radius:14px;
-      font-weight:800;
+      min-height:36px;
+      padding:8px 14px;
+      border-radius:10px;
+      font-weight:700;
+      font-size:12px;
       cursor:pointer;
       white-space:nowrap;
       transition:transform .12s ease, opacity .12s ease, background .2s ease, border-color .18s ease, box-shadow .18s ease;
@@ -5060,13 +5242,14 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       background:var(--button-warn-fill);
       border-color:color-mix(in srgb, var(--warn) 46%, rgba(255,255,255,.18));
     }
-    .btn.small{min-height:unset; padding:8px 10px; font-size:12px; border-radius:12px}
+    .btn.small{min-height:unset; padding:6px 9px; font-size:11px; border-radius:8px}
 
     .layout{
       display:grid;
       grid-template-columns:360px 1fr;
       gap:18px;
-      min-height:calc(100vh - 250px);
+      flex:1 1 0;
+      min-height:0;
       align-items:stretch;
     }
     .sidebar,.canvas{
@@ -5079,35 +5262,46 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
     }
     .sidebar{display:flex;flex-direction:column;height:var(--chart-pane-height);min-height:var(--chart-pane-height);max-height:var(--chart-pane-height)}
     .canvas{display:flex;flex-direction:column;height:var(--chart-pane-height);min-height:var(--chart-pane-height);max-height:var(--chart-pane-height)}
-    .panel-title{
-      padding:16px 18px;
+    .sidebar-header{
+      padding:10px 14px;
       border-bottom:1px solid rgba(255,255,255,.06);
-      font-size:14px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      flex-shrink:0;
+    }
+    .sidebar-title{
+      font-size:11px;
       font-weight:800;
-      letter-spacing:.06em;
+      letter-spacing:.08em;
       text-transform:uppercase;
       color:var(--muted);
     }
-    .stats{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:10px;
-      padding:16px;
+    .stat-strip{
+      display:flex;
+      gap:5px;
+      flex-wrap:wrap;
     }
-    .stat{
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+    .stat-chip{
+      display:inline-flex;
+      align-items:baseline;
+      gap:3px;
+      padding:3px 8px;
+      border-radius:8px;
+      background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.08);
-      border-radius:14px;
-      padding:12px;
+      font-size:11px;
     }
-    .stat .value{font-size:22px;font-weight:800;margin-bottom:4px}
-    .stat .label{font-size:12px;color:var(--muted)}
+    .stat-chip .stat-val{font-weight:800;color:var(--accent);font-size:12px}
+    .stat-chip .stat-lbl{color:var(--muted);font-size:10px}
+    .stat-chip.issues-chip .stat-val{color:var(--warn)}
 
     .tabs{
       display:flex;
       gap:8px;
       padding:12px 16px 0;
       flex-wrap:wrap;
+      margin-bottom:10px;
     }
     .tab{
       min-height:unset;
@@ -5134,7 +5328,16 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       min-height:0;
       flex:1 1 auto;
     }
-    .tab-panel.active{display:flex;flex-direction:column;min-height:0}
+    .tab-panel.active{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+      max-height:calc(6 * 66px + 24px);
+      overflow-y:auto;
+      overflow-x:hidden;
+      scrollbar-width:thin;
+      scrollbar-color:var(--scrollbar-thumb-a,rgba(255,255,255,.25)) transparent;
+    }
     #resultsList{
       flex:1 1 auto;
       min-height:0;
@@ -5142,6 +5345,9 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       overflow-y:auto;
       overflow-x:hidden;
       padding-right:6px;
+      position:sticky;
+      top:0;
+      z-index:2;
     }
     #resultsList .list-item:first-child{
       margin-top:0;
@@ -5182,6 +5388,45 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       border:1px solid rgba(255,255,255,.08);
       background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
       margin-top:10px;
+      cursor:grab;
+      transition:opacity .15s ease, transform .15s ease, border-color .15s ease;
+      user-select:none;
+    }
+    .highlight-chip:active{ cursor:grabbing; }
+    .highlight-chip.dragging{
+      opacity:.4;
+      transform:scale(.98);
+    }
+    .highlight-chip.drag-over{
+      border-color:rgba(124,196,255,.6);
+      background:linear-gradient(180deg, rgba(124,196,255,.10), rgba(124,196,255,.04));
+    }
+    .drag-handle{
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+      padding:2px 4px;
+      opacity:.35;
+      flex-shrink:0;
+    }
+    .drag-handle span{
+      display:block;
+      width:14px;
+      height:2px;
+      border-radius:2px;
+      background:currentColor;
+    }
+    .highlight-chip:hover .drag-handle{ opacity:.7; }
+    .highlight-priority-badge{
+      font-size:.65rem;
+      font-weight:700;
+      color:rgba(255,255,255,.35);
+      padding:1px 5px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      flex-shrink:0;
+      min-width:18px;
+      text-align:center;
     }
     .highlight-meta{
       display:flex;
@@ -5202,70 +5447,106 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       color:var(--muted);
     }
     .legend-overlay{
-      position:sticky;
-      top:0;
-      z-index:8;
-      margin:0 0 12px auto;
-      width:min(520px, 100%);
-      background:linear-gradient(180deg, rgba(18,26,51,.95), rgba(15,23,48,.9));
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:16px;
-      padding:10px 12px;
-      box-shadow:var(--shadow);
-      backdrop-filter:blur(8px);
+      display:none !important;
+    }
+    .legend-overlay:empty,
+    .legend-overlay.is-empty{
+      display:none;
     }
     .legend-title{
-      font-size:12px;
+      font-size:10px;
       text-transform:uppercase;
-      letter-spacing:.08em;
-      color:var(--muted);
-      margin-bottom:8px;
+      letter-spacing:.1em;
+      color:rgba(255,255,255,.4);
       font-weight:800;
+      padding:0 2px;
+      pointer-events:none;
     }
     .legend-items{
       display:flex;
-      flex-wrap:wrap;
-      gap:8px;
+      flex-direction:column;
+      gap:5px;
     }
     .legend-item{
       display:flex;
       align-items:center;
-      gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      font-size:12px;
+      gap:7px;
+      padding:6px 10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(135deg, rgba(15,23,48,.88), rgba(18,26,51,.82));
+      backdrop-filter:blur(10px);
+      font-size:11px;
+      color:rgba(255,255,255,.82);
+      box-shadow:0 2px 8px rgba(0,0,0,.35);
+      pointer-events:auto;
+      animation:legendItemIn .2s ease;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    @keyframes legendItemIn{
+      from{opacity:0;transform:translateX(12px)}
+      to{opacity:1;transform:translateX(0)}
     }
 
     .canvas-toolbar{
       display:flex;
-      justify-content:space-between;
       align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      padding:16px 18px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-    .canvas-toolbar .title{font-size:18px;font-weight:800}
-    .zoom-controls,.view-controls{
-      display:flex;
       gap:8px;
       flex-wrap:wrap;
+      padding:8px 12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      flex-shrink:0;
+    }
+    .canvas-toolbar .view-controls{ flex:1 1 auto }
+    .zoom-controls,.view-controls{
+      display:flex;
+      gap:5px;
       align-items:center;
+      flex-wrap:wrap;
+    }
+    .zoom-btn{
+      min-width:32px;
+      padding:6px 8px !important;
+      font-size:14px !important;
+      font-weight:800;
+      text-align:center;
     }
     .canvas-inner{
       flex:1 1 auto;
       min-height:0;
       height:100%;
       max-height:100%;
-      overflow-x:auto;
-      overflow-y:auto;
+      overflow:scroll;
+      overscroll-behavior:contain;
       padding:24px;
       background:
         radial-gradient(circle at top left, rgba(110,168,255,.09), transparent 30%),
         radial-gradient(circle at bottom right, rgba(180,110,255,.08), transparent 26%),
         linear-gradient(180deg, rgba(13,21,36,.98), rgba(11,16,32,.98));
+      scrollbar-width:thin;
+      scrollbar-color:rgba(124,196,255,.55) rgba(255,255,255,.07);
+    }
+    .canvas-inner.arrow-pan-enabled{
+      outline:2px solid rgba(124,196,255,.35);
+      outline-offset:-2px;
+    }
+    .canvas-inner::-webkit-scrollbar{
+      width:14px;
+      height:14px;
+    }
+    .canvas-inner::-webkit-scrollbar-track{
+      background:rgba(255,255,255,.05);
+      border-radius:999px;
+    }
+    .canvas-inner::-webkit-scrollbar-thumb{
+      background:linear-gradient(180deg, rgba(124,196,255,.65), rgba(124,196,255,.35));
+      border-radius:999px;
+      border:3px solid rgba(8,12,24,.45);
+    }
+    .canvas-inner::-webkit-scrollbar-corner{
+      background:rgba(255,255,255,.04);
     }
     .chart-stage{
       transform-origin:top left;
@@ -5371,21 +5652,16 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
     }
 
     .print-hint{font-size:12px;color:var(--muted)}
+    .pan-status{
+      font-size:12px;
+      color:var(--muted);
+      padding:0 4px;
+    }
 
     .mini-map{
-      position:absolute;
-      right:18px;
-      bottom:18px;
-      width:220px;
-      height:150px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      background:linear-gradient(180deg, rgba(18,26,51,.94), rgba(15,23,48,.9));
-      box-shadow:var(--shadow);
-      backdrop-filter:blur(10px);
-      overflow:hidden;
-      z-index:9;
+      display:none !important;
     }
+    .mini-map-hidden-placeholder{display:none}
     .mini-map-header{
       display:flex;
       align-items:center;
@@ -5437,21 +5713,21 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
     .stack{display:flex;flex-direction:column;gap:10px}
     .muted-note{font-size:12px;color:var(--muted)}
     .changes-list{display:flex;flex-direction:column;gap:10px;max-height:380px;overflow:auto;padding-right:4px}
-    .toolbar3{grid-template-columns:1.1fr auto auto auto}
     .row-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
     @media (max-width:1250px){
-      .compare-grid,.changes-grid,.saved-view-row,.toolbar3{grid-template-columns:1fr}
+      .compare-grid,.changes-grid,.saved-view-row{grid-template-columns:1fr}
       .mini-map{width:180px;height:128px}
     }
     @media print{
       body{background:white;color:black}
-      .header,.toolbar,.toolbar2,.sidebar,.canvas-toolbar{display:none !important}
+      .ctrl-bar,.ctrl-panel,.sidebar,.canvas-toolbar{display:none !important}
       .canvas,.canvas-inner,.chart-stage{overflow:visible !important; height:auto !important; transform:none !important}
       .node-card{box-shadow:none; border:1px solid #999; background:#fff !important; color:#000}
       .meta,.pill{color:#333 !important}
     }
     @media (max-width:1250px){
-      .toolbar,.toolbar2{grid-template-columns:1fr 1fr}
+      .ctrl-row{flex-direction:column}
+      .field{min-width:0;flex:1 1 100%}
       .layout{grid-template-columns:1fr}
       .sidebar,.canvas{height:auto;min-height:680px}
       .tab-panel{max-height:none}
@@ -5473,9 +5749,8 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
         radial-gradient(980px 560px at 100% 0%, color-mix(in srgb, var(--accent2) 16%, transparent), transparent 46%),
         linear-gradient(180deg, color-mix(in srgb, var(--bg) 96%, black 4%) 0%, var(--bg) 100%);
     }
-    .header,
-    .toolbar,
-    .toolbar2,
+    .ctrl-bar,
+    .ctrl-panel,
     .sidebar,
     .canvas,
     .canvas-toolbar,
@@ -5497,20 +5772,13 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       box-shadow:0 14px 34px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.03) !important;
       backdrop-filter:blur(10px);
     }
-    .header{
-      background:
-        linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, var(--panel)) 0%, color-mix(in srgb, var(--accent2) 14%, var(--panel2)) 100%) !important;
-    }
-    .header h1,
     .section-title,
     .sidebar h2,
-    .canvas-toolbar strong,
     .tab-btn.active,
     .metric-value,
     .detail-title{
       color:var(--text) !important;
     }
-    .header p,
     .muted,
     .muted-small,
     .field label,
@@ -5623,6 +5891,8 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent), 0 10px 28px color-mix(in srgb, var(--accent) 10%, transparent) !important;
       background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, var(--panel)), color-mix(in srgb, var(--panel2) 92%, rgba(255,255,255,.03))) !important;
     }
+    .ctrl-bar,
+    .ctrl-panel,
     .canvas-toolbar,
     .sidebar-tabs,
     .tab-strip,
@@ -5646,137 +5916,155 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
 &lt;/head&gt;
 &lt;body&gt;
   &lt;div class=&quot;app&quot;&gt;
-    &lt;div class=&quot;header&quot;&gt;
-      &lt;h1&gt;CSV Org Chart Tool Pro&lt;/h1&gt;
-      &lt;p&gt;Upload a CSV, render the hierarchy, filter it, validate it, export selected rows, view supervisor chains, and print to PDF.&lt;/p&gt;
+    &lt;!-- ═══ Unified control bar ═══ --&gt;
+    &lt;div class=&quot;ctrl-bar&quot;&gt;
+      &lt;div class=&quot;ctrl-tabs&quot;&gt;
+        &lt;button class=&quot;ctrl-tab active&quot; data-ctrl=&quot;data&quot; type=&quot;button&quot;&gt;Data&lt;/button&gt;
+        &lt;button class=&quot;ctrl-tab&quot; data-ctrl=&quot;filters&quot; type=&quot;button&quot;&gt;Filters&lt;/button&gt;
+        &lt;button class=&quot;ctrl-tab&quot; data-ctrl=&quot;highlight&quot; type=&quot;button&quot;&gt;Highlight&lt;/button&gt;
+        &lt;button class=&quot;ctrl-tab&quot; data-ctrl=&quot;views&quot; type=&quot;button&quot;&gt;Views&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;ctrl-actions&quot;&gt;
+        &lt;button id=&quot;sampleBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Sample&lt;/button&gt;
+        &lt;button id=&quot;renderBtn&quot; class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Render Chart&lt;/button&gt;
+      &lt;/div&gt;
     &lt;/div&gt;
 
-    &lt;div class=&quot;toolbar&quot;&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;CSV Upload&lt;/label&gt;
-        &lt;label class=&quot;upload-btn&quot;&gt;
-          &lt;span id=&quot;fileLabel&quot;&gt;Upload CSV File&lt;/span&gt;
-          &lt;input id=&quot;csvFile&quot; type=&quot;file&quot; accept=&quot;.csv,text/csv&quot;&gt;
-        &lt;/label&gt;
+    &lt;div class=&quot;ctrl-panel&quot; id=&quot;ctrlPanel-data&quot;&gt;
+      &lt;div class=&quot;ctrl-row&quot;&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label&gt;CSV File&lt;/label&gt;
+          &lt;label class=&quot;upload-btn&quot;&gt;
+            &lt;span id=&quot;fileLabel&quot;&gt;Upload CSV&lt;/span&gt;
+            &lt;input id=&quot;csvFile&quot; type=&quot;file&quot; accept=&quot;.csv,text/csv&quot;&gt;
+          &lt;/label&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label&gt;Position Column&lt;/label&gt;
+          &lt;select id=&quot;positionColumn&quot;&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label&gt;Reports To Column&lt;/label&gt;
+          &lt;select id=&quot;reportsToColumn&quot;&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field ctrl-field-grow&quot;&gt;
+          &lt;label&gt;Search&lt;/label&gt;
+          &lt;input id=&quot;searchInput&quot; type=&quot;text&quot; placeholder=&quot;Search position, title, name…&quot;&gt;
+        &lt;/div&gt;
       &lt;/div&gt;
-
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Position Column&lt;/label&gt;
-        &lt;select id=&quot;positionColumn&quot;&gt;&lt;/select&gt;
-      &lt;/div&gt;
-
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Reports To Column&lt;/label&gt;
-        &lt;select id=&quot;reportsToColumn&quot;&gt;&lt;/select&gt;
-      &lt;/div&gt;
-
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Search&lt;/label&gt;
-        &lt;input id=&quot;searchInput&quot; type=&quot;text&quot; placeholder=&quot;Search position, title, name...&quot;&gt;
-      &lt;/div&gt;
-
-      &lt;button id=&quot;renderBtn&quot; class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Render Chart&lt;/button&gt;
-      &lt;button id=&quot;sampleBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Load Sample&lt;/button&gt;
     &lt;/div&gt;
 
-    &lt;div class=&quot;toolbar2&quot;&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Rank Filter&lt;/label&gt;
-        &lt;select id=&quot;rankFilter&quot;&gt;&lt;option value=&quot;&quot;&gt;All ranks&lt;/option&gt;&lt;/select&gt;
+    &lt;div class=&quot;ctrl-panel&quot; id=&quot;ctrlPanel-filters&quot; hidden&gt;
+      &lt;div class=&quot;ctrl-row&quot;&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label&gt;Rank&lt;/label&gt;
+          &lt;select id=&quot;rankFilter&quot;&gt;&lt;option value=&quot;&quot;&gt;All ranks&lt;/option&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label&gt;Unit&lt;/label&gt;
+          &lt;select id=&quot;unitFilter&quot;&gt;&lt;option value=&quot;&quot;&gt;All units&lt;/option&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label&gt;Section&lt;/label&gt;
+          &lt;select id=&quot;sectionFilter&quot;&gt;&lt;option value=&quot;&quot;&gt;All sections&lt;/option&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label&gt;View Mode&lt;/label&gt;
+          &lt;select id=&quot;viewMode&quot;&gt;
+            &lt;option value=&quot;all&quot;&gt;Full org&lt;/option&gt;
+            &lt;option value=&quot;branch&quot;&gt;Branch only&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field ctrl-field-auto&quot;&gt;
+          &lt;label&gt;&amp;nbsp;&lt;/label&gt;
+          &lt;div class=&quot;ctrl-btn-group&quot;&gt;
+            &lt;button id=&quot;collapseAllBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Collapse All&lt;/button&gt;
+            &lt;button id=&quot;expandAllBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Expand All&lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
       &lt;/div&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Unit Filter&lt;/label&gt;
-        &lt;select id=&quot;unitFilter&quot;&gt;&lt;option value=&quot;&quot;&gt;All units&lt;/option&gt;&lt;/select&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Section Filter&lt;/label&gt;
-        &lt;select id=&quot;sectionFilter&quot;&gt;&lt;option value=&quot;&quot;&gt;All sections&lt;/option&gt;&lt;/select&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;View Mode&lt;/label&gt;
-        &lt;select id=&quot;viewMode&quot;&gt;
-          &lt;option value=&quot;all&quot;&gt;Full org&lt;/option&gt;
-          &lt;option value=&quot;branch&quot;&gt;Branch only&lt;/option&gt;
-        &lt;/select&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Theme&lt;/label&gt;
-        &lt;select id=&quot;themePicker&quot;&gt;
-          &lt;option value=&quot;northbay&quot;&gt;North Bay Blue&lt;/option&gt;
-          &lt;option value=&quot;emerald&quot;&gt;Emerald Command&lt;/option&gt;
-          &lt;option value=&quot;sunset&quot;&gt;Sunset Ops&lt;/option&gt;
-          &lt;option value=&quot;slate&quot;&gt;Slate Neutral&lt;/option&gt;
-          &lt;option value=&quot;royal&quot;&gt;Royal Air&lt;/option&gt;
-        &lt;/select&gt;
-      &lt;/div&gt;
-      &lt;button id=&quot;collapseAllBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Collapse All&lt;/button&gt;
-      &lt;button id=&quot;expandAllBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Expand All&lt;/button&gt;
     &lt;/div&gt;
 
-    &lt;div class=&quot;toolbar2&quot;&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Highlight Column&lt;/label&gt;
-        &lt;select id=&quot;highlightColumn&quot;&gt;&lt;/select&gt;
+    &lt;div class=&quot;ctrl-panel&quot; id=&quot;ctrlPanel-highlight&quot; hidden&gt;
+      &lt;div class=&quot;ctrl-row&quot;&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label&gt;Column&lt;/label&gt;
+          &lt;select id=&quot;highlightColumn&quot;&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label&gt;Preset Value&lt;/label&gt;
+          &lt;select id=&quot;highlightPreset&quot;&gt;&lt;option value=&quot;&quot;&gt;Choose from CSV&lt;/option&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field ctrl-field-grow&quot;&gt;
+          &lt;label&gt;Text Match&lt;/label&gt;
+          &lt;input id=&quot;highlightText&quot; type=&quot;text&quot; placeholder=&quot;e.g. MCpl&quot;&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label&gt;Match Mode&lt;/label&gt;
+          &lt;select id=&quot;highlightMatchMode&quot;&gt;
+            &lt;option value=&quot;contains&quot;&gt;Contains&lt;/option&gt;
+            &lt;option value=&quot;exact&quot;&gt;Exact&lt;/option&gt;
+            &lt;option value=&quot;startsWith&quot;&gt;Starts with&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label&gt;Display&lt;/label&gt;
+          &lt;select id=&quot;highlightDisplayMode&quot;&gt;
+            &lt;option value=&quot;both&quot;&gt;Fill + Glow&lt;/option&gt;
+            &lt;option value=&quot;fill&quot;&gt;Fill only&lt;/option&gt;
+            &lt;option value=&quot;glow&quot;&gt;Glow only&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field ctrl-field-color&quot;&gt;
+          &lt;label&gt;Fill&lt;/label&gt;
+          &lt;input id=&quot;highlightFill&quot; type=&quot;color&quot; value=&quot;#3b82f6&quot;&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field ctrl-field-color&quot;&gt;
+          &lt;label&gt;Glow&lt;/label&gt;
+          &lt;input id=&quot;highlightGlow&quot; type=&quot;color&quot; value=&quot;#93c5fd&quot;&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field ctrl-field-auto&quot;&gt;
+          &lt;label&gt;&amp;nbsp;&lt;/label&gt;
+          &lt;div class=&quot;ctrl-btn-group&quot;&gt;
+            &lt;button id=&quot;addHighlightBtn&quot; class=&quot;btn good&quot; type=&quot;button&quot;&gt;Add&lt;/button&gt;
+            &lt;button id=&quot;clearHighlightsBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Clear&lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
       &lt;/div&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Preset Match&lt;/label&gt;
-        &lt;select id=&quot;highlightPreset&quot;&gt;&lt;option value=&quot;&quot;&gt;Choose from CSV values&lt;/option&gt;&lt;/select&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Or Text Match&lt;/label&gt;
-        &lt;input id=&quot;highlightText&quot; type=&quot;text&quot; placeholder=&quot;Example: MCpl&quot;&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Match Mode&lt;/label&gt;
-        &lt;select id=&quot;highlightMatchMode&quot;&gt;
-          &lt;option value=&quot;contains&quot;&gt;Contains&lt;/option&gt;
-          &lt;option value=&quot;exact&quot;&gt;Exact&lt;/option&gt;
-          &lt;option value=&quot;startsWith&quot;&gt;Starts with&lt;/option&gt;
-        &lt;/select&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Display Mode&lt;/label&gt;
-        &lt;select id=&quot;highlightDisplayMode&quot;&gt;
-          &lt;option value=&quot;both&quot;&gt;Fill + Glow&lt;/option&gt;
-          &lt;option value=&quot;fill&quot;&gt;Fill only&lt;/option&gt;
-          &lt;option value=&quot;glow&quot;&gt;Glow only&lt;/option&gt;
-        &lt;/select&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Fill Color&lt;/label&gt;
-        &lt;input id=&quot;highlightFill&quot; type=&quot;color&quot; value=&quot;#3b82f6&quot;&gt;
-      &lt;/div&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;Glow Color&lt;/label&gt;
-        &lt;input id=&quot;highlightGlow&quot; type=&quot;color&quot; value=&quot;#93c5fd&quot;&gt;
-      &lt;/div&gt;
-      &lt;button id=&quot;addHighlightBtn&quot; class=&quot;btn good&quot; type=&quot;button&quot;&gt;Add Highlight&lt;/button&gt;
-      &lt;button id=&quot;clearHighlightsBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Clear Highlights&lt;/button&gt;
     &lt;/div&gt;
 
-    &lt;div class=&quot;toolbar toolbar3&quot;&gt;
-      &lt;div class=&quot;field&quot;&gt;
-        &lt;label&gt;What Changed Baseline CSV&lt;/label&gt;
-        &lt;label class=&quot;upload-btn&quot;&gt;
-          &lt;span id=&quot;baselineLabel&quot;&gt;Upload Baseline CSV&lt;/span&gt;
-          &lt;input id=&quot;baselineCsvFile&quot; type=&quot;file&quot; accept=&quot;.csv,text/csv&quot;&gt;
-        &lt;/label&gt;
+    &lt;div class=&quot;ctrl-panel&quot; id=&quot;ctrlPanel-views&quot; hidden&gt;
+      &lt;div class=&quot;ctrl-row&quot;&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label&gt;Baseline CSV (What Changed)&lt;/label&gt;
+          &lt;label class=&quot;upload-btn&quot;&gt;
+            &lt;span id=&quot;baselineLabel&quot;&gt;Upload Baseline CSV&lt;/span&gt;
+            &lt;input id=&quot;baselineCsvFile&quot; type=&quot;file&quot; accept=&quot;.csv,text/csv&quot;&gt;
+          &lt;/label&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;field ctrl-field-auto&quot;&gt;
+          &lt;label&gt;&amp;nbsp;&lt;/label&gt;
+          &lt;div class=&quot;ctrl-btn-group&quot;&gt;
+            &lt;button id=&quot;saveViewBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Save View&lt;/button&gt;
+            &lt;button id=&quot;resetViewBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Reset View&lt;/button&gt;
+            &lt;button id=&quot;clearBaselineBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Clear Baseline&lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
       &lt;/div&gt;
-      &lt;button id=&quot;saveViewBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Save View&lt;/button&gt;
-      &lt;button id=&quot;resetViewBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Reset View&lt;/button&gt;
-      &lt;button id=&quot;clearBaselineBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Clear Baseline&lt;/button&gt;
     &lt;/div&gt;
 
     &lt;div class=&quot;layout&quot;&gt;
       &lt;aside class=&quot;sidebar&quot;&gt;
-        &lt;div class=&quot;panel-title&quot;&gt;Chart Details&lt;/div&gt;
-        &lt;div class=&quot;stats&quot;&gt;
-          &lt;div class=&quot;stat&quot;&gt;&lt;div class=&quot;value&quot; id=&quot;totalNodes&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;label&quot;&gt;Positions&lt;/div&gt;&lt;/div&gt;
-          &lt;div class=&quot;stat&quot;&gt;&lt;div class=&quot;value&quot; id=&quot;rootNodes&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;label&quot;&gt;Root Nodes&lt;/div&gt;&lt;/div&gt;
-          &lt;div class=&quot;stat&quot;&gt;&lt;div class=&quot;value&quot; id=&quot;orphans&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;label&quot;&gt;Orphans&lt;/div&gt;&lt;/div&gt;
-          &lt;div class=&quot;stat&quot;&gt;&lt;div class=&quot;value&quot; id=&quot;maxDepth&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;label&quot;&gt;Max Depth&lt;/div&gt;&lt;/div&gt;
-          &lt;div class=&quot;stat&quot;&gt;&lt;div class=&quot;value&quot; id=&quot;selectedCount&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;label&quot;&gt;Selected&lt;/div&gt;&lt;/div&gt;
-          &lt;div class=&quot;stat&quot;&gt;&lt;div class=&quot;value&quot; id=&quot;issuesCount&quot;&gt;0&lt;/div&gt;&lt;div class=&quot;label&quot;&gt;Validation Issues&lt;/div&gt;&lt;/div&gt;
+        &lt;div class=&quot;sidebar-header&quot;&gt;
+          &lt;span class=&quot;sidebar-title&quot;&gt;Chart Details&lt;/span&gt;
+          &lt;div class=&quot;stat-strip&quot;&gt;
+            &lt;span class=&quot;stat-chip&quot;&gt;&lt;span class=&quot;stat-val&quot; id=&quot;totalNodes&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;stat-lbl&quot;&gt;pos&lt;/span&gt;&lt;/span&gt;
+            &lt;span class=&quot;stat-chip&quot;&gt;&lt;span class=&quot;stat-val&quot; id=&quot;rootNodes&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;stat-lbl&quot;&gt;roots&lt;/span&gt;&lt;/span&gt;
+            &lt;span class=&quot;stat-chip&quot;&gt;&lt;span class=&quot;stat-val&quot; id=&quot;orphans&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;stat-lbl&quot;&gt;orphans&lt;/span&gt;&lt;/span&gt;
+            &lt;span class=&quot;stat-chip&quot;&gt;&lt;span class=&quot;stat-val&quot; id=&quot;maxDepth&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;stat-lbl&quot;&gt;depth&lt;/span&gt;&lt;/span&gt;
+            &lt;span class=&quot;stat-chip&quot;&gt;&lt;span class=&quot;stat-val&quot; id=&quot;selectedCount&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;stat-lbl&quot;&gt;sel&lt;/span&gt;&lt;/span&gt;
+            &lt;span class=&quot;stat-chip issues-chip&quot;&gt;&lt;span class=&quot;stat-val&quot; id=&quot;issuesCount&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;stat-lbl&quot;&gt;issues&lt;/span&gt;&lt;/span&gt;
+          &lt;/div&gt;
         &lt;/div&gt;
 
         &lt;div class=&quot;tabs&quot;&gt;
@@ -5850,22 +6138,20 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
 
       &lt;section class=&quot;canvas&quot;&gt;
         &lt;div class=&quot;canvas-toolbar&quot;&gt;
-          &lt;div class=&quot;title&quot;&gt;Org Chart Viewer&lt;/div&gt;
           &lt;div class=&quot;view-controls&quot;&gt;
-            &lt;button id=&quot;backBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Back&lt;/button&gt;
-            &lt;button id=&quot;forwardBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Forward&lt;/button&gt;
-            &lt;button id=&quot;homeViewBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Home View&lt;/button&gt;
-            &lt;button id=&quot;fitBtn&quot; class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Fit to Page&lt;/button&gt;
-            &lt;button id=&quot;printPdfBtn&quot; class=&quot;btn warn&quot; type=&quot;button&quot;&gt;Print / Save PDF&lt;/button&gt;
-            &lt;span class=&quot;print-hint&quot;&gt;Use your browser print dialog to save as PDF.&lt;/span&gt;
+            &lt;button id=&quot;backBtn&quot; class=&quot;btn&quot; type=&quot;button&quot; title=&quot;Back&quot;&gt;&amp;larr;&lt;/button&gt;
+            &lt;button id=&quot;forwardBtn&quot; class=&quot;btn&quot; type=&quot;button&quot; title=&quot;Forward&quot;&gt;&amp;rarr;&lt;/button&gt;
+            &lt;button id=&quot;homeViewBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Home&lt;/button&gt;
+            &lt;button id=&quot;fitBtn&quot; class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Fit&lt;/button&gt;
           &lt;/div&gt;
           &lt;div class=&quot;zoom-controls&quot;&gt;
-            &lt;button id=&quot;zoomOutBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Shrink&lt;/button&gt;
-            &lt;button id=&quot;zoomResetBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Reset&lt;/button&gt;
-            &lt;button id=&quot;zoomInBtn&quot; class=&quot;btn&quot; type=&quot;button&quot;&gt;Expand&lt;/button&gt;
+            &lt;button id=&quot;zoomOutBtn&quot; class=&quot;btn zoom-btn&quot; type=&quot;button&quot; title=&quot;Zoom out&quot;&gt;&amp;minus;&lt;/button&gt;
+            &lt;button id=&quot;zoomResetBtn&quot; class=&quot;btn zoom-btn&quot; type=&quot;button&quot; title=&quot;Reset zoom&quot;&gt;1&amp;times;&lt;/button&gt;
+            &lt;button id=&quot;zoomInBtn&quot; class=&quot;btn zoom-btn&quot; type=&quot;button&quot; title=&quot;Zoom in&quot;&gt;+&lt;/button&gt;
           &lt;/div&gt;
+          &lt;button id=&quot;printPdfBtn&quot; class=&quot;btn warn&quot; type=&quot;button&quot;&gt;Print / PDF&lt;/button&gt;
         &lt;/div&gt;
-        &lt;div id=&quot;canvasInner&quot; class=&quot;canvas-inner&quot;&gt;
+        &lt;div id=&quot;canvasInner&quot; class=&quot;canvas-inner&quot; tabindex=&quot;0&quot;&gt;
           &lt;div id=&quot;highlightLegend&quot; class=&quot;legend-overlay&quot;&gt;No active highlights.&lt;/div&gt;
           &lt;div id=&quot;chartStage&quot; class=&quot;chart-stage&quot;&gt;
             &lt;div id=&quot;chartMount&quot;&gt;
@@ -5931,7 +6217,7 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       unitFilter: document.getElementById(&#x27;unitFilter&#x27;),
       sectionFilter: document.getElementById(&#x27;sectionFilter&#x27;),
       viewMode: document.getElementById(&#x27;viewMode&#x27;),
-      themePicker: document.getElementById(&#x27;themePicker&#x27;),
+      themePicker: null,
       highlightColumn: document.getElementById(&#x27;highlightColumn&#x27;),
       highlightPreset: document.getElementById(&#x27;highlightPreset&#x27;),
       highlightText: document.getElementById(&#x27;highlightText&#x27;),
@@ -5981,7 +6267,9 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       orphans: document.getElementById(&#x27;orphans&#x27;),
       maxDepth: document.getElementById(&#x27;maxDepth&#x27;),
       selectedCount: document.getElementById(&#x27;selectedCount&#x27;),
-      issuesCount: document.getElementById(&#x27;issuesCount&#x27;)
+      issuesCount: document.getElementById(&#x27;issuesCount&#x27;),
+      arrowPanBtn: null,
+      panStatus: null
     };
 
     let currentZoom = 1;
@@ -6348,7 +6636,7 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       const glowRules = matches.filter(rule =&gt; rule.displayMode === &#x27;glow&#x27; || rule.displayMode === &#x27;both&#x27;);
 
       const fillStyle = fillRule
-        ? `background: linear-gradient(180deg, ${toRgba(fillRule.fill, 0.46)} 0%, ${toRgba(fillRule.fill, 0.22)} 100%);`
+        ? `background: linear-gradient(180deg, ${toRgba(fillRule.fill, 0.46)} 0%, ${toRgba(fillRule.fill, 0.22)} 100%) !important;`
         : &#x27;&#x27;;
 
       let glowStyle = &#x27;&#x27;;
@@ -6366,44 +6654,97 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
     }
 
     function renderHighlightsSummary(){
+      const container = els.highlightsSummary;
+      container.innerHTML = &#x27;&#x27;;
       if (!state.highlights.length) {
-        els.highlightsSummary.innerHTML = &#x27;No highlights added.&#x27;;
+        container.innerHTML = &#x27;No highlights added.&#x27;;
         return;
       }
 
-      els.highlightsSummary.innerHTML = state.highlights.map(rule =&gt; `
-        &lt;div class=&quot;highlight-chip&quot;&gt;
-          &lt;div class=&quot;highlight-meta&quot;&gt;
-            &lt;span class=&quot;swatch&quot; style=&quot;background:${escapeHtml(rule.fill)}&quot;&gt;&lt;/span&gt;
-            &lt;span class=&quot;swatch&quot; style=&quot;background:${escapeHtml(rule.glow)}&quot;&gt;&lt;/span&gt;
-            &lt;div&gt;
-              &lt;div&gt;&lt;strong&gt;${escapeHtml(rule.column)}&lt;/strong&gt; ${escapeHtml(rule.matchMode)} &lt;strong&gt;${escapeHtml(rule.match)}&lt;/strong&gt;&lt;/div&gt;
-              &lt;div class=&quot;muted-small&quot;&gt;${escapeHtml(rule.displayMode)} · Fill ${escapeHtml(rule.fill)} · Glow ${escapeHtml(rule.glow)}&lt;/div&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
-          &lt;button class=&quot;btn small&quot; type=&quot;button&quot; data-remove-highlight=&quot;${escapeHtml(rule.id)}&quot;&gt;Remove&lt;/button&gt;
-        &lt;/div&gt;
-      `).join(&#x27;&#x27;);
+      let _dragSrcIdx = null;
 
-      els.highlightsSummary.querySelectorAll(&#x27;[data-remove-highlight]&#x27;).forEach(btn =&gt; {
-        btn.addEventListener(&#x27;click&#x27;, () =&gt; removeHighlightRule(btn.dataset.removeHighlight));
+      state.highlights.forEach((rule, idx) => {
+        const chip = document.createElement(&#x27;div&#x27;);
+        chip.className = &#x27;highlight-chip&#x27;;
+        chip.draggable = true;
+        chip.dataset.idx = idx;
+
+        const handle = document.createElement(&#x27;div&#x27;);
+        handle.className = &#x27;drag-handle&#x27;;
+        handle.innerHTML = &#x27;&lt;span&gt;&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&lt;span&gt;&lt;/span&gt;&#x27;;
+        handle.title = &#x27;Drag to reorder priority&#x27;;
+
+        const badge = document.createElement(&#x27;span&#x27;);
+        badge.className = &#x27;highlight-priority-badge&#x27;;
+        badge.textContent = idx + 1;
+        badge.title = &#x27;Priority order&#x27;;
+
+        const meta = document.createElement(&#x27;div&#x27;);
+        meta.className = &#x27;highlight-meta&#x27;;
+        meta.innerHTML = `&lt;span class=&quot;swatch&quot; style=&quot;background:${escapeHtml(rule.fill)}&quot;&gt;&lt;/span&gt;&lt;span class=&quot;swatch&quot; style=&quot;background:${escapeHtml(rule.glow)}&quot;&gt;&lt;/span&gt;&lt;div&gt;&lt;div&gt;&lt;strong&gt;${escapeHtml(rule.column)}&lt;/strong&gt; ${escapeHtml(rule.matchMode)} &lt;strong&gt;${escapeHtml(rule.match)}&lt;/strong&gt;&lt;/div&gt;&lt;div class=&quot;muted-small&quot;&gt;${escapeHtml(rule.displayMode)} · Fill ${escapeHtml(rule.fill)} · Glow ${escapeHtml(rule.glow)}&lt;/div&gt;&lt;/div&gt;`;
+
+        const removeBtn = document.createElement(&#x27;button&#x27;);
+        removeBtn.className = &#x27;btn small&#x27;;
+        removeBtn.type = &#x27;button&#x27;;
+        removeBtn.textContent = &#x27;Remove&#x27;;
+        removeBtn.addEventListener(&#x27;click&#x27;, () => removeHighlightRule(rule.id));
+
+        chip.appendChild(handle);
+        chip.appendChild(badge);
+        chip.appendChild(meta);
+        chip.appendChild(removeBtn);
+
+        // Drag events
+        chip.addEventListener(&#x27;dragstart&#x27;, (e) => {
+          _dragSrcIdx = idx;
+          chip.classList.add(&#x27;dragging&#x27;);
+          e.dataTransfer.effectAllowed = &#x27;move&#x27;;
+          e.dataTransfer.setData(&#x27;text/plain&#x27;, idx);
+        });
+        chip.addEventListener(&#x27;dragend&#x27;, () => {
+          chip.classList.remove(&#x27;dragging&#x27;);
+          container.querySelectorAll(&#x27;.highlight-chip&#x27;).forEach(c => c.classList.remove(&#x27;drag-over&#x27;));
+        });
+        chip.addEventListener(&#x27;dragover&#x27;, (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = &#x27;move&#x27;;
+          container.querySelectorAll(&#x27;.highlight-chip&#x27;).forEach(c => c.classList.remove(&#x27;drag-over&#x27;));
+          chip.classList.add(&#x27;drag-over&#x27;);
+        });
+        chip.addEventListener(&#x27;dragleave&#x27;, () => {
+          chip.classList.remove(&#x27;drag-over&#x27;);
+        });
+        chip.addEventListener(&#x27;drop&#x27;, (e) => {
+          e.preventDefault();
+          const fromIdx = _dragSrcIdx;
+          const toIdx = idx;
+          if (fromIdx === null || fromIdx === toIdx) return;
+          const moved = state.highlights.splice(fromIdx, 1)[0];
+          state.highlights.splice(toIdx, 0, moved);
+          renderHighlightsSummary();
+          renderHighlightLegend();
+          renderChart();
+          renderSearchResults();
+        });
+
+        container.appendChild(chip);
       });
     }
 
     function renderHighlightLegend(){
       if (!state.highlights.length) {
-        els.highlightLegend.innerHTML = &#x27;No active highlights.&#x27;;
+        els.highlightLegend.innerHTML = &#x27;&#x27;;
+        els.highlightLegend.classList.add(&#x27;is-empty&#x27;);
         return;
       }
-
+      els.highlightLegend.classList.remove(&#x27;is-empty&#x27;);
       els.highlightLegend.innerHTML = `
-        &lt;div class=&quot;legend-title&quot;&gt;Highlight Legend&lt;/div&gt;
+        &lt;div class=&quot;legend-title&quot;&gt;Highlights&lt;/div&gt;
         &lt;div class=&quot;legend-items&quot;&gt;
           ${state.highlights.map(rule =&gt; `
             &lt;div class=&quot;legend-item&quot;&gt;
-              &lt;span class=&quot;swatch&quot; style=&quot;background:${escapeHtml(rule.fill)}&quot;&gt;&lt;/span&gt;
-              &lt;span class=&quot;swatch&quot; style=&quot;background:${escapeHtml(rule.glow)}&quot;&gt;&lt;/span&gt;
-              &lt;span&gt;${escapeHtml(rule.column)} ${escapeHtml(rule.matchMode)} ${escapeHtml(rule.match)} · ${escapeHtml(rule.displayMode)}&lt;/span&gt;
+              &lt;span class=&quot;swatch&quot; style=&quot;background:${escapeHtml(rule.fill)};width:10px;height:10px;border-radius:50%;flex-shrink:0;display:inline-block&quot;&gt;&lt;/span&gt;
+              &lt;span style=&quot;overflow:hidden;text-overflow:ellipsis&quot;&gt;${escapeHtml(rule.column)} ${escapeHtml(rule.matchMode)} ${escapeHtml(rule.match)}&lt;/span&gt;
             &lt;/div&gt;
           `).join(&#x27;&#x27;)}
         &lt;/div&gt;
@@ -6603,8 +6944,10 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       els.rankFilter.value = view.rank || &#x27;&#x27;;
       els.unitFilter.value = view.unit || &#x27;&#x27;;
       els.sectionFilter.value = view.section || &#x27;&#x27;;
-      els.themePicker.value = view.theme || &#x27;northbay&#x27;;
-      setTheme(els.themePicker.value);
+      if (els.themePicker) {
+        els.themePicker.value = view.theme || &#x27;northbay&#x27;;
+        setTheme(els.themePicker.value);
+      }
       state.highlights = Array.isArray(view.highlights) ? view.highlights : [];
       renderHighlightsSummary();
       renderHighlightLegend();
@@ -6661,6 +7004,7 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       els.savedViewsPanel.querySelectorAll(&#x27;[data-apply-view]&#x27;).forEach(btn =&gt; btn.addEventListener(&#x27;click&#x27;, () =&gt; applySavedViewConfig(items[Number(btn.dataset.applyView)])));
       els.savedViewsPanel.querySelectorAll(&#x27;[data-delete-view]&#x27;).forEach(btn =&gt; btn.addEventListener(&#x27;click&#x27;, () =&gt; deleteSavedView(Number(btn.dataset.deleteView))));
     }
+
 
     function resetView(){
       els.searchInput.value = &#x27;&#x27;;
@@ -7315,6 +7659,17 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       btn.addEventListener(&#x27;click&#x27;, () =&gt; setActiveTab(btn.dataset.tab));
     });
 
+    document.querySelectorAll(&#x27;.ctrl-tab&#x27;).forEach(btn =&gt; {
+      btn.addEventListener(&#x27;click&#x27;, () =&gt; {
+        const key = btn.dataset.ctrl;
+        document.querySelectorAll(&#x27;.ctrl-tab&#x27;).forEach(t =&gt; t.classList.toggle(&#x27;active&#x27;, t.dataset.ctrl === key));
+        document.querySelectorAll(&#x27;.ctrl-panel&#x27;).forEach(p =&gt; {
+          const match = p.id === &#x27;ctrlPanel-&#x27; + key;
+          p.hidden = !match;
+        });
+      });
+    });
+
     els.csvFile.addEventListener(&#x27;change&#x27;, async (e) =&gt; {
       const file = e.target.files &amp;&amp; e.target.files[0];
       if (!file) return;
@@ -7342,8 +7697,6 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
       if (state.viewMode === &#x27;all&#x27;) state.branchRootId = null;
       renderChart();
     });
-    els.themePicker.addEventListener(&#x27;change&#x27;, () =&gt; setTheme(els.themePicker.value));
-
     els.collapseAllBtn.addEventListener(&#x27;click&#x27;, collapseAll);
     els.expandAllBtn.addEventListener(&#x27;click&#x27;, expandAll);
 
@@ -7391,11 +7744,9 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
     els.resetViewBtn.addEventListener(&#x27;click&#x27;, resetView);
     els.compareLeftSelect.addEventListener(&#x27;change&#x27;, renderComparePanel);
     els.compareRightSelect.addEventListener(&#x27;change&#x27;, renderComparePanel);
-    els.canvasInner.addEventListener(&#x27;scroll&#x27;, drawMiniMap);
+    els.canvasInner.addEventListener(&#x27;scroll&#x27;, drawMiniMap, { passive: true });
     els.miniMapCanvas.addEventListener(&#x27;click&#x27;, handleMiniMapClick);
-    window.addEventListener(&#x27;resize&#x27;, () =&gt; requestAnimationFrame(drawMiniMap));
-
-    setTheme(&#x27;northbay&#x27;);
+    window.addEventListener(&#x27;resize&#x27;, () =&gt; requestAnimationFrame(drawMiniMap), { passive: true });
     loadCsvText(sampleCsv, &#x27;sample_org_chart.csv&#x27;);
     collapseAll();
     applyZoom();
@@ -7514,7 +7865,7 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
     const data = event.data || {};
     if (data.source !== &#x27;orgCardsHost&#x27;) return;
     try {
-      if (data.type === &#x27;loadSample&#x27; &amp;&amp; typeof window.loadCsvText === &#x27;function&#x27; &amp;&amp; typeof window.sampleCsv === &#x27;string&#x27;) {
+    if (data.type === &#x27;loadSample&#x27; &amp;&amp; typeof window.loadCsvText === &#x27;function&#x27; &amp;&amp; typeof window.sampleCsv === &#x27;string&#x27;) {
         window.loadCsvText(window.sampleCsv, &#x27;sample_org_chart.csv&#x27;);
         notifyHostSize();
       } else if (data.type === &#x27;loadCsvText&#x27; &amp;&amp; typeof window.loadCsvText === &#x27;function&#x27; &amp;&amp; typeof data.csvText === &#x27;string&#x27;) {
@@ -7526,6 +7877,12 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
         window.applyHostThemeVars(data.vars || {});
       } else if (data.type === &#x27;setTheme&#x27; &amp;&amp; typeof window.applyThemeById === &#x27;function&#x27;) {
         window.applyThemeById(data.theme || &#x27;northbay&#x27;);
+      } else if (data.type === &#x27;scrollTo&#x27;) {
+        const inner = document.getElementById(&#x27;canvasInner&#x27;);
+        if (inner) {
+          inner.scrollLeft = data.scrollLeft || 0;
+          inner.scrollTop  = data.scrollTop  || 0;
+        }
       }
     } catch (err) {
       console.error(&#x27;Org Chart Pro host bridge error&#x27;, err);
@@ -7545,8 +7902,126 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
     } catch (err) {}
   });
 
-  const obs = new MutationObserver(function(){ notifyHostSize(); });
+  // Debounced observer: coalesce rapid DOM mutations during chart renders.
+  // Without this, every node added to the chart fires a postMessage flood.
+  let _obsTimer = null;
+  const obs = new MutationObserver(function(){
+    if (_obsTimer) return; // already scheduled
+    _obsTimer = setTimeout(function(){
+      _obsTimer = null;
+      notifyHostSize();
+    }, 200);
+  });
   if (document.body) obs.observe(document.body, { childList:true, subtree:true });
+
+  // ── Minimap broadcaster: draws to offscreen canvas and sends to parent ──
+  let _miniMapTimer = null;
+  const _offCanvas = document.createElement(&#x27;canvas&#x27;);
+  _offCanvas.width  = 220;
+  _offCanvas.height = 120;
+
+  function broadcastMiniMap(){
+    try {
+      const inner = document.getElementById(&#x27;canvasInner&#x27;);
+      const meta  = document.getElementById(&#x27;miniMapMeta&#x27;);
+      if (!inner) return;
+
+      const CW = _offCanvas.width;
+      const CH = _offCanvas.height;
+      const ctx = _offCanvas.getContext(&#x27;2d&#x27;);
+      ctx.clearRect(0, 0, CW, CH);
+
+      const tree = document.querySelector(&#x27;#chartMount .tree&#x27;) || document.querySelector(&#x27;.tree&#x27;);
+      let mmScale = 1, mmOffsetX = 0, mmOffsetY = 0, mmStageScale = 1;
+      let nodeCount = &#x27;0 nodes&#x27;;
+
+      if (tree) {
+        const treeRect = tree.getBoundingClientRect();
+        const nodes = [...document.querySelectorAll(&#x27;#chartMount .node-card&#x27;)];
+        const stageScale = (typeof currentZoom !== &#x27;undefined&#x27; ? currentZoom : 1) || 1;
+        const unscaledWidth  = Math.max(1, treeRect.width  / stageScale);
+        const unscaledHeight = Math.max(1, treeRect.height / stageScale);
+        const scale   = Math.min((CW - 12) / unscaledWidth, (CH - 12) / unscaledHeight);
+        const offsetX = (CW - unscaledWidth  * scale) / 2;
+        const offsetY = (CH - unscaledHeight * scale) / 2;
+
+        mmScale      = scale;
+        mmOffsetX    = offsetX;
+        mmOffsetY    = offsetY;
+        mmStageScale = stageScale;
+
+        // background rect
+        ctx.fillStyle = &#x27;rgba(255,255,255,0.06)&#x27;;
+        ctx.fillRect(offsetX, offsetY, unscaledWidth * scale, unscaledHeight * scale);
+
+        // node rects
+        nodes.forEach(card =&gt; {
+          const cr = card.getBoundingClientRect();
+          const x = ((cr.left - treeRect.left) / stageScale) * scale + offsetX;
+          const y = ((cr.top  - treeRect.top)  / stageScale) * scale + offsetY;
+          const w = Math.max(3, (cr.width  / stageScale) * scale);
+          const h = Math.max(3, (cr.height / stageScale) * scale);
+          ctx.fillStyle = card.classList.contains(&#x27;selected&#x27;) ? &#x27;rgba(255,201,107,.95)&#x27; : &#x27;rgba(124,196,255,.85)&#x27;;
+          ctx.fillRect(x, y, w, h);
+        });
+
+        // viewport rect
+        const visibleW  = inner.clientWidth  / stageScale;
+        const visibleH  = inner.clientHeight / stageScale;
+        const viewportX = (inner.scrollLeft  / stageScale) * scale + offsetX;
+        const viewportY = (inner.scrollTop   / stageScale) * scale + offsetY;
+        ctx.strokeStyle = &#x27;rgba(255,255,255,.95)&#x27;;
+        ctx.lineWidth   = 1.5;
+        ctx.strokeRect(viewportX, viewportY, visibleW * scale, visibleH * scale);
+
+        nodeCount = `${nodes.length} nodes`;
+      }
+
+      const img = _offCanvas.toDataURL(&#x27;image/png&#x27;);
+      if (window.parent &amp;&amp; window.parent !== window) {
+        window.parent.postMessage({
+          source: &#x27;orgChartPro&#x27;,
+          type: &#x27;minimap&#x27;,
+          img,
+          nodeCount,
+          scrollLeft:   inner.scrollLeft,
+          scrollTop:    inner.scrollTop,
+          scrollWidth:  inner.scrollWidth,
+          scrollHeight: inner.scrollHeight,
+          clientWidth:  inner.clientWidth,
+          clientHeight: inner.clientHeight,
+          canvasWidth:  CW,
+          canvasHeight: CH,
+          mmScale,
+          mmOffsetX,
+          mmOffsetY,
+          mmStageScale,
+        }, &#x27;*&#x27;);
+      }
+    } catch(e){ console.warn(&#x27;broadcastMiniMap error&#x27;, e); }
+  }
+  function debouncedBroadcastMiniMap(){
+    if (_miniMapTimer) clearTimeout(_miniMapTimer);
+    _miniMapTimer = setTimeout(broadcastMiniMap, 60);
+  }
+  // Hook into scroll and draw events
+  (function waitForEls(){
+    const inner = document.getElementById(&#x27;canvasInner&#x27;);
+    const canvas = document.getElementById(&#x27;miniMapCanvas&#x27;);
+    if (!inner || !canvas) { setTimeout(waitForEls, 200); return; }
+    inner.addEventListener(&#x27;scroll&#x27;, debouncedBroadcastMiniMap, { passive: true });
+    // Patch drawMiniMap to also broadcast after each draw
+    const origDraw = window.drawMiniMap;
+    if (typeof origDraw === &#x27;function&#x27;) {
+      window.drawMiniMap = function(){ origDraw(); debouncedBroadcastMiniMap(); };
+    }
+    // Observe minimap canvas mutations (size changes)
+    const mo = new MutationObserver(debouncedBroadcastMiniMap);
+    mo.observe(canvas, { attributes: true });
+    // Also broadcast on resize
+    window.addEventListener(&#x27;resize&#x27;, debouncedBroadcastMiniMap, { passive: true });
+    broadcastMiniMap();
+  })();
 
 })();
 &lt;/script&gt;
@@ -7563,9 +8038,23 @@ Upload or load a CSV, detect and apply your headers, then click Render to build 
             <span id="proFooterSelectionStat" class="pro-hem-chip">Selected <strong>0</strong></span>
           </div>
         </div>
+      </div><!-- /.pro-frame-shell -->
+      </div><!-- /.pro-page-main-col -->
+
+      <!-- Sticky minimap sidebar -->
+      <div class="pro-minimap-sidebar">
+        <div class="pro-minimap-panel">
+          <div class="pro-minimap-header">
+            <span>Mini Map</span>
+            <span id="proOuterMiniMapMeta">—</span>
+          </div>
+          <canvas id="proMiniMapCanvas" width="220" height="120"></canvas>
+          <div class="pro-minimap-footer">Click to navigate</div>
+        </div>
       </div>
-    </div>
-  </div>
+
+    </div><!-- /.pro-page-body -->
+  </div><!-- /.pro-page -->
 
   <footer id="appFooter">
     <div class="footer-inner">
@@ -8162,7 +8651,7 @@ Object.entries(stateAliases).forEach(([alias, path]) => {
                 dom.statusBar.appendChild(pill);
       }
       updateAppHeaderStatus();
-      if (document.body.classList.contains("page-pro") || document.body.classList.contains("pro-page-open")) {
+      if (document.body.classList.contains("page-pro")) {
         window.setTimeout(syncProTheme, 0);
       }
     }
@@ -9394,7 +9883,13 @@ Object.entries(stateAliases).forEach(([alias, path]) => {
         dom.filterReportRootSelect.addEventListener("change", applyFilterMenuState);
       }
       if (dom.filterTextInput) {
-        dom.filterTextInput.addEventListener("input", applyFilterMenuState);
+        (function(){
+          let _ft = null;
+          dom.filterTextInput.addEventListener("input", () => {
+            if (_ft) clearTimeout(_ft);
+            _ft = setTimeout(applyFilterMenuState, 200);
+          });
+        })();
       }
       if (dom.applyFilterMenuButton) {
         dom.applyFilterMenuButton.addEventListener("click", applyFilterMenuState);
@@ -9626,8 +10121,43 @@ Object.entries(stateAliases).forEach(([alias, path]) => {
       downloadTextFile(tableToCsv(headers, rows), `org_chart_validation_${new Date().toISOString().slice(0,10)}.csv`, "text/csv;charset=utf-8");
     }
 
+    // Manage the search results bar — called from renderMainView.
+    // Lives outside so the Clear button listener is wired exactly once.
+    (function() {
+      const bar = document.getElementById("searchResultsBar");
+      if (!bar) return;
+      bar.innerHTML = `<span>Found <strong class="srb-count">0</strong> positions matching <strong class="srb-query"></strong></span><button class="srb-clear" type="button" aria-label="Clear search">✕ Clear</button>`;
+      bar.querySelector(".srb-clear").addEventListener("click", () => {
+        dom.searchInput.value = "";
+        dom.searchInput.classList.remove("search-not-found-active");
+        const span = bar.querySelector("span");
+        if (span) span.textContent = "Awaiting input";
+        const sl = document.getElementById("searchStatusLabel");
+        if (sl) { sl.textContent = "Awaiting input"; sl.className = "search-status-label"; }
+        if (state.org) renderMainView();
+        dom.searchInput.focus();
+      });
+    })();
+
+    function updateSearchResultsBar(visible, count, query) {
+      const bar = document.getElementById("searchResultsBar");
+      if (!bar) return;
+      if (!visible) { bar.hidden = true; return; }
+      const countEl = bar.querySelector(".srb-count");
+      const queryEl = bar.querySelector(".srb-query");
+      if (countEl) countEl.textContent = count;
+      if (queryEl) queryEl.textContent = query;
+      bar.querySelector(".srb-count").previousSibling && (bar.querySelector("span").firstChild.textContent = "");
+      // Fix plural in the span text
+      const span = bar.querySelector("span");
+      if (span) span.innerHTML = `Found <strong class="srb-count">${count}</strong> position${count === 1 ? "" : "s"} matching <strong class="srb-query">${escapeHtml(query)}</strong>`;
+      bar.hidden = false;
+    }
+
     // Re-render the org view based on current state (main or drilldown).
     function renderMainView() {
+      if (!state.org) return;
+      if (!state.org.nodesByPosition) return;
       const query = dom.searchInput.value.trim().toLowerCase();
       const changedSet = getChangedPositionsSet();
       const hasActiveFilter = getActiveFilterCount() > 0;
@@ -9651,9 +10181,32 @@ Object.entries(stateAliases).forEach(([alias, path]) => {
         positionsToDisplay = [...state.org.roots];
       }
 
+      const _searchHasQuery = Boolean(dom.searchInput.value.trim());
+      const _noResults = positionsToDisplay.length === 0;
+      const _q = dom.searchInput.value.trim();
+
+      // Update the sidebar status label
+      const _statusLabel = document.getElementById("searchStatusLabel");
+      if (_statusLabel) {
+        if (!_searchHasQuery) {
+          _statusLabel.textContent = "Awaiting input";
+          _statusLabel.className = "search-status-label";
+        } else if (_noResults) {
+          _statusLabel.textContent = `No position found for "${_q}"`;
+          _statusLabel.className = "search-status-label state-not-found";
+        } else {
+          const _c = positionsToDisplay.length;
+          _statusLabel.textContent = `${_c} position${_c === 1 ? "" : "s"} found`;
+          _statusLabel.className = "search-status-label state-found";
+        }
+      }
+      if (dom.searchInput) dom.searchInput.classList.toggle("search-not-found-active", _searchHasQuery && _noResults);
+
+      updateSearchResultsBar(_searchHasQuery && !_noResults, positionsToDisplay.length, _q);
+
       dom.orgView.innerHTML = "";
-      if (positionsToDisplay.length === 0) {
-        dom.orgView.appendChild(createEmptyNotice("No matching cards. Try a different search or filter."));
+      if (_noResults) {
+        if (!_searchHasQuery) dom.orgView.appendChild(createEmptyNotice("No matching cards. Try a different search or filter."));
         return;
       }
 
@@ -10389,18 +10942,33 @@ Object.entries(stateAliases).forEach(([alias, path]) => {
     });
 
     // Attach an event handler so the UI reacts to user actions.
-    dom.searchInput.addEventListener("input", () => {
-      // Branch logic depending on current conditions.
-      if (!state.org) return;
-      // Branch logic depending on current conditions.
-      if (state.currentDrillRootPosition) {
-        // Re-render the org view based on current state (main or drilldown).
-        renderDrilldownView(state.currentDrillRootPosition);
-            } else {
-        // Re-render the org view based on current state (main or drilldown).
-        renderMainView();
-      }
-    });
+    (function() {
+      let _searchTimer = null;
+      dom.searchInput.addEventListener("input", () => {
+        if (!state.org) return;
+        if (_searchTimer) clearTimeout(_searchTimer);
+        _searchTimer = setTimeout(() => {
+          _searchTimer = null;
+          if (state.currentDrillRootPosition) {
+            renderDrilldownView(state.currentDrillRootPosition);
+          } else {
+            renderMainView();
+          }
+        }, 180);
+      });
+      // Clear feedback on Escape
+      dom.searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          dom.searchInput.value = "";
+          dom.searchInput.classList.remove("search-not-found-active");
+          const _sl = document.getElementById("searchStatusLabel");
+          if (_sl) { _sl.textContent = "Awaiting input"; _sl.className = "search-status-label"; }
+          const _rb = document.getElementById("searchResultsBar");
+          if (_rb) _rb.hidden = true;
+          if (state.org) renderMainView();
+        }
+      });
+    })();
 
     // Attach an event handler so the UI reacts to user actions.
     dom.exportButton.addEventListener("click", exportCsv);
@@ -10833,9 +11401,33 @@ initCardFirstUI();
       toggleButton.classList.toggle("primary", isExpanded);
     }
 
+    function resetProFrameLayout() {
+      const frame = document.getElementById("proPageFrame");
+      const shell = document.querySelector(".pro-frame-shell");
+      if (shell) {
+        shell.style.height = "";
+        shell.style.minHeight = "";
+        shell.style.maxHeight = "";
+      }
+      if (frame) {
+        frame.style.height = "";
+        frame.style.minHeight = "";
+        frame.style.maxHeight = "";
+      }
+    }
+
     function setProExpanded(isExpanded) {
       document.body.classList.toggle("pro-expanded", !!isExpanded);
+      resetProFrameLayout();
       syncProExpandButton();
+      // Fire across multiple frames — class change + layout + hem footer all need to settle
+      window.requestAnimationFrame(() => {
+        syncProFrameHeight();
+        window.requestAnimationFrame(() => {
+          syncProFrameHeight();
+          setTimeout(syncProFrameHeight, 100);
+        });
+      });
     }
 
     function openProPage() {
@@ -10846,11 +11438,21 @@ initCardFirstUI();
       setTopNavigation("pro");
       syncProExpandButton();
       updateAppHeaderStatus();
+      window.requestAnimationFrame(() => {
+        syncProFrameHeight();
+        window.requestAnimationFrame(() => {
+          syncProFrameHeight();
+          setTimeout(syncProFrameHeight, 100);
+        });
+      });
     }
 
     function closeProPage() {
       document.body.classList.remove("page-pro");
       setProExpanded(false);
+      resetProFrameLayout();
+      const proPage = document.getElementById("proPage");
+      if (proPage) proPage.scrollTop = 0;
       document.getElementById("proPage")?.setAttribute("aria-hidden","true");
       setTopNavigation("main");
       updateAppHeaderStatus();
@@ -12552,6 +13154,10 @@ initCardFirstUI();
       isReady: false
     };
 
+    function _proEscHtml(s) {
+      return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
     function getCurrentAppCsvPayload() {
       const csvTextarea = document.getElementById("csvTextarea");
       const mapping = state?.mapping || {};
@@ -12635,27 +13241,37 @@ initCardFirstUI();
       }
     }
 
-    function updateProFooterSummary(meta = {}) {
-      const datasetEl = document.getElementById("proFooterDatasetStat");
-      const searchEl = document.getElementById("proFooterSearchStat");
-      const issuesEl = document.getElementById("proFooterIssuesStat");
-      const selectionEl = document.getElementById("proFooterSelectionStat");
-
-      const totalNodes = Number.isFinite(Number(meta.totalNodes)) ? Number(meta.totalNodes) : 0;
-      const filteredRows = Number.isFinite(Number(meta.filteredRows)) ? Number(meta.filteredRows) : totalNodes;
-      const issues = Number.isFinite(Number(meta.issues)) ? Number(meta.issues) : 0;
-      const selected = Number.isFinite(Number(meta.selected)) ? Number(meta.selected) : 0;
-      const search = String(meta.search || "").trim();
-
-      if (datasetEl) datasetEl.innerHTML = `Dataset <strong>${filteredRows}/${totalNodes || 0} visible</strong>`;
-      if (searchEl) searchEl.innerHTML = `Search <strong>${escapeHtml(search || "All records")}</strong>`;
-      if (selectionEl) selectionEl.innerHTML = `Selected <strong>${selected}</strong>`;
-      if (issuesEl) {
-        issuesEl.innerHTML = `Validation <strong>${issues} issue${issues === 1 ? "" : "s"}</strong>`;
-        issuesEl.classList.toggle("status-ok", issues === 0);
-        issuesEl.classList.toggle("status-warn", issues > 0);
+    const updateProFooterSummary = (function() {
+      let _pendingMeta = null;
+      let _timer = null;
+      const datasetEl = () => document.getElementById("proFooterDatasetStat");
+      const searchEl  = () => document.getElementById("proFooterSearchStat");
+      const issuesEl  = () => document.getElementById("proFooterIssuesStat");
+      const selEl     = () => document.getElementById("proFooterSelectionStat");
+      function flush() {
+        _timer = null;
+        const meta = _pendingMeta || {};
+        _pendingMeta = null;
+        const totalNodes  = Number.isFinite(Number(meta.totalNodes))  ? Number(meta.totalNodes)  : 0;
+        const filteredRows= Number.isFinite(Number(meta.filteredRows)) ? Number(meta.filteredRows): totalNodes;
+        const issues  = Number.isFinite(Number(meta.issues))   ? Number(meta.issues)   : 0;
+        const selected= Number.isFinite(Number(meta.selected)) ? Number(meta.selected) : 0;
+        const search  = String(meta.search || "").trim();
+        const de = datasetEl(), se = searchEl(), ie = issuesEl(), sel = selEl();
+        if (de) de.innerHTML = `Dataset <strong>${filteredRows}/${totalNodes || 0} visible</strong>`;
+        if (se) se.innerHTML = `Search <strong>${_proEscHtml(search || "All records")}</strong>`;
+        if (sel) sel.innerHTML = `Selected <strong>${selected}</strong>`;
+        if (ie) {
+          ie.innerHTML = `Validation <strong>${issues} issue${issues === 1 ? "" : "s"}</strong>`;
+          ie.classList.toggle("status-ok", issues === 0);
+          ie.classList.toggle("status-warn", issues > 0);
+        }
       }
-    }
+      return function(meta = {}) {
+        _pendingMeta = meta;
+        if (!_timer) _timer = setTimeout(flush, 150);
+      };
+    })();
 
     function setProStatus(message) {
       const status = document.getElementById("proPageStatus");
@@ -12663,8 +13279,8 @@ initCardFirstUI();
     }
 
     function syncProTheme() {
-      const activeTheme = state?.currentThemeId || state?.themeKey || state?.theme || "default";
       const rootStyles = getComputedStyle(document.documentElement);
+      const activeTheme = rootStyles.getPropertyValue("--theme-id").trim() || localStorage.getItem("csvOrgCardsTheme") || "default";
       const themeVars = {
         "--background": rootStyles.getPropertyValue("--background").trim(),
         "--panel": rootStyles.getPropertyValue("--panel").trim(),
@@ -12732,6 +13348,36 @@ initCardFirstUI();
           if (event.data.type === "height") {
             return;
           }
+          if (event.data.type === "minimap") {
+            const d = event.data;
+            const outerCanvas = document.getElementById("proMiniMapCanvas");
+            const metaEl = document.getElementById("proOuterMiniMapMeta");
+            if (!outerCanvas) return;
+            const ctx = outerCanvas.getContext("2d");
+            const img = new Image();
+            img.onload = () => {
+              outerCanvas.width  = outerCanvas.offsetWidth  || 220;
+              outerCanvas.height = outerCanvas.offsetHeight || 120;
+              ctx.clearRect(0, 0, outerCanvas.width, outerCanvas.height);
+              ctx.drawImage(img, 0, 0, outerCanvas.width, outerCanvas.height);
+            };
+            img.src = d.img;
+            if (metaEl) metaEl.textContent = d.nodeCount || "—";
+            // Store the full draw state for accurate click-to-navigate
+            outerCanvas._mmState = {
+              // scroll/viewport
+              clientWidth:  d.clientWidth,
+              clientHeight: d.clientHeight,
+              // draw math (from inner canvas coordinate space)
+              canvasWidth:     d.canvasWidth,
+              canvasHeight:    d.canvasHeight,
+              mmScale:         d.mmScale,
+              mmOffsetX:       d.mmOffsetX,
+              mmOffsetY:       d.mmOffsetY,
+              mmStageScale:    d.mmStageScale,
+            };
+            return;
+          }
         });
       }
 
@@ -12783,42 +13429,73 @@ initCardFirstUI();
     }
 
     function syncProFrameHeight() {
-      const frame = document.getElementById("proPageFrame");
-      const footer = document.getElementById("proHemFooter");
-      const shell = document.querySelector(".pro-frame-shell");
-      const body = document.querySelector(".pro-page-body");
-      const header = document.querySelector(".pro-page-header");
-      const panel = body ? body.querySelector(":scope > .panel") : null;
+      const frame    = document.getElementById("proPageFrame");
+      const shell    = document.querySelector(".pro-frame-shell");
+      const header   = document.querySelector(".pro-page-header");
+      const hemFoot  = document.getElementById("proHemFooter");
+      const body     = document.querySelector(".pro-page-body");
       if (!frame || !shell) return;
 
-      const footerHeight = footer ? footer.offsetHeight : 54;
-      const headerHeight = header ? header.offsetHeight : 76;
-      const bodyStyle = body ? window.getComputedStyle(body) : null;
-      const bodyPaddingTop = bodyStyle ? parseFloat(bodyStyle.paddingTop) || 0 : 0;
-      const bodyPaddingBottom = bodyStyle ? parseFloat(bodyStyle.paddingBottom) || 0 : 0;
-      const bodyGap = bodyStyle ? parseFloat(bodyStyle.rowGap || bodyStyle.gap) || 0 : 0;
-      const panelHeight = (panel && !document.body.classList.contains("pro-expanded")) ? panel.offsetHeight : 0;
       const isExpanded = document.body.classList.contains("pro-expanded");
 
       if (isExpanded) {
-        const expandedShell = Math.max(360, window.innerHeight - headerHeight);
-        shell.style.height = `${expandedShell}px`;
-        shell.style.minHeight = `${expandedShell}px`;
-        frame.style.height = `${Math.max(240, expandedShell - footerHeight)}px`;
-        frame.style.minHeight = "0px";
-        return;
-      }
+        // Shell fills the body (which fills the pro-page minus the header)
+        const headerH  = header  ? header.offsetHeight  : 56;
+        const hemH     = hemFoot ? hemFoot.offsetHeight : 48;
+        const bodyH    = Math.max(100, window.innerHeight - headerH);
+        const frameH   = Math.max(60, bodyH - hemH);
 
-      const available = window.innerHeight - headerHeight - bodyPaddingTop - bodyPaddingBottom - panelHeight - bodyGap - 10;
-      const shellHeight = Math.max(520, available);
-      shell.style.height = `${shellHeight}px`;
-      shell.style.minHeight = `${shellHeight}px`;
-      frame.style.height = `${Math.max(320, shellHeight - footerHeight)}px`;
-      frame.style.minHeight = "0px";
+        shell.style.height    = bodyH + "px";
+        shell.style.minHeight = bodyH + "px";
+        shell.style.maxHeight = bodyH + "px";
+        frame.style.height    = frameH + "px";
+        frame.style.minHeight = frameH + "px";
+        frame.style.maxHeight = frameH + "px";
+      } else {
+        // Normal mode: shell size is driven by CSS clamp — just pin the iframe
+        // to the shell's actual rendered height minus the hem footer
+        const shellH  = shell.offsetHeight || 600;
+        const hemH    = hemFoot ? hemFoot.offsetHeight : 48;
+        const frameH  = Math.max(60, shellH - hemH);
+
+        shell.style.height    = "";
+        shell.style.minHeight = "";
+        shell.style.maxHeight = "";
+        frame.style.height    = frameH + "px";
+        frame.style.minHeight = frameH + "px";
+        frame.style.maxHeight = frameH + "px";
+      }
     }
 
     wireProPageBridge();
     window.addEventListener("resize", syncProFrameHeight);
+
+    // ── Outer minimap click-to-navigate ──
+    (function(){
+      const canvas = document.getElementById("proMiniMapCanvas");
+      if (!canvas) return;
+      canvas.addEventListener("click", (e) => {
+        const s = canvas._mmState;
+        if (!s) return;
+        const rect = canvas.getBoundingClientRect();
+
+        // Click position in outer canvas pixels
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        // Scale click coords from outer canvas size → inner canvas coordinate space
+        const scaleToInner = s.canvasWidth / (rect.width || 1);
+        const innerX = clickX * scaleToInner;
+        const innerY = clickY * scaleToInner;
+
+        // Identical math to inner handleMiniMapClick:
+        // targetScroll = ((innerClick - offset) / mmScale) * stageScale - viewport/2
+        const targetX = Math.max(0, ((innerX - s.mmOffsetX) / s.mmScale) * s.mmStageScale - s.clientWidth  / 2);
+        const targetY = Math.max(0, ((innerY - s.mmOffsetY) / s.mmScale) * s.mmStageScale - s.clientHeight / 2);
+
+        postToProFrame({ type: "scrollTo", scrollLeft: targetX, scrollTop: targetY });
+      });
+    })();
 
   </script>
 </body>
