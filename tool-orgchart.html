@@ -2601,11 +2601,20 @@
       extraFieldsWrap.hidden = false;
     }
 
+    async function readCsvWithFallback(file) {
+      var buf = await file.arrayBuffer();
+      try {
+        return new TextDecoder('utf-8', { fatal: true }).decode(buf);
+      } catch (e) {
+        return new TextDecoder('windows-1252').decode(buf);
+      }
+    }
+
     async function handleFileUpload(evt) {
       var file = evt.target.files && evt.target.files[0];
       if (!file) return;
       try {
-        var text = await file.text();
+        var text = await readCsvWithFallback(file);
         var parsed = parseCSV(text);
         if (!parsed.headers.length) throw new Error('No headers detected in CSV.');
 
