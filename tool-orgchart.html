@@ -2683,11 +2683,15 @@
         reportsToHeader.value = autoPickHeader(parsed.headers, ['reports to','reportsto','supervisor','manager','parent','reportsTo']) || '';
 
         // Populate optional field maps
-        populateFieldSelect(mapName,    parsed.headers, true, ['name','employee','full name','fullname','person']);
-        populateFieldSelect(mapTitle,   parsed.headers, true, ['title','job title','jobtitle','role']);
-        populateFieldSelect(mapSection, parsed.headers, true, ['section','department','dept','team','division','group']);
-        populateFieldSelect(mapRank,    parsed.headers, true, ['rank','grade','level','band','pay grade']);
-        populateFieldSelect(mapService, parsed.headers, true, ['service','service component','component','svc']);
+        populateFieldSelect(mapName,          parsed.headers, true, ['name','employee','full name','fullname','person']);
+        populateFieldSelect(mapTitle,         parsed.headers, true, ['title','position description','job title','jobtitle','role']);
+        populateFieldSelect(mapUnit,          parsed.headers, true, ['unit']);
+        populateFieldSelect(mapUnitDesc,      parsed.headers, true, ['unit description']);
+        populateFieldSelect(mapSection,       parsed.headers, true, ['section','department','dept','team','division','group']);
+        populateFieldSelect(mapSectionDesc,   parsed.headers, true, ['section description']);
+        populateFieldSelect(mapReportsToDesc, parsed.headers, true, ['reports to description','supervisor description','manager description']);
+        populateFieldSelect(mapRank,          parsed.headers, true, ['rank','grade','level','band','pay grade']);
+        populateFieldSelect(mapService,       parsed.headers, true, ['service','service component','component','svc']);
 
         state.extraCardFields = [];
         populateExtraFields();
