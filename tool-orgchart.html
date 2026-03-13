@@ -404,8 +404,9 @@
       background: rgba(0,0,0,.45);
       color: var(--text);
       font-family: 'Share Tech Mono', monospace;
-      font-size: 11px;
-      letter-spacing: .03em;
+      font-size: 10px;
+      line-height: 1.2;
+      letter-spacing: .02em;
       margin-bottom: 6px;
       box-sizing: border-box;
       outline: none;
@@ -537,21 +538,47 @@
     }
 
     /* Field mapping rows */
+    .map-subgroup {
+      margin: 10px 0 12px;
+      padding: 10px 10px 8px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.02);
+    }
+    .map-subgroup-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--teal-dim);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin: 0 0 4px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+    .map-subgroup-note {
+      font-size: 9px;
+      color: var(--muted);
+      line-height: 1.25;
+      margin: 0 0 8px;
+      overflow-wrap: anywhere;
+    }
     .map-row {
       display: grid;
-      grid-template-columns: 80px 1fr;
+      grid-template-columns: minmax(98px, 116px) minmax(0, 1fr);
       gap: 8px;
-      align-items: center;
+      align-items: start;
       margin-bottom: 8px;
     }
     .map-label {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: bold;
       color: var(--muted);
-      text-align: right;
-      white-space: nowrap;
-      letter-spacing: .06em;
+      text-align: left;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      line-height: 1.2;
+      letter-spacing: .04em;
       text-transform: uppercase;
+      padding-top: 7px;
     }
     .map-label .required-dot {
       color: #ff8080;
@@ -560,6 +587,7 @@
 
     .map-row select {
       width: 100%;
+      min-width: 0;
       padding: 7px 28px 7px 9px;
       border-radius: 2px;
       border: 1px solid var(--border);
@@ -589,6 +617,16 @@
     .map-row select:disabled {
       opacity: .35;
       cursor: not-allowed;
+    }
+
+    @media (max-width: 1280px) {
+      .map-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+      .map-label {
+        padding-top: 0;
+      }
     }
 
     .panel {
