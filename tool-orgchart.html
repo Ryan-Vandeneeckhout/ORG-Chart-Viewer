@@ -1470,6 +1470,48 @@
       box-sizing: border-box;
     }
 
+    .card-popup select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%),
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.03));
+      background-position:
+        calc(100% - 16px) calc(50% - 2px),
+        calc(100% - 11px) calc(50% - 2px),
+        0 0;
+      background-size: 5px 5px, 5px 5px, 100% 100%;
+      background-repeat: no-repeat;
+      padding-right: 30px;
+    }
+
+    .card-popup select option,
+    .card-popup select optgroup {
+      background: var(--panel2);
+      color: var(--text);
+    }
+
+    .popup-combo {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 154px;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .popup-combo select {
+      min-width: 0;
+    }
+
+    .popup-combo-hint {
+      display: block;
+      margin-top: 5px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: .02em;
+    }
+
     .card-popup input.error-field,
     .card-popup select.error-field {
       border-color: #ff6b6b;
@@ -1888,6 +1930,10 @@
           <span class="map-label">Rank</span>
           <select id="mapRank" disabled><option value="">— none —</option></select>
         </div>
+        <div class="map-row">
+          <span class="map-label">Service</span>
+          <select id="mapService" disabled><option value="">— none —</option></select>
+        </div>
       </div>
 
       <!-- Roots -->
@@ -2074,6 +2120,7 @@
     const mapTitle            = document.getElementById('mapTitle');
     const mapSection          = document.getElementById('mapSection');
     const mapRank             = document.getElementById('mapRank');
+    const mapService          = document.getElementById('mapService');
     const searchInput         = document.getElementById('searchInput');
     const renderBtn           = document.getElementById('renderBtn');
     const resetBtn            = document.getElementById('resetBtn');
@@ -2114,7 +2161,7 @@
     const drawerCloseBtn      = document.getElementById('drawerCloseBtn');
 
     // All field-mapping selects in order
-    const fieldMapSelects = [positionHeader, reportsToHeader, mapName, mapTitle, mapSection, mapRank];
+    const fieldMapSelects = [positionHeader, reportsToHeader, mapName, mapTitle, mapSection, mapRank, mapService];
 
     // Re-populate extra fields whenever a column mapping changes
     fieldMapSelects.forEach(function(sel) {
@@ -2428,7 +2475,8 @@
         mapName.value,
         mapTitle.value,
         mapSection.value,
-        mapRank.value
+        mapRank.value,
+        mapService.value
       ].filter(Boolean));
 
       var available = state.headers.filter(function(h) { return !schemaKeys.has(h); });
@@ -2512,6 +2560,7 @@
         populateFieldSelect(mapTitle,   parsed.headers, true, ['title','job title','jobtitle','role']);
         populateFieldSelect(mapSection, parsed.headers, true, ['section','department','dept','team','division','group']);
         populateFieldSelect(mapRank,    parsed.headers, true, ['rank','grade','level','band','pay grade']);
+        populateFieldSelect(mapService, parsed.headers, true, ['service','service component','component','svc']);
 
         state.extraCardFields = [];
         populateExtraFields();
@@ -2643,6 +2692,7 @@
       var titleKey     = mapTitle.value;
       var sectionKey   = mapSection.value;
       var rankKey      = mapRank.value;
+      var serviceKey   = mapService.value;
 
       if (!positionKey || !reportsToKey) {
         setStatus('Please map both Position and Reports To columns first.', 'error');
@@ -2658,6 +2708,7 @@
         copy.__title     = titleKey   ? String(row[titleKey]   || '').trim() : '';
         copy.__section   = sectionKey ? String(row[sectionKey] || '').trim() : '';
         copy.__rank      = rankKey    ? String(row[rankKey]    || '').trim() : '';
+        copy.__service   = serviceKey ? String(row[serviceKey] || '').trim() : '';
         copy.__rowNumber = index + 2;
         return copy;
       }).filter(function (row) { return row.__position; });
@@ -2740,7 +2791,7 @@
 
       function buildNode(positionName) {
         if (activePath.has(positionName)) {
-          return { cycle: true, position: positionName, reportsTo: '', name:'', title:'', section:'', rank:'', rowNumber:'-', rowData: null, extraData: {}, children: [] };
+          return { cycle: true, position: positionName, reportsTo: '', name:'', title:'', section:'', rank:'', service:'', rowNumber:'-', rowData: null, extraData: {}, children: [] };
         }
         if (renderedNodes.has(positionName)) {
           return null;
@@ -2750,7 +2801,7 @@
         var row = nodeMap.get(positionName);
         if (!row) {
           activePath.delete(positionName);
-          return { cycle: false, position: positionName, reportsTo: '', name:'', title:'', section:'', rank:'', rowNumber:'-', rowData: null, extraData: {}, children: [] };
+          return { cycle: false, position: positionName, reportsTo: '', name:'', title:'', section:'', rank:'', service:'', rowNumber:'-', rowData: null, extraData: {}, children: [] };
         }
         var childNodes = (childrenMap.get(positionName) || []).map(buildNode).filter(function(child) { return !!child; });
         activePath.delete(positionName);
@@ -2768,6 +2819,7 @@
           title:     row.__title,
           section:   row.__section,
           rank:      row.__rank,
+          service:   row.__service,
           rowNumber: row.__rowNumber,
           rowData:   row,
           extraData: extraData,
@@ -3053,9 +3105,10 @@
       var titleKey     = mapTitle.value;
       var sectionKey   = mapSection.value;
       var rankKey      = mapRank.value;
+      var serviceKey   = mapService.value;
 
       // Keys covered by the fixed schema (skip them in the "extra" section)
-      var schemaKeys = new Set([positionKey, reportsToKey, nameKey, titleKey, sectionKey, rankKey].filter(Boolean));
+      var schemaKeys = new Set([positionKey, reportsToKey, nameKey, titleKey, sectionKey, rankKey, serviceKey].filter(Boolean));
 
       // Extra columns from CSV not covered by schema
       var extraHeaders = state.headers.filter(function(h) { return !schemaKeys.has(h); });
@@ -3096,9 +3149,30 @@
       body.className = 'popup-body';
       popup.appendChild(body);
 
+      function getDistinctValues(header, omitValue) {
+        if (!header) return [];
+        var seen = new Set();
+        var values = [];
+        state.rows.forEach(function (row) {
+          var raw = row && header in row ? row[header] : '';
+          var val = String(raw == null ? '' : raw).trim();
+          if (!val) return;
+          if (omitValue != null && val.toLowerCase() === String(omitValue).trim().toLowerCase()) return;
+          var key = val.toLowerCase();
+          if (seen.has(key)) return;
+          seen.add(key);
+          values.push(val);
+        });
+        values.sort(function (a, b) {
+          return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+        });
+        return values;
+      }
+
       // ── Helper: build a labelled input field ──
       // required=true adds a red star; required=false adds "(optional)" tag
-      function makeField(labelText, value, placeholder, required) {
+      function makeField(labelText, value, placeholder, required, csvHeader, options) {
+        options = options || {};
         var f   = document.createElement('div'); f.className = 'popup-field';
         var lbl = document.createElement('label'); lbl.className = 'popup-field-label';
         lbl.textContent = labelText;
@@ -3111,8 +3185,45 @@
         }
         var inp = document.createElement('input'); inp.type = 'text'; inp.value = value;
         if (placeholder) inp.placeholder = placeholder;
-        f.appendChild(lbl); f.appendChild(inp);
-        return { field: f, input: inp };
+
+        var combo = document.createElement('div');
+        combo.className = 'popup-combo';
+        combo.appendChild(inp);
+
+        var distinctValues = options.values || getDistinctValues(csvHeader, options.omitValue);
+        var pick = null;
+        if (distinctValues.length) {
+          pick = document.createElement('select');
+          var chooseOpt = document.createElement('option');
+          chooseOpt.value = '';
+          chooseOpt.textContent = options.selectLabel || 'Pick CSV value…';
+          pick.appendChild(chooseOpt);
+          distinctValues.forEach(function (val) {
+            var optEl = document.createElement('option');
+            optEl.value = val;
+            optEl.textContent = val;
+            pick.appendChild(optEl);
+          });
+          pick.addEventListener('change', function () {
+            if (!pick.value) return;
+            inp.value = pick.value;
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+            inp.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+          combo.appendChild(pick);
+        }
+
+        f.appendChild(lbl);
+        f.appendChild(combo);
+
+        if (pick) {
+          var hint = document.createElement('span');
+          hint.className = 'popup-combo-hint';
+          hint.textContent = 'Type any value or choose one already in the CSV.';
+          f.appendChild(hint);
+        }
+
+        return { field: f, input: inp, select: pick, values: distinctValues };
       }
 
       // ── Section divider ──
@@ -3134,7 +3245,7 @@
       editLeft.className = 'popup-col';
 
       editLeft.appendChild(makeDivider('Required'));
-      var posField = makeField('Position ID', position, '', true);
+      var posField = makeField('Position ID', position, '', true, positionKey, { omitValue: position, selectLabel: 'Pick position…' });
       editLeft.appendChild(posField.field);
 
       // Reports To (required)
@@ -3143,6 +3254,12 @@
       rtLbl.innerHTML = 'Reports To <span class="req">*</span>';
       var rtBadge = document.createElement('span'); rtBadge.className = 'popup-changed-badge'; rtBadge.textContent = 'will move'; rtBadge.style.display = 'none';
       rtLbl.appendChild(rtBadge);
+
+      var rtInput = document.createElement('input');
+      rtInput.type = 'text';
+      rtInput.value = currentReportsTo;
+      rtInput.placeholder = 'Leave blank to make this a root';
+
       var rtSel = document.createElement('select');
       var blankOpt = document.createElement('option'); blankOpt.value = ''; blankOpt.textContent = '— none (root) —';
       rtSel.appendChild(blankOpt);
@@ -3153,22 +3270,39 @@
         rtSel.appendChild(opt);
       });
       rtSel.addEventListener('change', function () {
-        rtBadge.style.display = rtSel.value !== currentReportsTo ? '' : 'none';
+        rtInput.value = rtSel.value;
+        rtBadge.style.display = rtInput.value.trim() !== currentReportsTo ? '' : 'none';
       });
-      rtField.appendChild(rtLbl); rtField.appendChild(rtSel);
+      rtInput.addEventListener('input', function () {
+        rtBadge.style.display = rtInput.value.trim() !== currentReportsTo ? '' : 'none';
+      });
+
+      var rtCombo = document.createElement('div');
+      rtCombo.className = 'popup-combo';
+      rtCombo.appendChild(rtInput);
+      rtCombo.appendChild(rtSel);
+
+      rtField.appendChild(rtLbl);
+      rtField.appendChild(rtCombo);
+      var rtHint = document.createElement('span');
+      rtHint.className = 'popup-combo-hint';
+      rtHint.textContent = 'Type any position or choose one already in the CSV.';
+      rtField.appendChild(rtHint);
       editLeft.appendChild(rtField);
 
-      var nameField  = nameKey    ? makeField('Name',    getField(nameKey),    'Full name',   false) : null;
-      var titleField = titleKey   ? makeField('Title',   getField(titleKey),   'Job title',   false) : null;
-      var secField   = sectionKey ? makeField('Section', getField(sectionKey), 'Department',  false) : null;
-      var rankField  = rankKey    ? makeField('Rank',    getField(rankKey),    'Grade/level', false) : null;
+      var nameField    = nameKey    ? makeField('Name',    getField(nameKey),    'Full name',   false, nameKey, { selectLabel: 'Pick name…' }) : null;
+      var titleField   = titleKey   ? makeField('Title',   getField(titleKey),   'Job title',   false, titleKey, { selectLabel: 'Pick title…' }) : null;
+      var secField     = sectionKey ? makeField('Section', getField(sectionKey), 'Department',  false, sectionKey, { selectLabel: 'Pick section…' }) : null;
+      var rankField    = rankKey    ? makeField('Rank',    getField(rankKey),    'Grade/level', false, rankKey, { selectLabel: 'Pick rank…' }) : null;
+      var serviceField = serviceKey ? makeField('Service', getField(serviceKey), 'Service/component', false, serviceKey, { selectLabel: 'Pick service…' }) : null;
 
-      if (nameField || titleField || secField || rankField) {
+      if (nameField || titleField || secField || rankField || serviceField) {
         editLeft.appendChild(makeDivider('Card Fields'));
-        if (nameField)  editLeft.appendChild(nameField.field);
-        if (titleField) editLeft.appendChild(titleField.field);
-        if (secField)   editLeft.appendChild(secField.field);
-        if (rankField)  editLeft.appendChild(rankField.field);
+        if (nameField)    editLeft.appendChild(nameField.field);
+        if (titleField)   editLeft.appendChild(titleField.field);
+        if (secField)     editLeft.appendChild(secField.field);
+        if (rankField)    editLeft.appendChild(rankField.field);
+        if (serviceField) editLeft.appendChild(serviceField.field);
       }
 
       editPanel.appendChild(editLeft);
@@ -3181,7 +3315,7 @@
       if (extraHeaders.length > 0) {
         editRight.appendChild(makeDivider('Additional Data'));
         extraHeaders.forEach(function(h) {
-          var ef = makeField(h, getField(h), '', false);
+          var ef = makeField(h, getField(h), '', false, h, { selectLabel: 'Pick value…' });
           editExtraInputs[h] = ef.input;
           editRight.appendChild(ef.field);
         });
@@ -3221,20 +3355,22 @@
       addLeft.appendChild(addHint);
 
       addLeft.appendChild(makeDivider('Required'));
-      var addPosF = makeField('Position ID', '', 'Unique ID e.g. POS-042', true);
+      var addPosF = makeField('Position ID', '', 'Unique ID e.g. POS-042', true, positionKey, { selectLabel: 'Pick position…' });
       addLeft.appendChild(addPosF.field);
 
-      var addNameF  = nameKey    ? makeField('Name',    '', 'Full name',   false) : null;
-      var addTitleF = titleKey   ? makeField('Title',   '', 'Job title',   false) : null;
-      var addSecF   = sectionKey ? makeField('Section', '', 'Department',  false) : null;
-      var addRankF  = rankKey    ? makeField('Rank',    '', 'Grade/level', false) : null;
+      var addNameF    = nameKey    ? makeField('Name',    '', 'Full name',   false, nameKey, { selectLabel: 'Pick name…' }) : null;
+      var addTitleF   = titleKey   ? makeField('Title',   '', 'Job title',   false, titleKey, { selectLabel: 'Pick title…' }) : null;
+      var addSecF     = sectionKey ? makeField('Section', '', 'Department',  false, sectionKey, { selectLabel: 'Pick section…' }) : null;
+      var addRankF    = rankKey    ? makeField('Rank',    '', 'Grade/level', false, rankKey, { selectLabel: 'Pick rank…' }) : null;
+      var addServiceF = serviceKey ? makeField('Service', '', 'Service/component', false, serviceKey, { selectLabel: 'Pick service…' }) : null;
 
-      if (addNameF || addTitleF || addSecF || addRankF) {
+      if (addNameF || addTitleF || addSecF || addRankF || addServiceF) {
         addLeft.appendChild(makeDivider('Card Fields'));
-        if (addNameF)  addLeft.appendChild(addNameF.field);
-        if (addTitleF) addLeft.appendChild(addTitleF.field);
-        if (addSecF)   addLeft.appendChild(addSecF.field);
-        if (addRankF)  addLeft.appendChild(addRankF.field);
+        if (addNameF)    addLeft.appendChild(addNameF.field);
+        if (addTitleF)   addLeft.appendChild(addTitleF.field);
+        if (addSecF)     addLeft.appendChild(addSecF.field);
+        if (addRankF)    addLeft.appendChild(addRankF.field);
+        if (addServiceF) addLeft.appendChild(addServiceF.field);
       }
       addPanel.appendChild(addLeft);
 
@@ -3246,7 +3382,7 @@
       if (extraHeaders.length > 0) {
         addRight.appendChild(makeDivider('Additional Data'));
         extraHeaders.forEach(function(h) {
-          var ef = makeField(h, '', '', false);
+          var ef = makeField(h, '', '', false, h, { selectLabel: 'Pick value…' });
           addExtraInputs[h] = ef.input;
           addRight.appendChild(ef.field);
         });
@@ -3296,10 +3432,17 @@
         e.stopPropagation();
         try {
           var newName      = posField.input.value.trim();
-          var newReportsTo = rtSel.value;
+          var newReportsTo = rtInput.value.trim();
 
           if (!newName) { posField.input.classList.add('error-field'); posField.input.focus(); return; }
           posField.input.classList.remove('error-field');
+          if (newReportsTo && newReportsTo.toLowerCase() === newName.toLowerCase()) {
+            rtInput.classList.add('error-field');
+            rtInput.focus();
+            setStatus('A position cannot report to itself.', 'error');
+            return;
+          }
+          rtInput.classList.remove('error-field');
 
           if (newName.toLowerCase() !== position.toLowerCase()) {
             var conflict = state.rows.some(function(r){ return String(r[positionKey]||'').trim().toLowerCase() === newName.toLowerCase(); });
@@ -3308,10 +3451,11 @@
 
           var posChanged     = newName !== position;
           var reportsChanged = newReportsTo !== currentReportsTo;
-          var schemaChanged  = (nameKey    && nameField   && nameField.input.value.trim()   !== getField(nameKey))   ||
-                               (titleKey   && titleField  && titleField.input.value.trim()  !== getField(titleKey))  ||
-                               (sectionKey && secField    && secField.input.value.trim()    !== getField(sectionKey))||
-                               (rankKey    && rankField   && rankField.input.value.trim()   !== getField(rankKey));
+          var schemaChanged  = (nameKey    && nameField    && nameField.input.value.trim()    !== getField(nameKey))    ||
+                               (titleKey   && titleField   && titleField.input.value.trim()   !== getField(titleKey))   ||
+                               (sectionKey && secField     && secField.input.value.trim()     !== getField(sectionKey)) ||
+                               (rankKey    && rankField    && rankField.input.value.trim()    !== getField(rankKey))    ||
+                               (serviceKey && serviceField && serviceField.input.value.trim() !== getField(serviceKey));
           var extraChanged   = extraHeaders.some(function(h){ return editExtraInputs[h].value.trim() !== getField(h); });
 
           if (!posChanged && !reportsChanged && !schemaChanged && !extraChanged) { closeAllPopups(); return; }
@@ -3320,10 +3464,11 @@
             var targetRow = state.rows[rowIndex];
             targetRow[positionKey]  = newName;
             targetRow[reportsToKey] = newReportsTo;
-            if (nameKey    && nameField)  targetRow[nameKey]    = nameField.input.value.trim();
-            if (titleKey   && titleField) targetRow[titleKey]   = titleField.input.value.trim();
-            if (sectionKey && secField)   targetRow[sectionKey] = secField.input.value.trim();
-            if (rankKey    && rankField)  targetRow[rankKey]    = rankField.input.value.trim();
+            if (nameKey    && nameField)    targetRow[nameKey]    = nameField.input.value.trim();
+            if (titleKey   && titleField)   targetRow[titleKey]   = titleField.input.value.trim();
+            if (sectionKey && secField)     targetRow[sectionKey] = secField.input.value.trim();
+            if (rankKey    && rankField)    targetRow[rankKey]    = rankField.input.value.trim();
+            if (serviceKey && serviceField) targetRow[serviceKey] = serviceField.input.value.trim();
             extraHeaders.forEach(function(h){ targetRow[h] = editExtraInputs[h].value.trim(); });
           }
           if (posChanged) {
@@ -3368,10 +3513,11 @@
           state.headers.forEach(function(h){ newRow[h]=''; });
           newRow[positionKey]  = newPos;
           newRow[reportsToKey] = position;
-          if (nameKey    && addNameF)  newRow[nameKey]    = addNameF.input.value.trim();
-          if (titleKey   && addTitleF) newRow[titleKey]   = addTitleF.input.value.trim();
-          if (sectionKey && addSecF)   newRow[sectionKey] = addSecF.input.value.trim();
-          if (rankKey    && addRankF)  newRow[rankKey]    = addRankF.input.value.trim();
+          if (nameKey    && addNameF)    newRow[nameKey]    = addNameF.input.value.trim();
+          if (titleKey   && addTitleF)   newRow[titleKey]   = addTitleF.input.value.trim();
+          if (sectionKey && addSecF)     newRow[sectionKey] = addSecF.input.value.trim();
+          if (rankKey    && addRankF)    newRow[rankKey]    = addRankF.input.value.trim();
+          if (serviceKey && addServiceF) newRow[serviceKey] = addServiceF.input.value.trim();
           extraHeaders.forEach(function(h){ newRow[h] = addExtraInputs[h].value.trim(); });
 
           state.rows.push(newRow);
@@ -3445,10 +3591,13 @@
         body.appendChild(rtEl);
       }
 
-      // ── Section & Rank ──
+      // ── Section & Rank / Service ──
       var hasSection = !!node.section;
-      var hasRank    = !!node.rank;
-      if (hasSection || hasRank) {
+      var useServiceInsteadOfRank = String(node.service || '').trim().toLowerCase() === 'civ';
+      var secondaryLabel = useServiceInsteadOfRank ? 'Service' : 'Rank';
+      var secondaryValue = useServiceInsteadOfRank ? String(node.service || '') : String(node.rank || '');
+      var hasSecondary = useServiceInsteadOfRank || !!secondaryValue;
+      if (hasSection || hasSecondary) {
         var hr = document.createElement('hr');
         hr.className = 'node-divider';
         body.appendChild(hr);
@@ -3462,10 +3611,10 @@
           var sVal = document.createElement('span'); sVal.className = 'node-field-val'; sVal.textContent = node.section;
           sRow.appendChild(sKey); sRow.appendChild(sVal); fieldsEl.appendChild(sRow);
         }
-        if (hasRank) {
+        if (hasSecondary) {
           var rRow = document.createElement('div'); rRow.className = 'node-field';
-          var rKey = document.createElement('span'); rKey.className = 'node-field-key'; rKey.textContent = 'Rank';
-          var rVal = document.createElement('span'); rVal.className = 'node-field-val'; rVal.textContent = node.rank;
+          var rKey = document.createElement('span'); rKey.className = 'node-field-key'; rKey.textContent = secondaryLabel;
+          var rVal = document.createElement('span'); rVal.className = 'node-field-val'; rVal.textContent = secondaryValue;
           rRow.appendChild(rKey); rRow.appendChild(rVal); fieldsEl.appendChild(rRow);
         }
         body.appendChild(fieldsEl);
