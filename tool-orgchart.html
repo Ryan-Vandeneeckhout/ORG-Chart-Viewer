@@ -120,6 +120,45 @@
       margin-top: 6px;
     }
 
+
+    .render-tracker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(0,0,0,.28);
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+    .render-tracker strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+    .render-tracker.ok {
+      border-color: rgba(0,255,209,.28);
+      box-shadow: inset 0 0 0 1px rgba(0,255,209,.06);
+    }
+    .render-tracker.warn {
+      border-color: rgba(255,123,44,.45);
+      color: #ffbf92;
+      box-shadow: inset 0 0 0 1px rgba(255,123,44,.08);
+    }
+    .render-tracker-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 999px;
+      font-size: 10px;
+      line-height: 1;
+      border: 1px solid currentColor;
+    }
+
     .layout {
       display: grid;
       grid-template-columns: 1fr;
@@ -1958,6 +1997,13 @@
             <button id="exportChangedBtn" class="btn-export-changed" disabled>⬇ Export Changed <span class="changed-count" id="changedCount">0</span></button>
             <button id="exportBtn" class="btn-export" disabled>⬇ Export All CSV</button>
             <div id="chartMeta" style="font-size:12px; color:var(--muted);">No chart rendered.</div>
+            <div id="renderTracker" class="render-tracker" aria-live="polite" title="Compares rendered node count to the expected count for the current chart root.">
+              <span>Rendered</span>
+              <strong id="renderedNodeCount">0</strong>
+              <span>/</span>
+              <strong id="expectedNodeCount">0</strong>
+              <span id="renderTrackerBadge" class="render-tracker-badge">OK</span>
+            </div>
           </div>
         </div>
 
@@ -2016,7 +2062,8 @@
       startLeft: 0, startTop: 0,
       highlightRules: [],   // [{id, column, matchType, value, bg, border, label, textColor}]
       hlPresets: {},        // {presetName: [rules array]}
-      extraCardFields: []   // [headerName, ...] — extra CSV columns shown on card
+      extraCardFields: [],  // [headerName, ...] — extra CSV columns shown on card
+      lastExpectedRenderedCount: 0
     };
 
     // DOM refs
@@ -2038,6 +2085,10 @@
     const chartRoot           = document.getElementById('chartRoot');
     const emptyState          = document.getElementById('emptyState');
     const chartMeta           = document.getElementById('chartMeta');
+    const renderTracker       = document.getElementById('renderTracker');
+    const renderedNodeCount   = document.getElementById('renderedNodeCount');
+    const expectedNodeCount   = document.getElementById('expectedNodeCount');
+    const renderTrackerBadge  = document.getElementById('renderTrackerBadge');
     const zoomInBtn           = document.getElementById('zoomInBtn');
     const zoomOutBtn          = document.getElementById('zoomOutBtn');
     const zoomResetBtn        = document.getElementById('zoomResetBtn');
@@ -2676,6 +2727,10 @@
       state.selectedCard = previousSelectedCard && nodeMap.has(previousSelectedCard) ? previousSelectedCard : null;
 
       if (!renderRoot) {
+        state.treeData = null;
+        state.lastExpectedRenderedCount = 0;
+        chartRoot.replaceChildren();
+        updateRenderedNodeTracker(0);
         setStatus('No root nodes found.', 'error');
         return;
       }
@@ -2721,9 +2776,11 @@
       }
 
       state.treeData = buildNode(renderRoot);
+      state.lastExpectedRenderedCount = countTreeNodes(state.treeData);
       chartRoot.replaceChildren();
       chartRoot.appendChild(renderTree(state.treeData));
       chartRoot.style.display = 'flex';
+      updateRenderedNodeTracker(state.lastExpectedRenderedCount);
       emptyState.style.display = 'none';
       zoomInBtn.disabled = false;
       zoomOutBtn.disabled = false;
@@ -2796,6 +2853,38 @@
       return parts.join(' • ');
     }
 
+    function countTreeNodes(node) {
+      if (!node) return 0;
+      var total = node.cycle ? 0 : 1;
+      if (node.children && node.children.length) {
+        node.children.forEach(function(child) { total += countTreeNodes(child); });
+      }
+      return total;
+    }
+
+    function updateRenderedNodeTracker(expectedCount) {
+      if (!renderTracker || !renderedNodeCount || !expectedNodeCount || !renderTrackerBadge) return;
+      if (typeof expectedCount === 'number' && !isNaN(expectedCount)) {
+        state.lastExpectedRenderedCount = expectedCount;
+      }
+      var actualCount = chartRoot ? chartRoot.querySelectorAll('.node[data-position]').length : 0;
+      var expected = Number.isFinite(state.lastExpectedRenderedCount) ? state.lastExpectedRenderedCount : 0;
+      renderedNodeCount.textContent = String(actualCount);
+      expectedNodeCount.textContent = String(expected);
+      var healthy = actualCount === expected;
+      renderTracker.classList.toggle('ok', healthy);
+      renderTracker.classList.toggle('warn', !healthy);
+      renderTrackerBadge.textContent = healthy ? 'OK' : 'CHECK';
+      renderTracker.title = healthy
+        ? 'Rendered node count matches the expected count for the current chart root.'
+        : 'Rendered node count does not match the expected count for the current chart root. Something may have gone wrong during render.';
+    }
+
+    var renderTrackerObserver = new MutationObserver(function() {
+      updateRenderedNodeTracker();
+    });
+    renderTrackerObserver.observe(chartRoot, { childList: true, subtree: true });
+
     function renderRootChips() {
       var term = normalize(searchInput.value);
       rootsList.innerHTML = '';
@@ -2852,10 +2941,14 @@
     // Safe inline re-render — used by card clicks, search, focus btn, etc.
     // Always guards against null treeData and logs errors.
     function safeRerender() {
-      if (!state.treeData) return;
+      if (!state.treeData) {
+        updateRenderedNodeTracker(0);
+        return;
+      }
       try {
         chartRoot.replaceChildren();
         chartRoot.appendChild(renderTree(state.treeData));
+        updateRenderedNodeTracker(countTreeNodes(state.treeData));
         applyHighlights();
       } catch (err) {
         console.error('[OrgChart] safeRerender error:', err);
