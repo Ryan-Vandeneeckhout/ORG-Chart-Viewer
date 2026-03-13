@@ -2343,7 +2343,7 @@
       rootsList.innerHTML = '';
       extraFieldsWrap.hidden = true;
       extraFieldsList.innerHTML = '';
-      chartRoot.innerHTML = '';
+      chartRoot.replaceChildren();
       chartRoot.style.display = 'none';
       chartRoot.style.transform = 'scale(1)';
       emptyState.style.display = 'grid';
@@ -2470,7 +2470,7 @@
 
         rootsWrap.hidden = true;
         rootsList.innerHTML = '';
-        chartRoot.innerHTML = '';
+        chartRoot.replaceChildren();
         chartRoot.style.display = 'none';
         emptyState.style.display = 'grid';
         chartMeta.textContent = 'Loaded ' + state.rows.length + ' rows.';
@@ -2620,19 +2620,30 @@
       var childrenMap = new Map();
       var duplicates = [];
 
+      // Collapse duplicate positions to a single node before building the tree.
+      // This UMR can contain multiple rows for the same position (for example,
+      // multiple incumbents or assignment-history entries). Keeping one node per
+      // position prevents the same card from rendering multiple times.
       cleaned.forEach(function (row) {
         if (nodeMap.has(row.__position)) duplicates.push(row.__position);
         nodeMap.set(row.__position, row);
-        if (!childrenMap.has(row.__position)) childrenMap.set(row.__position, []);
+      });
+
+      var dedupedRows = Array.from(nodeMap.values());
+      dedupedRows.forEach(function (row) {
+        childrenMap.set(row.__position, []);
       });
 
       var roots = [];
-      cleaned.forEach(function (row) {
+      dedupedRows.forEach(function (row) {
         var parent = row.__reportsTo;
         if (!parent || !nodeMap.has(parent) || parent === row.__position) {
           roots.push(row.__position);
         } else {
-          childrenMap.get(parent).push(row.__position);
+          var childList = childrenMap.get(parent);
+          if (childList && childList.indexOf(row.__position) === -1) {
+            childList.push(row.__position);
+          }
         }
       });
 
@@ -2670,18 +2681,23 @@
       }
 
       var activePath = new Set();
+      var renderedNodes = new Set();
 
       function buildNode(positionName) {
         if (activePath.has(positionName)) {
           return { cycle: true, position: positionName, reportsTo: '', name:'', title:'', section:'', rank:'', rowNumber:'-', rowData: null, extraData: {}, children: [] };
         }
+        if (renderedNodes.has(positionName)) {
+          return null;
+        }
         activePath.add(positionName);
+        renderedNodes.add(positionName);
         var row = nodeMap.get(positionName);
         if (!row) {
           activePath.delete(positionName);
           return { cycle: false, position: positionName, reportsTo: '', name:'', title:'', section:'', rank:'', rowNumber:'-', rowData: null, extraData: {}, children: [] };
         }
-        var childNodes = (childrenMap.get(positionName) || []).map(buildNode);
+        var childNodes = (childrenMap.get(positionName) || []).map(buildNode).filter(function(child) { return !!child; });
         activePath.delete(positionName);
 
         // Collect any extra card fields
@@ -2705,7 +2721,7 @@
       }
 
       state.treeData = buildNode(renderRoot);
-      chartRoot.innerHTML = '';
+      chartRoot.replaceChildren();
       chartRoot.appendChild(renderTree(state.treeData));
       chartRoot.style.display = 'flex';
       emptyState.style.display = 'none';
@@ -2838,7 +2854,7 @@
     function safeRerender() {
       if (!state.treeData) return;
       try {
-        chartRoot.innerHTML = '';
+        chartRoot.replaceChildren();
         chartRoot.appendChild(renderTree(state.treeData));
         applyHighlights();
       } catch (err) {
