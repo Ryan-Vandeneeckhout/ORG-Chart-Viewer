@@ -3565,60 +3565,47 @@
       var body = document.createElement('div');
       body.className = 'node-card-body';
 
-      // ── Name (primary title line) ──
-      var nameEl = document.createElement('div');
-      nameEl.className = 'node-title';
-      nameEl.textContent = node.name || '—';
-      body.appendChild(nameEl);
+      var serviceMapped = !!(mapService && mapService.value);
+      var serviceValue = String(node.service == null ? '' : node.service);
+      var rankValue = String(node.rank == null ? '' : node.rank);
+      var useServiceInsteadOfRank = serviceValue.trim().toLowerCase() === 'civ';
 
-      // ── Job Title (subtitle line) ──
-      if (node.title) {
-        var titleEl = document.createElement('div');
-        titleEl.className = 'node-subtitle';
-        titleEl.textContent = node.title;
-        body.appendChild(titleEl);
+      function displayValue(value) {
+        var s = String(value == null ? '' : value).trim();
+        return s ? s : 'IS Blank';
       }
 
-      // ── Reports To line ──
-      if (node.reportsTo) {
-        var rtEl = document.createElement('div');
-        rtEl.className = 'node-reports-to';
-        var rtArrow = document.createTextNode('\u2191 ');
-        var rtSpan = document.createElement('span');
-        rtSpan.textContent = node.reportsTo;
-        rtEl.appendChild(rtArrow);
-        rtEl.appendChild(rtSpan);
-        body.appendChild(rtEl);
+      function appendLabeledRow(label, value) {
+        var row = document.createElement('div');
+        row.className = 'node-field';
+        var key = document.createElement('span');
+        key.className = 'node-field-key';
+        key.textContent = label;
+        var val = document.createElement('span');
+        val.className = 'node-field-val';
+        val.textContent = displayValue(value);
+        row.appendChild(key);
+        row.appendChild(val);
+        fieldsEl.appendChild(row);
       }
 
-      // ── Section & Rank / Service ──
-      var hasSection = !!node.section;
-      var useServiceInsteadOfRank = String(node.service || '').trim().toLowerCase() === 'civ';
-      var secondaryLabel = useServiceInsteadOfRank ? 'Service' : 'Rank';
-      var secondaryValue = useServiceInsteadOfRank ? String(node.service || '') : String(node.rank || '');
-      var hasSecondary = useServiceInsteadOfRank || !!secondaryValue;
-      if (hasSection || hasSecondary) {
-        var hr = document.createElement('hr');
-        hr.className = 'node-divider';
-        body.appendChild(hr);
+      var hr = document.createElement('hr');
+      hr.className = 'node-divider';
+      body.appendChild(hr);
 
-        var fieldsEl = document.createElement('div');
-        fieldsEl.className = 'node-fields';
+      var fieldsEl = document.createElement('div');
+      fieldsEl.className = 'node-fields';
 
-        if (hasSection) {
-          var sRow = document.createElement('div'); sRow.className = 'node-field';
-          var sKey = document.createElement('span'); sKey.className = 'node-field-key'; sKey.textContent = 'Sect';
-          var sVal = document.createElement('span'); sVal.className = 'node-field-val'; sVal.textContent = node.section;
-          sRow.appendChild(sKey); sRow.appendChild(sVal); fieldsEl.appendChild(sRow);
-        }
-        if (hasSecondary) {
-          var rRow = document.createElement('div'); rRow.className = 'node-field';
-          var rKey = document.createElement('span'); rKey.className = 'node-field-key'; rKey.textContent = secondaryLabel;
-          var rVal = document.createElement('span'); rVal.className = 'node-field-val'; rVal.textContent = secondaryValue;
-          rRow.appendChild(rKey); rRow.appendChild(rVal); fieldsEl.appendChild(rRow);
-        }
-        body.appendChild(fieldsEl);
-      }
+      appendLabeledRow('Position:', node.position);
+      appendLabeledRow('Reports To:', node.reportsTo);
+      appendLabeledRow('Name:', node.name);
+      appendLabeledRow('Position Title:', node.title);
+      appendLabeledRow('Section:', node.section);
+      if (!useServiceInsteadOfRank) appendLabeledRow('Rank:', rankValue);
+      if (serviceMapped) appendLabeledRow('Service:', serviceValue);
+      else appendLabeledRow('Service:', '');
+
+      body.appendChild(fieldsEl);
 
       // ── Extra card fields ──
       var extraKeys = node.extraData ? Object.keys(node.extraData).filter(function(k) { return node.extraData[k]; }) : [];
