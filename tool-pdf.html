@@ -1,0 +1,2303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CFB North Bay CSV Comparison Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="shared.js"></script>
+  <style>
+    :root {
+      --bg:            #080808;
+      --panel:         #0e0e0e;
+      --surface:       #161616;
+      --surface-h:     #1a1a1a;
+      --border:        #666;
+      --border-focus:  var(--theme-accent, #00ffd1);
+      --text:          #e8e8e8;
+      --muted:         #aaa;
+      --accent-a:      var(--theme-accent, #00FFD1);
+      --accent-b:      #FF6B35;
+      --ar:            var(--theme-accent, #00FFD1);
+      --br:            #FF6B35;
+      --dangerr:       #FF6B35;
+      --successr:      var(--theme-accent, #00FFD1);
+      --warnr:         #FACC15;
+      --shadow:        0 4px 24px rgba(0,0,0,.7);
+      --r:             4px;
+      --mono:          'Share Tech Mono', monospace;
+      --sans:          'Rajdhani', sans-serif;
+    }
+
+    /* ── CGP Theme Bridge ─────────────────────────────────────────
+       shared.js writes --teal / --theme-accent onto :root.
+       This block forwards those values into this tool's local vars
+       so every accent colour tracks the active CGP theme.
+    ──────────────────────────────────────────────────────────────── */
+    :root {
+      --border-focus:  var(--theme-accent, #00ffd1);
+      --accent-a:      var(--theme-accent, #00FFD1);
+      --ar:            var(--theme-accent, #00FFD1);
+      --successr:      var(--theme-accent, #00FFD1);
+      --bg:            var(--background,  #080808);
+      --panel:         var(--panel,        #0e0e0e);
+      --text:          var(--text,         #e8e8e8);
+      --muted:         var(--muted,        #aaa);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--mono);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    body.fade-in  { opacity: 1; }
+    body.fade-out { opacity: 0; }
+
+    /* ── Grid line background (CommandGridPro) ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(#ffffff05 1px, transparent 1px),
+        linear-gradient(90deg, #ffffff05 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* scrollbars */
+    * { scrollbar-width: thin; scrollbar-color:#888 #0e0e0e; }
+    *::-webkit-scrollbar { width: 6px; height: 6px; }
+    *::-webkit-scrollbar-track { background: #0e0e0e; }
+    *::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+    *::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+    /* header */
+    header {
+      position: sticky; top: 0; z-index: 50;
+      background: #050505;
+      border-bottom: 1px solid #444;
+      padding: 0 clamp(16px,3vw,32px); height: 52px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    /* grid lines visible through header */
+    header::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, #00FFD108, transparent);
+      pointer-events: none;
+    }
+    .hdr-logo {
+      font-family: 'Rajdhani', sans-serif; font-size:clamp(1rem,1rem + .5vw,1.3rem); font-weight: 700;
+      color: var(--text); letter-spacing: .18em; text-transform: uppercase;
+      position: relative; z-index: 1;
+    }
+    .hdr-logo span { color:var(--theme-accent, #00ffd1); }
+    .hdr-sep  { width: 1px; height: 18px; background: #555; position: relative; z-index: 1; }
+    .hdr-sub  { font-family: var(--mono); font-size:clamp(.83rem,.65rem + .4vw,.95rem); color:#aaa; font-weight: 400; letter-spacing: .2em; text-transform: uppercase; position: relative; z-index: 1; }
+    .hdr-back-btn {
+      margin-left: auto;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: clamp(.75rem,.6rem + .3vw,.85rem);
+      font-weight: 400; letter-spacing: .12em; text-transform: uppercase;
+      color:#aaa; background: #161616;
+      border: 1px solid #666; border-radius: var(--r);
+      padding: 5px 12px; cursor: pointer;
+      transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
+      position: relative; z-index: 1;
+      /* override global button styles */
+      box-shadow: none;
+    }
+    .hdr-back-btn:hover {
+      border-color:var(--theme-accent, #00ffd1); color:var(--theme-accent, #00ffd1);
+      background: #001a14; box-shadow: 0 0 8px #00FFD120;
+    }
+
+    /* page */
+    .page { max-width: 1340px; margin: 0 auto; padding: clamp(20px,3vw,36px) clamp(16px,3vw,32px); display: flex; flex-direction: column; gap: 20px; position: relative; z-index: 1; }
+    .page-h { display: flex; align-items: center; gap: 10px; }
+    .page-h h1 { font-size: clamp(1.1rem,1rem + .5vw,1.4rem); font-weight: 700; letter-spacing: .12em; font-family:'Rajdhani', sans-serif; text-transform: uppercase; }
+    .badge-tool { font-family: var(--mono); font-size:clamp(.75rem,.55rem + .5vw,.88rem); font-weight: 700; padding: 2px 8px; border-radius: 2px; background: transparent; border: 1px solid #00ffd140; color:var(--theme-accent, #00ffd1); letter-spacing: .12em; }
+
+    /* panel */
+    .panel { background: var(--panel); border: 1px solid #666; border-radius: var(--r); padding: clamp(14px,2vw,20px); transition: border-color .2s; }
+    .panel:hover { border-color:#888; }
+    .phead { font-family: var(--mono); font-size:clamp(.83rem,.65rem + .4vw,.95rem); font-weight: 400; letter-spacing: .18em; text-transform: uppercase; color:#aaa; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .phead::before { content:''; display:block; width:2px; height:12px; border-radius:1px; background:var(--theme-accent, #00FFD1); flex-shrink:0; }
+
+    /* upload */
+    .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media(max-width:560px){ .upload-grid { grid-template-columns:1fr; } }
+
+    .uzone {
+      position: relative; overflow: hidden;
+      border: 1px dashed #444; border-radius: var(--r);
+      padding: 18px 14px; cursor: pointer;
+      display: flex; align-items: center; gap: 14px;
+      background: #080808; transition: border-color .2s, background .2s, box-shadow .2s;
+    }
+    .uzone:hover, .uzone.drag { border-color:var(--theme-accent, #00ffd1); background: #0e0e0e; box-shadow: 0 0 0 1px #00FFD120, inset 0 0 16px #00FFD108; }
+    .uzone.loaded { border-style: solid; border-color:var(--theme-accent, #00ffd1); box-shadow: 0 0 0 1px #00FFD130; }
+    .uzone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+    .uicon { width:34px; height:34px; border-radius:var(--r); flex-shrink:0; display:grid; place-items:center; font-size:1rem; background:#161616; border:1px solid #666; }
+    .uzone.loaded .uicon { background: #001a14; border-color:#00ffd150; }
+    .ucopy strong { display:block; font-size:clamp(1rem,.85rem + .4vw,1.15rem); font-weight:700; margin-bottom:2px; letter-spacing:.08em; font-family:'Rajdhani',sans-serif; text-transform:uppercase; color: var(--text); }
+    .ucopy .fname { font-family:var(--mono); font-size:clamp(.84rem,.67rem + .4vw,.97rem); color:var(--theme-accent, #00ffd1); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .ucopy .fhint { font-size:clamp(.84rem,.67rem + .4vw,.97rem); color:#aaa; font-family:var(--mono); }
+
+    /* selects */
+    .flbl { display:block; font-size:clamp(.8rem,.62rem + .4vw,.92rem); font-weight:400; letter-spacing:.14em; text-transform:uppercase; color:#aaa; margin-bottom:6px; font-family:var(--mono); }
+    select {
+      width:100%; padding:7px 28px 7px 10px; border-radius:var(--r); border:1px solid #666;
+      background: #161616 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
+      color:var(--text); font-family: var(--mono); font-size:clamp(.93rem,.75rem + .4vw,1.05rem); font-weight:400;
+      -webkit-appearance:none; appearance:none; outline:none; transition:border-color .15s, box-shadow .15s;
+    }
+    select:focus { border-color:var(--theme-accent, #00ffd1); box-shadow: 0 0 0 1px #00FFD130; }
+    select:disabled { opacity:.3; cursor:not-allowed; }
+    select option { background:#161616; color:var(--text); }
+
+    .key-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
+    @media(max-width:560px){ .key-grid { grid-template-columns:1fr; } }
+
+    /* col toggles */
+    .col-sect { margin-top:14px; }
+    .col-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .col-bulk { display:flex; gap:6px; }
+    .col-scroll {
+      display:flex; flex-wrap:wrap; gap:5px; max-height:140px; overflow-y:auto;
+      padding:10px; background:#080808; border:1px solid #888; border-radius:var(--r);
+    }
+    .cchip {
+      padding:3px 8px; border-radius:2px; cursor:pointer; border:1px solid #666;
+      background:#161616; font-size:clamp(.85rem,.68rem + .4vw,.98rem); color:#aaa; font-family:var(--mono);
+      transition:all .12s; user-select:none; display:flex; align-items:center; gap:4px;
+    }
+    .cchip:hover { border-color:var(--theme-accent, #00ffd1); color:var(--text); }
+    .cchip.on { border-color:#00ffd150; background:#001a14; color:var(--theme-accent, #00ffd1); }
+    .cchip.on::before { content:'✓'; font-size:clamp(.78rem,.6rem + .4vw,.9rem); color:var(--theme-accent, #00ffd1); }
+    .cchip.col-only-a { border-color:#ff6b3550; background:#1a0a00; color:#ff6b35; }
+    .cchip.col-only-a.on { border-color:#ff6b35; background:#1f0d00; }
+    .cchip.col-only-a.on::before { color:#ff6b35; }
+    .cchip.col-only-b { border-color:#a78bfa50; background:#0f0a1a; color:#a78bfa; }
+    .cchip.col-only-b.on { border-color:#a78bfa; background:#130e1f; }
+    .cchip.col-only-b.on::before { color:#a78bfa; }
+    .col-legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; font-size:clamp(.82rem,.64rem + .4vw,.94rem); color:#aaa; align-items:center; font-family:var(--mono); }
+    .col-legend-item { display:flex; align-items:center; gap:5px; letter-spacing:.08em; text-transform:uppercase; }
+    .col-legend-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .cchip input { display:none; }
+    .cempty { font-size:clamp(.88rem,.7rem + .4vw,1rem); color:#888; font-family:var(--mono); }
+
+    /* export */
+    .exprow { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+
+    .hidden { display:none !important; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .panel-fade-in { animation: fadeUp .3s ease both; }
+    /* ── Option toggles ── */
+    .opt-row { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+
+    .ochip {
+      display:flex; align-items:center; gap:10px;
+      cursor:pointer; user-select:none;
+      padding: 8px 14px;
+      border: 1px solid #666;
+      border-radius: var(--r);
+      background: #161616;
+      transition: border-color .15s, background .15s;
+    }
+    .ochip input { display:none; }
+    .ochip:hover { border-color:#888; background: #1a1a1a; }
+    .ochip.on { border-color:#00FFD180; background: #0a1a14; }
+
+    /* track */
+    .otoggle {
+      position: relative; flex-shrink: 0;
+      width: 32px; height: 18px;
+      background: #2a2a2a;
+      border-radius: 9px;
+      border: 1px solid #666;
+      transition: background .2s, border-color .2s, box-shadow .2s;
+    }
+    /* thumb */
+    .otoggle::after {
+      content: '';
+      position: absolute; top: 2px; left: 2px;
+      width: 12px; height: 12px;
+      background: #666;
+      border-radius: 50%;
+      transition: transform .2s, background .2s;
+    }
+    .ochip.on .otoggle {
+      background: #003d2a;
+      border-color:var(--theme-accent, #00ffd1);
+      box-shadow: 0 0 8px #00FFD130;
+    }
+    .ochip.on .otoggle::after {
+      transform: translateX(14px);
+      background: var(--theme-accent, #00FFD1);
+    }
+
+    .ochip-lbl {
+      font-family: var(--mono);
+      font-size: clamp(.83rem,.65rem + .4vw,.95rem);
+      color:#888;
+      letter-spacing: .06em;
+      transition: color .15s;
+      line-height: 1;
+    }
+    .ochip.on .ochip-lbl { color: var(--text); }
+
+    /* buttons */
+    button {
+      font-family:var(--mono); cursor:pointer;
+      border:1px solid #888; border-radius:var(--r);
+      background:#161616; color:#888;
+      padding:7px 14px; font-size:clamp(.9rem,.72rem + .4vw,1.02rem); font-weight:400;
+      transition:all .15s; display:inline-flex; align-items:center; gap:6px;
+      letter-spacing:.1em; text-transform:uppercase;
+    }
+    button:hover:not(:disabled) { border-color:var(--theme-accent, #00ffd1); color:var(--theme-accent, #00ffd1); background:#001a14; box-shadow: 0 0 8px #00FFD120; }
+    button:disabled { opacity:.25; cursor:not-allowed; }
+    button.primary {
+      background:#001a14; border-color:var(--theme-accent, #00ffd1); color:var(--theme-accent, #00ffd1);
+      box-shadow: 0 0 12px #00FFD130;
+    }
+    button.primary:hover:not(:disabled) { background:var(--theme-accent, #00FFD1); color:#080808; box-shadow: 0 0 20px #00FFD160; }
+    button.sm { padding:4px 8px; font-size:clamp(.8rem,.62rem + .4vw,.92rem); border-radius:2px; }
+
+    .act-row { display:flex; align-items:center; gap:10px; margin-top:16px; flex-wrap:wrap; }
+
+    /* view toggle */
+    .vtog { display:flex; border:1px solid #888; border-radius:var(--r); overflow:hidden; background:#080808; }
+    .vtbtn { border:none; border-radius:0; background:transparent; color:#aaa; font-size:clamp(.85rem,.68rem + .4vw,.98rem); padding:6px 12px; border-right:1px solid #666; font-family:var(--mono); letter-spacing:.1em; text-transform:uppercase; }
+    .vtbtn:last-child { border-right:none; }
+    .vtbtn:hover:not(:disabled) { background:#161616; color:#e8e8e8; transform:none; box-shadow:none; }
+    .vtbtn.active { background:#001a14; color:var(--theme-accent, #00ffd1); border-color:#888; }
+
+    /* stats */
+    .stats { display:flex; flex-wrap:wrap; gap:8px; }
+    .sbox { flex:1; min-width:80px; background:#080808; border:1px solid #888; border-radius:var(--r); padding:10px 12px; text-align:center; transition: border-color .2s; }
+    .sbox:hover { border-color:#888; }
+    .snum { font-family:'Rajdhani',sans-serif; font-size:clamp(1.4rem,1.4rem + .8vw,2rem); font-weight:700; color:var(--text); letter-spacing:.04em; }
+    .snum.d { color:#ff6b35; }
+    .snum.s { color:var(--theme-accent, #00ffd1); }
+    .snum.w { color:#facc15; }
+    .slbl { font-size:clamp(.75rem,.55rem + .5vw,.88rem); color:#aaa; margin-top:3px; text-transform:uppercase; letter-spacing:.14em; font-family:var(--mono); }
+
+    /* filter bar */
+    .fbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:8px 12px; background:#080808; border:1px solid #888; border-radius:var(--r); margin-top:14px; }
+    .fbar-lbl { font-size:clamp(.78rem,.6rem + .4vw,.9rem); font-weight:400; letter-spacing:.16em; text-transform:uppercase; color:#aaa; white-space:nowrap; font-family:var(--mono); }
+    .fchips { display:flex; flex-wrap:wrap; gap:5px; }
+    .fc {
+      padding:3px 9px; border-radius:2px; font-size:clamp(.84rem,.66rem + .4vw,.96rem); cursor:pointer; font-family:var(--mono);
+      border:1px solid #666; background:#161616; color:#aaa;
+      transition:all .12s; user-select:none; letter-spacing:.08em; text-transform:uppercase;
+    }
+    .fc:hover { border-color:var(--theme-accent, #00ffd1); color:var(--text); }
+    .fc.active { border-color:#888; background:#1a1a1a; color:#888; }
+    .fc.fw.active  { border-color:#facc1540; background:#1a1500; color:#facc15; }
+    .fc.fa.active  { border-color:#ff6b3540; background:#1a0800; color:#ff6b35; }
+    .fc.fb.active  { border-color:#a78bfa40; background:#0f0a1a; color:#a78bfa; }
+    .fc.fg.active  { border-color:#00FFD180; background:#001a14; color:var(--theme-accent, #00ffd1); }
+
+    /* results wrapper */
+    .rbody { margin-top:14px; }
+
+    /* ── CARD VIEW ── */
+    .cards-grid { display:flex; flex-direction:column; gap:8px; }
+
+    /* ── FIELD MAPPING PANEL ── */
+    .map-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      margin-top: 4px;
+    }
+    @media(max-width:640px){ .map-grid { grid-template-columns: 1fr; } }
+    .map-field { display: flex; flex-direction: column; gap: 6px; }
+    .map-field-lbl {
+      display: flex; align-items: center; gap: 7px;
+      font-size:clamp(.8rem,.62rem + .4vw,.92rem); font-weight: 400; letter-spacing: .12em;
+      text-transform: uppercase; color:#aaa; font-family:var(--mono);
+    }
+    .map-icon {
+      width: 16px; height: 16px; border-radius: 2px; flex-shrink: 0;
+      display: grid; place-items: center; font-size:clamp(.85rem,.68rem + .4vw,.98rem);
+      background: #161616; border:1px solid #666;
+    }
+    .map-hint { font-size:clamp(.8rem,.62rem + .4vw,.92rem); color:#888; margin-top: 2px; font-family:var(--mono); }
+
+    /* ── CARDS ── */
+    .pcard {
+      border:1px solid #888; border-radius:var(--r);
+      background:#0e0e0e;
+      overflow:hidden;
+      transition:border-color .15s, box-shadow .15s;
+    }
+    .pcard:hover { border-color:#888; }
+    .pcard.type-changed { border-left:2px solid #facc15; }
+    .pcard.type-only-a  { border-left:2px solid #ff6b35; }
+    .pcard.type-only-b  { border-left:2px solid #a78bfa; }
+    .pcard.type-same    { border-left:2px solid var(--theme-accent, #00ffd1); }
+
+    /* Card header */
+    .pchead {
+      padding: 9px 13px 9px 14px;
+      background: #080808;
+      border-bottom: 1px solid #444;
+      cursor: pointer; user-select: none;
+    }
+    .pchead-top {
+      display: flex; align-items: center; gap: 9px; min-width: 0;
+    }
+    .pc-num {
+      font-family: var(--mono); font-size:clamp(.83rem,.65rem + .4vw,.95rem); font-weight: 400;
+      color:var(--theme-accent, #00ffd1); white-space: nowrap; flex-shrink: 0;
+      background: #001a14; border: 1px solid #00ffd140;
+      padding: 1px 7px; border-radius: 2px;
+    }
+    .pc-surname {
+      font-size:clamp(1.05rem,.9rem + .5vw,1.2rem); font-weight: 700; flex: 1;
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-family: 'Rajdhani',sans-serif; letter-spacing:.06em; text-transform:uppercase;
+    }
+    .pc-pill {
+      font-family: var(--mono); font-size:clamp(.72rem,.5rem + .5vw,.85rem); font-weight: 400;
+      padding: 2px 7px; border-radius: 2px; white-space: nowrap; flex-shrink: 0;
+      letter-spacing:.1em; text-transform:uppercase;
+    }
+    .pp-changed { background:#1a1500; color:#facc15; border:1px solid #facc1540; }
+    .pp-only-a  { background:#1a0800; color:#ff6b35; border:1px solid #ff6b3540; }
+    .pp-only-b  { background:#0f0a1a; color:#a78bfa; border:1px solid #a78bfa40; }
+    .pp-same    { background:#001a14; color:var(--theme-accent, #00ffd1); border:1px solid #00ffd140; }
+    .pc-toggle { font-size:clamp(.8rem,.62rem + .4vw,.92rem); color:#666; flex-shrink: 0; transition: transform .15s; }
+    .pcard.open .pc-toggle { transform: rotate(180deg); }
+
+    .pchead-desc {
+      margin-top: 5px; padding-top: 5px;
+      border-top: 1px solid #3a3a3a;
+      font-size:clamp(.85rem,.68rem + .4vw,.98rem); color:#aaa; line-height: 1.4; font-family:var(--mono);
+      overflow: hidden; text-overflow: ellipsis;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .pchead-desc.empty { font-style: italic; opacity: .3; }
+
+    .pcbody { display:none; }
+    .pcard.open .pcbody { display:block; }
+
+    /* side-by-side split */
+    .split { display:grid; grid-template-columns: var(--split-col, 1fr) 1fr; position:relative; }
+    @media(max-width:640px){ .split { grid-template-columns:1fr; } }
+    .split-drag {
+      position:absolute; top:0; bottom:0; left:calc(var(--split-col-px, 50%));
+      width:6px; margin-left:-3px;
+      cursor:col-resize; z-index:10;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .split-drag::after {
+      content:''; display:block; width:1px; height:32px; border-radius:1px;
+      background:#555; transition:background .15s;
+    }
+    .split-drag:hover::after, .split-drag.dragging::after { background:var(--theme-accent, #00FFD1); box-shadow: 0 0 6px var(--theme-accent, #00FFD1); }
+
+    .pside { padding:10px 13px 12px; }
+    .pside + .pside { border-left:1px solid #3a3a3a; }
+    @media(max-width:640px){ .pside + .pside { border-left:none; border-top:1px solid #3a3a3a; } }
+
+    .pside-lbl { font-size:clamp(.75rem,.55rem + .5vw,.88rem); font-weight:400; letter-spacing:.14em; text-transform:uppercase; color:#aaa; margin-bottom:8px; display:flex; align-items:center; gap:5px; font-family:var(--mono); }
+    .dot-a { width:5px; height:5px; border-radius:50%; background:#FF6B35; box-shadow: 0 0 4px #FF6B35; }
+    .dot-b { width:5px; height:5px; border-radius:50%; background:#A78BFA; box-shadow: 0 0 4px #A78BFA; }
+
+    .frow { display:flex; gap:6px; padding:4px 0; border-bottom:1px solid #3a3a3a; font-size:clamp(.9rem,.72rem + .4vw,1.02rem); font-family:var(--mono); }
+    .frow:last-child { border-bottom:none; }
+    .fk { min-width:80px; max-width:160px; flex-shrink:0; font-size:clamp(.82rem,.64rem + .4vw,.94rem); color:#aaa; font-weight:400; word-break:break-word; white-space:normal; line-height:1.35; }
+    .fv { word-break:break-word; color:var(--text); }
+    .fv.diff  { color:#facc15; }
+    .fv.empty { font-style:italic; color:#666; }
+    .fv.miss  { font-style:italic; color:#ff6b35; }
+
+    .only-body { padding:10px 13px 12px; }
+
+    /* ── TABLE VIEW ── */
+    .tbl-wrap { overflow:auto; border-radius:var(--r); border:1px solid #666; max-height:520px; }
+    table { width:100%; border-collapse:collapse; font-size:clamp(.9rem,.72rem + .4vw,1.02rem); font-family:var(--mono); }
+    thead tr { background:#050505; position:sticky; top:0; z-index:2; }
+    th { padding:8px 12px; text-align:left; font-family:var(--mono); font-size:clamp(.75rem,.55rem + .5vw,.88rem); font-weight:400; letter-spacing:.14em; text-transform:uppercase; color:#aaa; border-bottom:1px solid #666; white-space:nowrap; }
+    td { padding:7px 12px; border-bottom:1px solid #3a3a3a; vertical-align:top; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:#161616; }
+    .tdkey { font-family:var(--mono); font-size:clamp(.84rem,.66rem + .4vw,.96rem); color:var(--theme-accent, #00ffd1); white-space:nowrap; }
+    .tdcol { font-family:var(--mono); font-size:clamp(.82rem,.64rem + .4vw,.94rem); color:#aaa; }
+    .tdval { max-width:230px; word-break:break-word; }
+    .vc { background:#1a1500; border-radius:2px; padding:1px 4px; color:#facc15; }
+    .ve { font-style:italic; color:#666; font-size:clamp(.85rem,.68rem + .4vw,.98rem); }
+    .vm { font-style:italic; color:#ff6b35; font-size:clamp(.85rem,.68rem + .4vw,.98rem); }
+    .tpill { display:inline-block; padding:1px 6px; border-radius:2px; font-family:var(--mono); font-size:clamp(.72rem,.5rem + .5vw,.85rem); font-weight:400; letter-spacing:.1em; text-transform:uppercase; }
+    .tpill.changed { background:#1a1500; color:#facc15; border:1px solid #facc1540; }
+    .tpill.only-a  { background:#1a0800; color:#ff6b35; border:1px solid #ff6b3540; }
+    .tpill.only-b  { background:#0f0a1a; color:#a78bfa; border:1px solid #a78bfa40; }
+
+    /* ── CARD EXPAND MODAL ── */
+    .card-overlay {
+      position: fixed; inset: 0; z-index: 900;
+      background: rgba(4,4,4,.72);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      opacity: 0; pointer-events: none;
+      transition: opacity .32s ease;
+    }
+    .card-overlay.open { opacity: 1; pointer-events: all; }
+
+    .card-modal {
+      position: fixed; z-index: 901;
+      background: #0e0e0e;
+      border: 1px solid #555;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,.9), 0 0 0 1px #00FFD110;
+      display: flex; flex-direction: column;
+      /* start hidden — JS sets initial rect then transitions to final */
+      opacity: 0; pointer-events: none;
+      transition: opacity .32s ease, transform .38s cubic-bezier(.22,1,.36,1), width .38s cubic-bezier(.22,1,.36,1), height .38s cubic-bezier(.22,1,.36,1), top .38s cubic-bezier(.22,1,.36,1), left .38s cubic-bezier(.22,1,.36,1);
+      /* we animate via top/left/width/height so don't use transform for position */
+      will-change: transform, opacity;
+    }
+    .card-modal.open { opacity: 1; pointer-events: all; }
+
+    .modal-head {
+      padding: 16px 20px 14px;
+      background: #080808;
+      border-bottom: 1px solid #333;
+      display: flex; align-items: flex-start; gap: 14px; flex-shrink: 0;
+    }
+    .modal-type-bar {
+      width: 3px; border-radius: 2px; flex-shrink: 0; align-self: stretch; min-height: 48px;
+    }
+    .modal-head-content { flex: 1; min-width: 0; }
+    .modal-num {
+      font-family: var(--mono); font-size: .78rem; color: var(--theme-accent, #00FFD1);
+      background: #001a14; border: 1px solid #00FFD140;
+      padding: 2px 9px; border-radius: 2px; display: inline-block;
+      margin-bottom: 8px; letter-spacing: .1em;
+    }
+    .modal-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(1.4rem, 1.2rem + 1.5vw, 2.2rem);
+      font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--text); line-height: 1.1;
+      overflow: hidden; text-overflow: ellipsis;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .modal-desc {
+      font-family: var(--mono); font-size: clamp(.82rem,.7rem + .3vw,.94rem);
+      color: #888; margin-top: 6px; line-height: 1.5; letter-spacing: .03em;
+    }
+    .modal-pill { margin-top: 10px; display: inline-block; }
+    .modal-close {
+      flex-shrink: 0; width: 32px; height: 32px;
+      border: 1px solid #444; border-radius: 3px;
+      background: #161616; color: #777;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1rem; line-height: 1;
+      transition: border-color .15s, color .15s, background .15s;
+      font-family: var(--mono); align-self: flex-start;
+    }
+    .modal-close:hover { border-color: var(--theme-accent, #00FFD1); color: var(--theme-accent, #00FFD1); background: #001a14; }
+
+    .modal-body {
+      overflow-y: auto; flex: 1;
+      /* larger frow text inside modal */
+    }
+    .modal-body .frow { font-size: clamp(1rem,.88rem + .4vw,1.14rem); padding: 7px 0; }
+    .modal-body .fk { font-size: clamp(.88rem,.75rem + .3vw,1rem); min-width: 110px; max-width: 200px; color: #999; }
+    .modal-body .fv { font-size: clamp(1rem,.88rem + .4vw,1.14rem); }
+    .modal-body .pside { padding: 14px 20px 16px; }
+    .modal-body .pside-lbl { font-size: clamp(.8rem,.68rem + .3vw,.9rem); margin-bottom: 12px; }
+    .modal-body .only-body { padding: 14px 20px 16px; }
+    .modal-body .split { grid-template-columns: 1fr 1fr; }
+    .modal-body .pside + .pside { border-left: 1px solid #333; }
+
+    /* status */
+    .smsg { padding:11px 14px; border-radius:var(--r); font-size:clamp(.93rem,.75rem + .4vw,1.05rem); font-family:var(--mono); }
+    .smsg.info  { background:#001a14; border:1px solid #00ffd140; color:var(--theme-accent, #00ffd1); }
+    .smsg.empty { background:#161616; border:1px dashed #666; color:#888; text-align:center; padding:28px; }
+
+    /* search in filter bar */
+    .fbar-search-wrap { display:flex; align-items:center; gap:7px; margin-left:auto; position:relative; }
+    .fbar-search {
+      font-family: var(--mono); font-size:clamp(.85rem,.68rem + .4vw,.98rem); padding:4px 10px;
+      border-radius:var(--r); border:1px solid #666;
+      background:#161616; color:var(--text);
+      outline:none; transition:border-color .15s, box-shadow .15s;
+      width:210px; letter-spacing:.05em;
+    }
+    .fbar-search::placeholder { color:#888; }
+    .fbar-search:focus { border-color:var(--theme-accent, #00ffd1); box-shadow: 0 0 0 1px #00FFD130; }
+    .fbar-search-hint { font-size:clamp(.8rem,.62rem + .4vw,.92rem); color:var(--theme-accent, #00ffd1); white-space:nowrap; min-width:60px; font-family:var(--mono); }
+
+    .search-dropdown {
+      display:none; position:absolute; top:calc(100% + 6px); right:0;
+      background:#161616; border:1px solid #666;
+      border-radius:var(--r); z-index:100;
+      min-width:280px; max-height:260px; overflow-y:auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,.6);
+    }
+    .search-dropdown.open { display:block; }
+    .search-result-item {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:7px 10px; gap:10px; border-bottom:1px solid #666;
+      font-family:var(--mono); font-size:clamp(.85rem,.68rem + .4vw,.98rem);
+    }
+    .search-result-item:last-child { border-bottom:none; }
+    .sri-info { display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .sri-num { font-size:clamp(.8rem,.62rem + .4vw,.92rem); color:var(--theme-accent, #00ffd1); }
+    .sri-name { color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px; }
+    .sri-go {
+      flex-shrink:0; padding:3px 9px; border-radius:2px; border:1px solid #666;
+      background:#080808; color:#888; font-family:var(--mono); font-size:clamp(.8rem,.62rem + .4vw,.92rem);
+      cursor:pointer; transition:all .15s; white-space:nowrap; letter-spacing:.08em;
+    }
+    .sri-go:hover { border-color:var(--theme-accent, #00ffd1); color:var(--theme-accent, #00ffd1); background:#001a14; }
+    .search-no-results { padding:10px; font-family:var(--mono); font-size:clamp(.85rem,.68rem + .4vw,.98rem); color:#888; text-align:center; }
+
+    /* return to search button */
+    .rts-btn {
+      display:inline-flex; align-items:center; gap:5px;
+      margin:10px 13px 12px; padding:4px 10px; border-radius:2px;
+      border:1px solid #666; background:#161616;
+      color:#aaa; font-size:clamp(.82rem,.64rem + .4vw,.94rem); font-family:var(--mono);
+      cursor:pointer; transition:all .15s; user-select:none;
+      letter-spacing:.1em; text-transform:uppercase;
+    }
+    .rts-btn:hover { border-color:var(--theme-accent, #00ffd1); color:var(--theme-accent, #00ffd1); background:#001a14; box-shadow: 0 0 8px #00FFD120; }
+
+    /* highlight matched card */
+    .pcard.search-match {
+      border-color:var(--theme-accent, #00ffd1) !important;
+      box-shadow: 0 0 0 1px #00FFD140, 0 0 12px #00FFD120 !important;
+    }
+
+    /* ── Step 4: Value Filter ── */
+    .vf-row {
+      display: grid;
+      grid-template-columns: 220px 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+    @media(max-width:640px){ .vf-row { grid-template-columns: 1fr; } }
+
+    .vf-add-wrap button { height: 36px; padding: 0 16px; white-space: nowrap; }
+
+    .vf-combo-wrap { position: relative; }
+    .vf-input {
+      width: 100%; padding: 7px 10px;
+      border: 1px solid #666; border-radius: var(--r);
+      background: #161616; color: var(--text);
+      font-family: var(--mono); font-size: clamp(.85rem,.68rem + .4vw,.98rem);
+      outline: none; transition: border-color .15s, box-shadow .15s;
+      letter-spacing: .04em;
+    }
+    .vf-input::placeholder { color:#888; }
+    .vf-input:focus { border-color:var(--theme-accent, #00ffd1); box-shadow: 0 0 0 1px #00FFD130; }
+    .vf-input:disabled { opacity: .3; cursor: not-allowed; }
+
+    .vf-dropdown {
+      display: none;
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: #161616; border: 1px solid #666;
+      border-radius: var(--r); z-index: 200;
+      max-height: 220px; overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,.7);
+    }
+    .vf-dropdown.open { display: block; }
+    .vf-opt {
+      padding: 7px 12px;
+      font-family: var(--mono); font-size: clamp(.83rem,.65rem + .4vw,.95rem);
+      color: var(--text); cursor: pointer;
+      border-bottom: 1px solid #444;
+      transition: background .1s;
+    }
+    .vf-opt:last-child { border-bottom: none; }
+    .vf-opt:hover, .vf-opt.focused { background: #1a1a1a; color:var(--theme-accent, #00ffd1); }
+    .vf-opt.dimmed { color:#888; }
+    .vf-no-opts { padding: 10px 12px; font-family: var(--mono); font-size: clamp(.83rem,.65rem + .4vw,.95rem); color:#888; }
+
+    .vf-pills-wrap { margin-top: 14px; }
+    .vf-pills-label {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .vf-active-label {
+      font-family: var(--mono); font-size: clamp(.78rem,.6rem + .3vw,.88rem);
+      letter-spacing: .14em; text-transform: uppercase; color:#aaa;
+    }
+    .vf-pills {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      min-height: 28px; align-items: center;
+    }
+    .vf-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px 4px 12px;
+      background: #001a14; border: 1px solid #00ffd150;
+      border-radius: 2px; cursor: pointer;
+      font-family: var(--mono); font-size: clamp(.8rem,.62rem + .4vw,.92rem);
+      color:var(--theme-accent, #00ffd1); letter-spacing: .06em;
+      transition: background .15s, border-color .15s, box-shadow .15s;
+      user-select: none;
+    }
+    .vf-pill:hover {
+      background: #002a1e; border-color:var(--theme-accent, #00ffd1);
+      box-shadow: 0 0 8px #00FFD130;
+    }
+    .vf-pill-x {
+      font-size: .8em; opacity: .6; line-height: 1;
+      transition: opacity .15s;
+    }
+    .vf-pill:hover .vf-pill-x { opacity: 1; }
+
+    /* ── Tool hero / instructions ── */
+    .tool-hero-block {
+      margin-top: 12px;
+      padding: clamp(24px,3vw,36px) clamp(20px,3vw,32px) clamp(20px,3vw,28px);
+      background: transparent;
+      border-bottom: 1px solid #333;
+      position: relative; z-index: 1;
+    }
+
+    .thb-title {
+      display: flex; align-items: center; gap: 12px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(1.3rem, 1.2rem + 1vw, 2rem);
+      font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--text); margin-bottom: 10px;
+    }
+    .thb-badge {
+      font-family: var(--mono); font-size: clamp(.65rem,.55rem + .3vw,.75rem);
+      padding: 2px 8px; border: 1px solid #00ffd130;
+      border-radius: 2px; color:var(--theme-accent, #00ffd1); letter-spacing: .14em;
+      font-weight: 400; align-self: center;
+    }
+
+    .thb-desc {
+      font-family: var(--mono); font-size: clamp(.82rem,.65rem + .3vw,.94rem);
+      color:#888; line-height: 1.6; letter-spacing: .04em;
+      max-width: 720px; margin-bottom: 28px;
+    }
+
+    .thb-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .thb-step {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 14px 16px;
+      background: #0c0c0c;
+      border: 1px solid #383838;
+      border-radius: var(--r);
+      cursor: pointer; user-select: none;
+      transition: border-color .2s, background .2s, box-shadow .2s;
+    }
+    .thb-step:hover {
+      border-color: #00FFD160;
+      background: #0e0e0e;
+      box-shadow: 0 0 0 1px #00FFD115, 0 6px 24px rgba(0,0,0,.5);
+    }
+    .thb-step:hover .thb-step-num {
+      border-color: #00FFD160;
+      box-shadow: 0 0 10px #00FFD125;
+    }
+
+    .thb-step-num {
+      font-family: var(--mono); font-size: clamp(.72rem,.58rem + .3vw,.82rem);
+      color:var(--theme-accent, #00ffd1); letter-spacing: .1em;
+      background: #001a14; border: 1px solid #00ffd120;
+      border-radius: 2px; padding: 3px 7px;
+      flex-shrink: 0; align-self: flex-start; margin-top: 1px;
+      line-height: 1.4; transition: border-color .2s, box-shadow .2s;
+    }
+
+    .thb-step-body { display: flex; flex-direction: column; gap: 5px; }
+
+    .thb-step-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(.9rem,.78rem + .3vw,1rem);
+      font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text); display: flex; align-items: center; gap: 8px;
+    }
+
+    .thb-opt {
+      font-family: var(--mono); font-size: clamp(.62rem,.52rem + .2vw,.7rem);
+      color:#facc15; border: 1px solid #facc1530;
+      background: #1a1500; padding: 1px 6px; border-radius: 2px;
+      letter-spacing: .1em; font-weight: 400; text-transform: uppercase;
+    }
+
+    .thb-step-text {
+      font-family: var(--mono); font-size: clamp(.78rem,.62rem + .3vw,.88rem);
+      color:#888; line-height: 1.55; letter-spacing: .03em;
+    }
+    .thb-step-text strong { color:#ccc; font-weight: 400; }
+
+    /* ── Step expand modal ── */
+    .step-modal {
+      position: fixed; z-index: 902;
+      background: #0a0a0a;
+      border: 1px solid #00FFD140;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 32px 90px rgba(0,0,0,.96), 0 0 0 1px #00FFD110;
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none;
+      transition: opacity .32s ease,
+                  top    .38s cubic-bezier(.22,1,.36,1),
+                  left   .38s cubic-bezier(.22,1,.36,1),
+                  width  .38s cubic-bezier(.22,1,.36,1),
+                  height .38s cubic-bezier(.22,1,.36,1);
+      will-change: opacity, top, left, width, height;
+    }
+    .step-modal.visible { opacity: 1; pointer-events: all; }
+
+    .sm-head {
+      padding: 22px 26px 18px;
+      background: #080808;
+      border-bottom: 1px solid #222;
+      display: flex; align-items: flex-start; gap: 18px; flex-shrink: 0;
+    }
+    .sm-num {
+      font-family: var(--mono);
+      font-size: clamp(1rem,.85rem + .8vw,1.4rem);
+      color: var(--theme-accent, #00FFD1); background: #001a14;
+      border: 1px solid #00FFD140;
+      padding: 8px 16px; border-radius: 4px;
+      flex-shrink: 0; letter-spacing: .14em; line-height: 1;
+      align-self: center; box-shadow: 0 0 12px #00FFD120;
+    }
+    .sm-head-text { flex: 1; min-width: 0; }
+    .sm-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(1.4rem, 1.1rem + 1.5vw, 2.1rem);
+      font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text); line-height: 1.1;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .sm-close {
+      flex-shrink: 0; width: 36px; height: 36px;
+      border: 1px solid #444; border-radius: 4px;
+      background: #161616; color: #777;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.1rem; line-height: 1;
+      transition: border-color .15s, color .15s, background .15s;
+      font-family: var(--mono); align-self: flex-start;
+    }
+    .sm-close:hover { border-color: var(--theme-accent, #00FFD1); color: var(--theme-accent, #00FFD1); background: #001a14; }
+
+    .sm-body {
+      flex: 1; overflow-y: auto;
+      padding: 28px 28px 36px;
+    }
+    .sm-lead {
+      font-family: var(--mono);
+      font-size: clamp(.94rem,.82rem + .4vw,1.1rem);
+      color: #aaa; line-height: 1.75; letter-spacing: .03em;
+      margin-bottom: 28px; border-left: 2px solid #00FFD130;
+      padding-left: 16px;
+    }
+    .sm-lead strong { color: #e0e0e0; font-weight: 400; }
+
+    .sm-tips { display: flex; flex-direction: column; gap: 10px; }
+    .sm-tip {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 14px 16px;
+      background: #111; border: 1px solid #1e1e1e; border-radius: 4px;
+      transition: border-color .15s;
+    }
+    .sm-tip:hover { border-color: #333; }
+    .sm-tip-icon {
+      font-size: 1.2rem; flex-shrink: 0; margin-top: 2px;
+      width: 30px; text-align: center;
+    }
+    .sm-tip-body { display: flex; flex-direction: column; gap: 4px; }
+    .sm-tip-label {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(.9rem,.78rem + .3vw,1.02rem);
+      font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: #ddd;
+    }
+    .sm-tip-text {
+      font-family: var(--mono);
+      font-size: clamp(.84rem,.72rem + .3vw,.96rem);
+      color: #888; line-height: 1.6;
+    }
+    .sm-tip-text strong { color: #bbb; font-weight: 400; }
+    .sm-tag {
+      display: inline-block;
+      font-family: var(--mono); font-size: .68rem;
+      padding: 1px 7px; border-radius: 2px; letter-spacing: .1em;
+      background: #1a1500; border: 1px solid #FACC1530; color: #FACC15;
+      text-transform: uppercase; vertical-align: middle; margin-left: 4px;
+    }
+
+    /* ── Tool footer ── */
+    .tool-footer {
+      display: flex; align-items: center; justify-content: center;
+      gap: 14px; flex-wrap: wrap;
+      padding: clamp(16px,2vw,24px) clamp(16px,3vw,32px);
+      border-top: 1px solid #444;
+      margin-top: auto;
+      position: relative; z-index: 1;
+    }
+
+    .tf-brand {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(.78rem,.68rem + .3vw,.92rem);
+      font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+      color:#999;
+    }
+    .tf-brand span { color:#00FFD180; }
+
+    .tf-sep {
+      font-family: var(--mono); font-size: .65rem;
+      color:#777; letter-spacing: .1em;
+    }
+
+    .tf-copy {
+      font-family: var(--mono); font-size: clamp(.65rem,.55rem + .2vw,.72rem);
+      color:#777; letter-spacing: .1em;
+    }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE — tablet (≤768px)
+    ═══════════════════════════════════════ */
+    @media (max-width: 768px) {
+      /* header — hide subtitle on tight screens */
+      .hdr-sub { display: none; }
+      .hdr-sep { display: none; }
+
+      /* panels tighter padding */
+      .panel { padding: 14px 12px; }
+
+      /* stats row — 2 per row */
+      .sbox { min-width: calc(50% - 4px); }
+
+      /* filter bar — wrap search below chips */
+      .fbar { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .fbar-search-wrap { margin-left: 0; width: 100%; }
+      .fbar-search { width: 100%; }
+      .search-dropdown { right: auto; left: 0; min-width: 0; width: 100%; }
+
+      /* act row — full width buttons */
+      .act-row { flex-direction: column; align-items: stretch; }
+      .act-row button { justify-content: center; }
+
+      /* opt toggles — stack vertically */
+      .opt-row { flex-direction: column; gap: 8px; }
+      .ochip { width: 100%; }
+
+      /* table — tighter cells */
+      td, th { padding: 6px 8px; }
+      .tdval { max-width: 140px; }
+
+      /* card pill — allow wrap */
+      .pchead-top { flex-wrap: wrap; }
+      .pc-pill { order: 3; }
+      .pc-toggle { order: 4; margin-left: auto; }
+
+      /* export buttons wrap */
+      .exprow { gap: 6px; }
+      .exprow button { flex: 1 1 auto; justify-content: center; }
+
+      /* fk column narrower */
+      .fk { min-width: 60px; max-width: 110px; }
+    }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE — mobile (≤480px)
+    ═══════════════════════════════════════ */
+    @media (max-width: 480px) {
+      /* header — compact */
+      header { height: 46px; gap: 10px; padding: 0 12px; }
+      header svg { width: 16px; height: 16px; }
+      .hdr-logo { font-size: 1rem; letter-spacing: .1em; }
+
+      /* page padding */
+      .page { padding: 12px; gap: 12px; }
+
+      /* panels */
+      .panel { padding: 12px 10px; border-radius: 3px; }
+      .phead { margin-bottom: 10px; }
+
+      /* upload zones — taller tap target */
+      .uzone { padding: 16px 12px; }
+      .uicon { width: 38px; height: 38px; }
+
+      /* key grid already stacks at 560px */
+
+      /* col scroll taller for touch */
+      .col-scroll { max-height: 160px; gap: 6px; padding: 8px; }
+      .cchip { padding: 5px 10px; }
+
+      /* opt row */
+      .ochip { padding: 10px 12px; }
+
+      /* act row */
+      .act-row { gap: 8px; margin-top: 12px; }
+
+      /* stats — all in a row, 2-col wrapping */
+      .stats { gap: 6px; }
+      .sbox { padding: 8px 6px; min-width: calc(50% - 3px); }
+      .snum { font-size: clamp(1.2rem, 5vw, 1.6rem); }
+      .slbl { letter-spacing: .08em; }
+
+      /* filter bar */
+      .fbar { padding: 8px 10px; gap: 8px; }
+      .fchips { gap: 4px; }
+      .fc { padding: 4px 8px; }
+
+      /* results cards */
+      .pchead { padding: 8px 10px; }
+      .pchead-top { gap: 6px; }
+      .pc-num { padding: 1px 5px; }
+      .pc-pill { display: none; } /* hide pill — type shown by border colour */
+      .pchead-desc { display: none; } /* collapse desc on tiny screens */
+
+      /* side panels stack, no drag handle */
+      .split-drag { display: none; }
+
+      /* table horizontal scroll hint */
+      .tbl-wrap { border-radius: 2px; }
+      th, td { white-space: nowrap; }
+
+      /* search dropdown full width */
+      .search-dropdown { width: calc(100vw - 24px); max-height: 200px; }
+
+      /* rts button */
+      .rts-btn { width: calc(100% - 26px); justify-content: center; }
+
+      /* map grid already stacks at 640px */
+      .map-hint { display: none; } /* remove hints — save space */
+
+      /* view toggle full width */
+      .vtog { width: 100%; }
+      .vtbtn { flex: 1; justify-content: center; }
+
+      /* export full-width each */
+      .exprow button { flex: 1 1 100%; }
+    }
+
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="20" height="20" viewBox="0 0 28 28" fill="none" style="flex-shrink:0">
+    <rect x="1"  y="1"  width="11" height="11" stroke="var(--theme-accent,#00FFD1)" stroke-width="1.5"/>
+    <rect x="16" y="1"  width="11" height="11" stroke="var(--theme-accent,#00FFD1)" stroke-width="1.5"/>
+    <rect x="1"  y="16" width="11" height="11" stroke="var(--theme-accent,#00FFD1)" stroke-width="1.5"/>
+    <rect x="16" y="16" width="11" height="11" stroke="var(--theme-accent,#00FFD1)" stroke-width="1.5" fill="#00FFD1" fill-opacity="0.15"/>
+  </svg>
+  <span class="hdr-logo">CFB <span>NORTH BAY</span></span>
+  <div class="hdr-sep"></div>
+  <span class="hdr-sub">CSV Comparison Tool</span>
+  <button class="hdr-back-btn" onclick="navigateTo('index.html')">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Back
+  </button>
+  <button class="settings-btn" onclick="navigateTo('settings.html')" title="Settings" style="margin-left:6px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+</header>
+
+<div class="page">
+
+  <!-- Hero / Instructions -->
+  <div class="tool-hero-block">
+    <div class="thb-title">
+      <svg width="22" height="22" viewBox="0 0 28 28" fill="none" style="flex-shrink:0;opacity:.6">
+        <rect x="1"  y="1"  width="11" height="11" stroke="var(--theme-accent,#00FFD1)" stroke-width="1.2"/>
+        <rect x="16" y="1"  width="11" height="11" stroke="var(--theme-accent,#00FFD1)" stroke-width="1.2"/>
+        <rect x="1"  y="16" width="11" height="11" stroke="var(--theme-accent,#00FFD1)" stroke-width="1.2"/>
+        <rect x="16" y="16" width="11" height="11" stroke="var(--theme-accent,#00FFD1)" stroke-width="1.2" fill="#00FFD1" fill-opacity="0.12"/>
+      </svg>
+      <span>CSV Comparison Tool</span>
+      <span class="thb-badge">v1.0</span>
+    </div>
+    <p class="thb-desc">Compare two CSV files row-by-row and surface every difference, addition, and removal — no server, no upload, fully in-browser.</p>
+
+    <div class="thb-steps">
+      <div class="thb-step" data-step="01">
+        <div class="thb-step-num">01</div>
+        <div class="thb-step-body">
+          <div class="thb-step-title">Upload Files</div>
+          <div class="thb-step-text">Drag &amp; drop or click to load <strong>CSV A</strong> (your baseline) and <strong>CSV B</strong> (the updated version). Both files stay local — nothing leaves your browser.</div>
+        </div>
+      </div>
+      <div class="thb-step" data-step="02">
+        <div class="thb-step-num">02</div>
+        <div class="thb-step-body">
+          <div class="thb-step-title">Configure the Comparison</div>
+          <div class="thb-step-text">Pick the <strong>key column</strong> that uniquely identifies each row in each file (e.g. Position #, Employee ID). Then choose which columns to compare and set your match options — case sensitivity, whitespace trimming, and empty-field handling.</div>
+        </div>
+      </div>
+      <div class="thb-step" data-step="02b">
+        <div class="thb-step-num">02b</div>
+        <div class="thb-step-body">
+          <div class="thb-step-title">Map Card Display Fields <span class="thb-opt">optional</span></div>
+          <div class="thb-step-text">Tell the tool which columns hold the <strong>position number</strong>, <strong>name</strong>, and <strong>description</strong> so result cards show meaningful labels instead of raw key values.</div>
+        </div>
+      </div>
+      <div class="thb-step" data-step="03">
+        <div class="thb-step-num">03</div>
+        <div class="thb-step-body">
+          <div class="thb-step-title">Filter by Value <span class="thb-opt">optional</span></div>
+          <div class="thb-step-text">Narrow results to specific rows by picking a column and adding one or more values as filter pills. Matching uses <strong>OR logic</strong> — any row whose value matches at least one pill is shown.</div>
+        </div>
+      </div>
+      <div class="thb-step" data-step="04">
+        <div class="thb-step-num">04</div>
+        <div class="thb-step-body">
+          <div class="thb-step-title">Run &amp; Review Results</div>
+          <div class="thb-step-text">Hit <strong>Run Comparison</strong>. Results appear as colour-coded cards (Changed · Only in A · Only in B · Matched) or a flat table. Use the search bar and type filters to zero in on what matters, then export any subset as CSV.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 1: Upload -->
+  <div class="panel">
+    <div class="phead">Step 1 — Upload Files</div>
+    <div class="upload-grid">
+      <div class="uzone" id="zoneA">
+        <input type="file" id="fileA" accept=".csv,text/csv" />
+        <div class="uicon" id="iconA">🅰️</div>
+        <div class="ucopy"><strong>CSV File A</strong><span id="fileAName" class="fhint">Click or drag to upload</span></div>
+      </div>
+      <div class="uzone" id="zoneB">
+        <input type="file" id="fileB" accept=".csv,text/csv" />
+        <div class="uicon" id="iconB">🅱️</div>
+        <div class="ucopy"><strong>CSV File B</strong><span id="fileBName" class="fhint">Click or drag to upload</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Configure -->
+  <div class="panel">
+    <div class="phead">Step 2 — Configure</div>
+    <div class="key-grid">
+      <div>
+        <label class="flbl" for="keyA">Key Column — CSV A</label>
+        <select id="keyA" disabled><option>— upload CSV A first —</option></select>
+      </div>
+      <div>
+        <label class="flbl" for="keyB">Key Column — CSV B</label>
+        <select id="keyB" disabled><option>— upload CSV B first —</option></select>
+      </div>
+    </div>
+
+    <div class="col-sect">
+      <div class="col-hd">
+        <label class="flbl" style="margin:0">Columns to Compare</label>
+        <div class="col-bulk">
+          <button class="sm" id="selAll" disabled>All</button>
+          <button class="sm" id="selNone" disabled>None</button>
+        </div>
+      </div>
+      <div class="col-scroll" id="colGrid"><span class="cempty">Upload both files to see columns</span></div>
+      <div class="col-legend" id="colLegend" style="display:none"></div>
+    </div>
+
+    <div class="opt-row">
+      <label class="ochip on" id="ocA">
+        <input type="checkbox" id="optA" checked />
+        <span class="otoggle"></span>
+        <span class="ochip-lbl">Ignore case</span>
+      </label>
+      <label class="ochip on" id="ocB">
+        <input type="checkbox" id="optB" checked />
+        <span class="otoggle"></span>
+        <span class="ochip-lbl">Trim whitespace</span>
+      </label>
+      <label class="ochip on" id="ocC">
+        <input type="checkbox" id="optC" checked />
+        <span class="otoggle"></span>
+        <span class="ochip-lbl">Treat missing as empty</span>
+      </label>
+    </div>
+
+    <div class="act-row">
+      <button class="primary" id="runBtn" disabled>⚡ Run Comparison</button>
+      <button id="clearBtn">Clear All</button>
+    </div>
+  </div>
+
+  <!-- Step 2b: Field Mapping -->
+  <div class="panel">
+    <div class="phead">Card Display Mapping <span style="font-size:clamp(.83rem,.65rem + .4vw,.95rem);font-weight:400;color:var(--muted);letter-spacing:.03em;text-transform:none;margin-left:4px;">— point each header slot to your actual column name</span></div>
+    <div class="map-grid">
+      <div class="map-field">
+        <label class="map-field-lbl" for="mapPosition"><span class="map-icon">🔢</span>Position / Key ID</label>
+        <select id="mapPosition" disabled><option value="">— auto (uses key column) —</option></select>
+        <span class="map-hint">Shown as the # badge on each card</span>
+      </div>
+      <div class="map-field">
+        <label class="map-field-lbl" for="mapSurname"><span class="map-icon">👤</span>Surname / Name</label>
+        <select id="mapSurname" disabled><option value="">— not mapped —</option></select>
+        <span class="map-hint">Large text on the card header</span>
+      </div>
+      <div class="map-field">
+        <label class="map-field-lbl" for="mapDesc"><span class="map-icon">📋</span>Position Description</label>
+        <select id="mapDesc" disabled><option value="">— not mapped —</option></select>
+        <span class="map-hint">Sub-line shown below name</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Step 4: Value Filter (optional) -->
+  <div class="panel" id="filterPanel">
+    <div class="phead">
+      Step 4 — Value Filter
+      <span style="font-size:clamp(.78rem,.6rem + .3vw,.88rem);font-weight:400;color:#888;letter-spacing:.04em;text-transform:none;margin-left:6px;">— optional · filter rows by column value (OR logic)</span>
+    </div>
+
+    <div class="vf-row">
+      <div class="vf-col-wrap">
+        <label class="flbl" for="vfCol">Filter Column</label>
+        <select id="vfCol" disabled>
+          <option value="">— upload files first —</option>
+        </select>
+      </div>
+      <div class="vf-input-wrap">
+        <label class="flbl" for="vfInput">Add Value</label>
+        <div class="vf-combo-wrap">
+          <input id="vfInput" class="vf-input" type="text" placeholder="Type or pick a value…" autocomplete="off" disabled />
+          <div class="vf-dropdown" id="vfDropdown"></div>
+        </div>
+      </div>
+      <div class="vf-add-wrap">
+        <label class="flbl">&nbsp;</label>
+        <button class="sm" id="vfAddBtn" disabled>+ Add</button>
+      </div>
+    </div>
+
+    <div class="vf-pills-wrap" id="vfPillsWrap">
+      <div class="vf-pills-label" id="vfPillsLabel" style="display:none">
+        <span class="vf-active-label">Active filters</span>
+        <button class="sm" id="vfClearAll">Clear all</button>
+      </div>
+      <div class="vf-pills" id="vfPills">
+        <span class="cempty" id="vfEmpty">No filters active — all rows shown</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel hidden panel-fade-in" id="resultsPanel">
+    <div class="phead" style="justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center;">
+      <span style="display:flex;align-items:center;gap:8px;">
+        <span style="display:block;width:2px;height:13px;border-radius:2px;background:var(--theme-accent,#00FFD1);flex-shrink:0"></span>
+        Step 3 — Results
+      </span>
+      <div class="vtog">
+        <button class="vtbtn active" id="vtCards">▦ Cards</button>
+        <button class="vtbtn" id="vtTable">☰ Table</button>
+      </div>
+    </div>
+
+    <div class="stats" id="statsEl"></div>
+
+    <!-- filter bar (card view) -->
+    <div class="fbar hidden" id="fbar">
+      <span class="fbar-lbl">Show</span>
+      <div class="fchips">
+        <span class="fc fw active" data-f="changed">Changed</span>
+        <span class="fc fa active" data-f="only-a">Only A</span>
+        <span class="fc fb active" data-f="only-b">Only B</span>
+        <span class="fc fg active" data-f="same">Matched</span>
+      </div>
+      <div class="fbar-search-wrap">
+        <input type="text" id="cardSearch" class="fbar-search" placeholder="🔍 Search position or name…" autocomplete="off" />
+        <span class="fbar-search-hint" id="searchHint"></span>
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+    </div>
+
+    <div class="exprow" id="exprow" style="margin-bottom:12px;"></div>
+    <div class="rbody" id="rbody"></div>
+  </div>
+  <!-- Footer -->
+  <footer class="tool-footer">
+    <span class="tf-brand">CFB <span>North Bay</span></span>
+    <span class="tf-sep">×</span>
+    <span class="tf-brand">Command<span>Grid</span>Pro</span>
+    <span class="tf-sep">|</span>
+    <span class="tf-copy">© 2026 · All rights reserved</span>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* STATE */
+const S={
+  csvA:{headers:[],rows:[]}, csvB:{headers:[],rows:[]},
+  diffs:[], onlyA:[], onlyB:[], matched:0,
+  allKeys:[], mA:null, mB:null,
+  ka:'', kb:'', cols:[],
+  view:'cards', filter:new Set(['changed','only-a','only-b','same'])
+};
+
+const $=id=>document.getElementById(id);
+const el={
+  fileA:$('fileA'),fileB:$('fileB'),
+  nameA:$('fileAName'),nameB:$('fileBName'),
+  zoneA:$('zoneA'),zoneB:$('zoneB'),
+  iconA:$('iconA'),iconB:$('iconB'),
+  keyA:$('keyA'),keyB:$('keyB'),
+  colGrid:$('colGrid'),
+  selAll:$('selAll'),selNone:$('selNone'),
+  optA:$('optA'),optB:$('optB'),optC:$('optC'),
+  mapPosition:$('mapPosition'),mapSurname:$('mapSurname'),mapDesc:$('mapDesc'),
+  runBtn:$('runBtn'),clearBtn:$('clearBtn'),
+  rPanel:$('resultsPanel'),
+  statsEl:$('statsEl'),
+  fbar:$('fbar'),rbody:$('rbody'),exprow:$('exprow'),
+  vtCards:$('vtCards'),vtTable:$('vtTable')
+};
+
+/* CSV */
+function csvParse(text){
+  const rows=[];let row=[],val='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
+    if(c==='"'){if(q&&n==='"'){val+='"';i++;}else q=!q;}
+    else if(c===','&&!q){row.push(val);val='';}
+    else if((c==='\n'||c==='\r')&&!q){
+      if(c==='\r'&&n==='\n')i++;
+      row.push(val);val='';
+      if(row.some(x=>x.trim()!=''))rows.push(row);
+      row=[];
+    }else val+=c;
+  }
+  if(val.length||row.length){row.push(val);if(row.some(x=>x.trim()!=''))rows.push(row);}
+  if(!rows.length)return{headers:[],rows:[]};
+  const headers=rows[0].map(h=>String(h).replace(/\s+/g,' ').trim());
+  const data=rows.slice(1).map(r=>{const o={};headers.forEach((h,i)=>o[h]=String(r[i]??'').trim());return o;});
+  return{headers,rows:data};
+}
+function inferKey(h){
+  const L=h.map(x=>x.toLowerCase());
+  for(const p of['position','id','key','position number','position id','name']){const i=L.findIndex(x=>x.includes(p));if(i>=0)return h[i];}
+  return h[0]||'';
+}
+
+/* load */
+function readFile(f,cb){const r=new FileReader();r.onload=e=>cb(e.target.result);r.readAsText(f,'UTF-8');}
+function loadFile(w,f){
+  readFile(f,text=>{
+    const p=csvParse(text);if(!p.headers.length)return;
+    S['csv'+w]=p;
+    const zone=w==='A'?el.zoneA:el.zoneB,nameEl=w==='A'?el.nameA:el.nameB,
+          keyEl=w==='A'?el.keyA:el.keyB,iconEl=w==='A'?el.iconA:el.iconB;
+    zone.classList.add('loaded');
+    nameEl.className='fname';nameEl.textContent=f.name;
+    iconEl.textContent='📋';
+    keyEl.disabled=false;
+    keyEl.innerHTML=p.headers.map(h=>`<option value="${esc(h)}">${esc(h)}</option>`).join('');
+    keyEl.value=inferKey(p.headers)||p.headers[0];
+    updateColGrid();updateRunBtn();
+  });
+}
+el.fileA.addEventListener('change',e=>{if(e.target.files[0])loadFile('A',e.target.files[0]);});
+el.fileB.addEventListener('change',e=>{if(e.target.files[0])loadFile('B',e.target.files[0]);});
+['A','B'].forEach(w=>{
+  const z=w==='A'?el.zoneA:el.zoneB;
+  z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('drag');});
+  z.addEventListener('dragleave',()=>z.classList.remove('drag'));
+  z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)loadFile(w,f);});
+});
+
+/* mapping selects */
+function updateMappingSelects(){
+  if(!S.csvA.headers.length&&!S.csvB.headers.length)return;
+  const allH=[...new Set([...S.csvA.headers,...S.csvB.headers])];
+
+  function populate(sel, hintPatterns, blankLabel){
+    const cur=sel.value;
+    sel.disabled=false;
+    sel.innerHTML=`<option value="">${blankLabel}</option>`+allH.map(h=>`<option value="${esc(h)}">${esc(h)}</option>`).join('');
+    // try to restore previous selection
+    if(cur&&allH.includes(cur)){ sel.value=cur; return; }
+    // auto-detect
+    const L=allH.map(h=>h.toLowerCase());
+    for(const pat of hintPatterns){
+      const i=L.findIndex(h=>h.includes(pat));
+      if(i>=0){ sel.value=allH[i]; return; }
+    }
+  }
+
+  populate(el.mapPosition, ['position number','position id','position','pos id','pos #','pos#'], '— auto (uses key column) —');
+  populate(el.mapSurname,  ['surname','last name','lastname','name','fullname','full name'], '— not mapped —');
+  populate(el.mapDesc,     ['description','title','job title','position description','pos desc','role'], '— not mapped —');
+}
+
+function updateColGrid(){
+  if(!S.csvA.headers.length||!S.csvB.headers.length)return;
+  const ka=el.keyA.value,kb=el.keyB.value;
+  const setA=new Set(S.csvA.headers.filter(h=>h!==ka));
+  const setB=new Set(S.csvB.headers.filter(h=>h!==kb));
+  const union=[...new Set([...setA,...setB])].filter(h=>h!==ka&&h!==kb);
+  if(!union.length){el.colGrid.innerHTML='<span class="cempty">No comparable columns.</span>';el.selAll.disabled=true;el.selNone.disabled=true;return;}
+
+  // determine per-column exclusivity
+  const onlyInA=union.filter(h=>setA.has(h)&&!setB.has(h));
+  const onlyInB=union.filter(h=>setB.has(h)&&!setA.has(h));
+  const onlyASet=new Set(onlyInA), onlyBSet=new Set(onlyInB);
+
+  el.colGrid.innerHTML=union.map(h=>{
+    let extra='';
+    if(onlyASet.has(h)) extra=' col-only-a';
+    else if(onlyBSet.has(h)) extra=' col-only-b';
+    return `<label class="cchip on${extra}" title="${onlyASet.has(h)?'Only in CSV A':onlyBSet.has(h)?'Only in CSV B':'In both CSVs'}"><input type="checkbox" checked data-col="${esc(h)}"/>${esc(h)}</label>`;
+  }).join('');
+
+  // show legend only when there are exclusive columns
+  const legendEl=document.getElementById('colLegend');
+  if(onlyInA.length||onlyInB.length){
+    legendEl.innerHTML=`
+      ${onlyInA.length?`<span class="col-legend-item"><span class="col-legend-dot" style="background:#f07800"></span>Only in CSV A</span>`:''}
+      ${onlyInB.length?`<span class="col-legend-item"><span class="col-legend-dot" style="background:var(--br)"></span>Only in CSV B</span>`:''}
+      ${(union.length-onlyInA.length-onlyInB.length)>0?`<span class="col-legend-item"><span class="col-legend-dot" style="background:var(--border)"></span>In both</span>`:''}
+    `;
+    legendEl.style.display='flex';
+  } else {
+    legendEl.style.display='none';
+  }
+
+  el.selAll.disabled=false;el.selNone.disabled=false;
+  el.colGrid.querySelectorAll('.cchip').forEach(c=>{
+    c.addEventListener('click',()=>{const cb=c.querySelector('input');cb.checked=!cb.checked;c.classList.toggle('on',cb.checked);updateRunBtn();});
+  });
+  updateMappingSelects(); updateRunBtn();
+  vfUpdateColSelect();
+}
+el.keyA.addEventListener('change',updateColGrid);
+el.keyB.addEventListener('change',updateColGrid);
+el.selAll.addEventListener('click',()=>{el.colGrid.querySelectorAll('.cchip').forEach(c=>{c.querySelector('input').checked=true;c.classList.add('on');});updateRunBtn();});
+el.selNone.addEventListener('click',()=>{el.colGrid.querySelectorAll('.cchip').forEach(c=>{c.querySelector('input').checked=false;c.classList.remove('on');});updateRunBtn();});
+
+/* opt chips */
+['A','B','C'].forEach(x=>{
+  const chip=$('oc'+x),cb=$('opt'+x);
+  chip.addEventListener('click',()=>{cb.checked=!cb.checked;chip.classList.toggle('on',cb.checked);});
+});
+
+function updateRunBtn(){
+  const hasA=S.csvA.headers.length>0,hasB=S.csvB.headers.length>0;
+  const hasCols=[...el.colGrid.querySelectorAll('input[data-col]:checked')].length>0;
+  el.runBtn.disabled=!(hasA&&hasB&&hasCols);
+}
+
+/* compare */
+function norm(v){let s=String(v??'');if(el.optB.checked)s=s.trim();if(el.optA.checked)s=s.toLowerCase();return s;}
+function byKey(rows,key){const m=new Map();rows.forEach(r=>{const k=String(r[key]??'').trim();if(k)m.set(k,r);});return m;}
+function selCols(){return[...el.colGrid.querySelectorAll('input[data-col]:checked')].map(cb=>cb.getAttribute('data-col'));}
+
+el.runBtn.addEventListener('click',()=>{
+  const ka=el.keyA.value,kb=el.keyB.value,cols=selCols();
+  const mA=byKey(S.csvA.rows,ka),mB=byKey(S.csvB.rows,kb);
+  const kA=new Set(mA.keys()),kB=new Set(mB.keys());
+  const inter=[...kA].filter(k=>kB.has(k));
+  const onlyA=[...kA].filter(k=>!kB.has(k));
+  const onlyB=[...kB].filter(k=>!kA.has(k));
+  S.onlyA=onlyA.map(k=>mA.get(k));
+  S.onlyB=onlyB.map(k=>mB.get(k));
+  S.matched=inter.length;
+  S.mA=mA;S.mB=mB;S.ka=ka;S.kb=kb;S.cols=cols;
+  const allKeys=[...new Set([...inter,...onlyA,...onlyB])];
+  S.allKeys=allKeys;
+  const diffs=[];
+  for(const k of allKeys){
+    const a=mA.get(k)||{},b=mB.get(k)||{};
+    for(const col of cols){
+      const hA=Object.prototype.hasOwnProperty.call(a,col);
+      const hB=Object.prototype.hasOwnProperty.call(b,col);
+      const vA=hA?a[col]:(el.optC.checked?'':undefined);
+      const vB=hB?b[col]:(el.optC.checked?'':undefined);
+      if(vA===undefined&&vB===undefined)continue;
+      if(norm(vA)!==norm(vB)){
+        const type=!kA.has(k)?'only-b':!kB.has(k)?'only-a':'changed';
+        diffs.push({key:k,column:col,a:vA??'',b:vB??'',type});
+      }
+    }
+  }
+  S.diffs=diffs;
+  renderResults(inter.length,onlyA.length,onlyB.length,diffs.length);
+});
+
+function renderResults(mc,ac,bc,dc){
+  const p=el.rPanel;
+  p.classList.remove('hidden');p.classList.add('panel-fade-in');
+  el.statsEl.innerHTML=`
+    <div class="sbox"><div class="snum s">${mc}</div><div class="slbl">Matched</div></div>
+    <div class="sbox"><div class="snum${ac>0?' w':''}">${ac}</div><div class="slbl">Only A</div></div>
+    <div class="sbox"><div class="snum${bc>0?' w':''}">${bc}</div><div class="slbl">Only B</div></div>
+    <div class="sbox"><div class="snum${dc>0?' d':' s'}">${dc}</div><div class="slbl">Differences</div></div>`;
+  renderView();
+  buildExport();
+  setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'start'}),80);
+}
+
+function renderView(){
+  if(S.view==='cards'){el.fbar.classList.remove('hidden');renderCards();}
+  else{el.fbar.classList.add('hidden');renderTable();}
+}
+
+/* view toggle */
+el.vtCards.addEventListener('click',()=>{S.view='cards';el.vtCards.classList.add('active');el.vtTable.classList.remove('active');renderView();});
+el.vtTable.addEventListener('click',()=>{S.view='table';el.vtTable.classList.add('active');el.vtCards.classList.remove('active');renderView();});
+
+/* filter */
+el.fbar.querySelectorAll('.fc').forEach(fc=>{
+  fc.addEventListener('click',()=>{
+    const f=fc.dataset.f;
+    if(S.filter.has(f)){S.filter.delete(f);fc.classList.remove('active');}
+    else{S.filter.add(f);fc.classList.add('active');}
+    renderCards();
+  });
+});
+
+/* ── CARD VIEW ── */
+function renderCards(){
+  if(!S.allKeys.length){el.rbody.innerHTML='<div class="smsg empty">No records to display.</div>';return;}
+
+  const dm=new Map();
+  S.diffs.forEach(d=>{if(!dm.has(d.key))dm.set(d.key,[]);dm.get(d.key).push(d);});
+
+  const kA=new Set(S.mA.keys()),kB=new Set(S.mB.keys());
+
+  // read field mapping from control panel
+  const colPos   = el.mapPosition.value || null; // null = use key itself
+  const colSname = el.mapSurname.value  || null;
+  const colDesc  = el.mapDesc.value     || null;
+
+  let shown=0;
+  const parts=[];
+
+  for(const k of S.allKeys){
+    const diffs=dm.get(k)||[];
+    const inA=kA.has(k),inB=kB.has(k);
+    const type=!inA?'only-b':!inB?'only-a':diffs.length>0?'changed':'same';
+    if(!S.filter.has(type))continue;
+
+    const rowA=S.mA.get(k)||null;
+    const rowB=S.mB.get(k)||null;
+
+    // Step 4 value filter
+    if(!vfRowPass(rowA, rowB))continue;
+    shown++;
+
+    // resolve display values — prefer A, fall back to B
+    const posNum  = colPos   ? (rowA?.[colPos]  ||rowB?.[colPos]  ||k) : k;
+    const surname = colSname ? (rowA?.[colSname]||rowB?.[colSname]||'') : '';
+    const desc    = colDesc  ? (rowA?.[colDesc] ||rowB?.[colDesc] ||'') : '';
+
+    let pillHtml='';
+    if(type==='changed') pillHtml=`<span class="pc-pill pp-changed">CHANGED · ${diffs.length} field${diffs.length!==1?'s':''}</span>`;
+    else if(type==='only-a') pillHtml='<span class="pc-pill pp-only-a">ONLY IN A</span>';
+    else if(type==='only-b') pillHtml='<span class="pc-pill pp-only-b">ONLY IN B</span>';
+    else pillHtml='<span class="pc-pill pp-same">MATCHED</span>';
+
+    const headerHtml=`
+      <div class="pchead">
+        <div class="pchead-top">
+          <span class="pc-num">#${esc(posNum)}</span>
+          <span class="pc-surname">${surname
+            ? esc(surname)
+            : '<span style="opacity:.38;font-style:italic;font-size:clamp(.94rem,.76rem + .4vw,1.06rem);font-weight:400">no name mapped</span>'
+          }</span>
+          ${pillHtml}
+          <span class="pc-toggle">▾</span>
+        </div>
+        <div class="pchead-desc${desc?'':' empty'}">${desc ? esc(desc) : 'no description mapped'}</div>
+      </div>`;
+
+    let bodyHtml='';
+
+    if(type==='only-a'||type==='only-b'){
+      const row=type==='only-a'?rowA:rowB;
+      const dot=type==='only-a'?'dot-a':'dot-b';
+      const lbl=type==='only-a'?'CSV A — not present in B':'CSV B — not present in A';
+      bodyHtml=`<div class="only-body">
+        <div class="pside-lbl"><span class="${dot}"></span>${lbl}</div>
+        ${S.cols.map(col=>{
+          const v=row?.[col]??'';
+          return `<div class="frow"><span class="fk" title="${esc(col)}">${esc(col)}</span><span class="fv ${v===''?'empty':''}">${v===''?'<i>empty</i>':esc(v)}</span></div>`;
+        }).join('')}
+      </div>`;
+
+    } else {
+      const diffCols=new Set(diffs.map(d=>d.column));
+      const showCols=type==='changed'?S.cols.filter(c=>diffCols.has(c)):S.cols;
+
+      const sideHtml=(row,which)=>`
+        <div class="pside">
+          <div class="pside-lbl"><span class="${which==='a'?'dot-a':'dot-b'}"></span>CSV ${which.toUpperCase()}</div>
+          ${showCols.map(col=>{
+            const isDiff=diffCols.has(col);
+            const v=row?.[col]??'';
+            const cls=isDiff?'diff':v===''?'empty':'';
+            return `<div class="frow"><span class="fk" title="${esc(col)}">${esc(col)}</span><span class="fv ${cls}">${v===''?'<i>empty</i>':esc(v)}</span></div>`;
+          }).join('')}
+        </div>`;
+
+      bodyHtml=`<div class="split" style="--split-col:1fr;--split-col-px:50%">${sideHtml(rowA,'a')}<div class="split-drag" data-drag="split"></div>${sideHtml(rowB,'b')}</div>`;
+    }
+
+    const isOpen=type!=='same';
+    const rttBtn=`<button class="rts-btn" onclick="var s=document.getElementById('cardSearch');s.scrollIntoView({behavior:'smooth',block:'center'});s.focus();">↑ return to search</button>`;
+    parts.push(`
+      <div class="pcard type-${type}${isOpen?' open':''}" data-posnum="${esc(String(posNum).toLowerCase())}" data-surname="${esc(String(surname).toLowerCase())}">
+        ${headerHtml}
+        <div class="pcbody">${bodyHtml}${rttBtn}</div>
+      </div>`);
+  }
+
+  if(!shown){el.rbody.innerHTML='<div class="smsg empty">No cards match the current filter.</div>';return;}
+  el.rbody.innerHTML=`<div class="cards-grid">${parts.join('')}</div>`;
+
+  el.rbody.querySelectorAll('.pchead').forEach(h=>{
+    h.addEventListener('click', e => {
+      // Don't expand if user was interacting with a button inside the header
+      if(e.target.closest('button')) return;
+      openCardModal(h.closest('.pcard'));
+    });
+  });
+
+  // Draggable column divider for split cards
+  el.rbody.querySelectorAll('.split-drag').forEach(handle=>{
+    handle.addEventListener('mousedown', e=>{
+      e.preventDefault();
+      const split = handle.closest('.split');
+      const startX = e.clientX;
+      const startW = split.getBoundingClientRect().width;
+      const startLeft = handle.offsetLeft + 3; // center of handle
+      handle.classList.add('dragging');
+
+      function onMove(ev){
+        const delta = ev.clientX - startX;
+        const newLeft = Math.max(80, Math.min(startW - 80, startLeft + delta));
+        const pct = (newLeft / startW * 100).toFixed(1);
+        split.style.gridTemplateColumns = `${pct}% 1fr`;
+        split.style.setProperty('--split-col-px', newLeft+'px');
+      }
+      function onUp(){
+        handle.classList.remove('dragging');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  });
+}
+
+/* ── CARD SEARCH ── */
+(function wireSearch(){
+  let searchTimer=null;
+  const inp=$('cardSearch');
+  const dropdown=$('searchDropdown');
+
+  document.addEventListener('input',function(e){
+    if(e.target.id!=='cardSearch')return;
+    clearTimeout(searchTimer);
+    searchTimer=setTimeout(()=>doSearch(e.target.value.trim()),200);
+  });
+
+  // close dropdown when clicking outside
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('.fbar-search-wrap')){
+      dropdown.classList.remove('open');
+    }
+  });
+
+  // reopen dropdown on refocus if there's a query
+  if(inp) inp.addEventListener('focus',function(){
+    if(this.value.trim()) doSearch(this.value.trim());
+  });
+})();
+
+function doSearch(q){
+  const hint=$('searchHint');
+  const dropdown=$('searchDropdown');
+  const cards=el.rbody.querySelectorAll('.pcard');
+  cards.forEach(c=>c.classList.remove('search-match'));
+
+  if(!q){
+    if(hint) hint.textContent='';
+    dropdown.classList.remove('open');
+    return;
+  }
+
+  const lq=q.toLowerCase();
+  const matches=[...cards].filter(c=>{
+    return (c.dataset.posnum||'').includes(lq)||(c.dataset.surname||'').includes(lq);
+  });
+
+  if(!matches.length){
+    if(hint) hint.textContent='';
+    dropdown.innerHTML='<div class="search-no-results">No matches found</div>';
+    dropdown.classList.add('open');
+    return;
+  }
+
+  matches.forEach(c=>c.classList.add('search-match'));
+  if(hint) hint.textContent=matches.length===1?'1 match':`${matches.length} matches`;
+
+  dropdown.innerHTML=matches.map((c,i)=>{
+    const num=c.dataset.posnum||'';
+    const name=c.dataset.surname||'(no name)';
+    return `<div class="search-result-item">
+      <div class="sri-info">
+        <span class="sri-num">#${esc(num)}</span>
+        <span class="sri-name">${esc(name)}</span>
+      </div>
+      <button class="sri-go" data-idx="${i}">Go to card →</button>
+    </div>`;
+  }).join('');
+
+  dropdown.classList.add('open');
+
+  dropdown.querySelectorAll('.sri-go').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const card=matches[+btn.dataset.idx];
+      card.classList.add('open');
+      dropdown.classList.remove('open');
+      card.scrollIntoView({behavior:'smooth',block:'center'});
+    });
+  });
+}
+function renderTable(){
+  // apply value filter to diffs
+  let diffs = S.diffs;
+  if(S.vf.col && S.vf.values.size > 0){
+    const filteredKeys = new Set(
+      S.allKeys.filter(k => vfRowPass(S.mA?S.mA.get(k)||null:null, S.mB?S.mB.get(k)||null:null))
+    );
+    diffs = diffs.filter(d => filteredKeys.has(d.key));
+  }
+  if(!diffs.length){el.rbody.innerHTML='<div class="smsg info">✅ No differences found for the selected columns and options.</div>';return;}
+  const lim=diffs.slice(0,2000);
+  const rows=lim.map(d=>`<tr>
+    <td class="tdkey">${esc(d.key)}</td>
+    <td class="tdcol">${esc(d.column)}</td>
+    <td class="tdval">${tv(d.a)}</td>
+    <td class="tdval">${tv(d.b)}</td>
+    <td><span class="tpill ${d.type}">${{changed:'CHANGED','only-a':'ONLY A','only-b':'ONLY B'}[d.type]}</span></td>
+  </tr>`).join('');
+  el.rbody.innerHTML=`
+    ${diffs.length>2000?`<div class="smsg info" style="margin-bottom:10px;">Showing first 2,000 of ${diffs.length.toLocaleString()} differences.</div>`:''}
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Key</th><th>Column</th><th>Value A</th><th>Value B</th><th>Type</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+function tv(v){
+  if(v===undefined)return'<span class="vm">missing</span>';
+  if(v==='')return'<span class="ve">empty</span>';
+  return`<span class="vc">${esc(String(v))}</span>`;
+}
+
+/* export */
+function buildExport(){
+  el.exprow.innerHTML=`
+    <button class="sm" id="exD" ${S.diffs.length?'':'disabled'}>⬇ Differences CSV</button>
+    <button class="sm" id="exA" ${S.onlyA.length?'':'disabled'}>⬇ Only-in-A CSV</button>
+    <button class="sm" id="exB" ${S.onlyB.length?'':'disabled'}>⬇ Only-in-B CSV</button>`;
+  $('exD').addEventListener('click',()=>{
+    dlCsv('csv_differences.csv',['Key','Column','Value_A','Value_B','Type'],S.diffs.map(d=>({Key:d.key,Column:d.column,Value_A:d.a,Value_B:d.b,Type:d.type})));
+  });
+  $('exA').addEventListener('click',()=>dlCsv('only_in_A.csv',S.csvA.headers,S.onlyA));
+  $('exB').addEventListener('click',()=>dlCsv('only_in_B.csv',S.csvB.headers,S.onlyB));
+}
+function ecv(v){const s=String(v??'');return/[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
+function dlCsv(name,headers,rows){
+  const csv=[headers.map(ecv).join(','),...rows.map(r=>headers.map(h=>ecv(r[h]??'')).join(','))].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+}
+
+/* re-render cards when mapping changes */
+[el.mapPosition, el.mapSurname, el.mapDesc].forEach(sel=>{
+  sel.addEventListener('change',()=>{
+    if(!el.rPanel.classList.contains('hidden')&&S.view==='cards') renderCards();
+  });
+});
+
+
+/* ════════════════════════════════════════════════════
+   STEP 4 — VALUE FILTER
+   State: S.vf = { col: string, values: Set<string> }
+   Filter is OR — a row passes if its value for vf.col
+   matches ANY value in vf.values. If vf.values is empty
+   or vf.col is blank, all rows pass.
+════════════════════════════════════════════════════ */
+S.vf = { col: '', values: new Set() };
+
+const vfEl = {
+  col:       $('vfCol'),
+  input:     $('vfInput'),
+  dropdown:  $('vfDropdown'),
+  addBtn:    $('vfAddBtn'),
+  pills:     $('vfPills'),
+  label:     $('vfPillsLabel'),
+  empty:     $('vfEmpty'),
+  clearAll:  $('vfClearAll'),
+};
+
+/* Populate the column dropdown when both CSVs are loaded */
+function vfUpdateColSelect(){
+  if(!S.csvA.headers.length && !S.csvB.headers.length) return;
+  const all = [...new Set([...S.csvA.headers, ...S.csvB.headers])];
+  const cur = vfEl.col.value;
+  vfEl.col.innerHTML =
+    '<option value="">— choose a column —</option>' +
+    all.map(h=>`<option value="${esc(h)}">${esc(h)}</option>`).join('');
+  vfEl.col.disabled = false;
+  if(cur && all.includes(cur)) vfEl.col.value = cur;
+  // reset values if col no longer valid
+  if(S.vf.col && !all.includes(S.vf.col)) vfClearAllPills();
+}
+
+/* Get all unique values for the selected column from both CSVs */
+function vfValuesForCol(col){
+  if(!col) return [];
+  const seen = new Set();
+  [...S.csvA.rows, ...S.csvB.rows].forEach(r=>{
+    const v = String(r[col]??'').trim();
+    if(v !== '') seen.add(v);
+  });
+  return [...seen].sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:'base'}));
+}
+
+/* Render the dropdown list filtered by current input */
+function vfRenderDropdown(){
+  const col = vfEl.col.value;
+  if(!col){ vfEl.dropdown.classList.remove('open'); return; }
+  const q = vfEl.input.value.trim().toLowerCase();
+  const all = vfValuesForCol(col);
+  const filtered = q
+    ? all.filter(v => v.toLowerCase().includes(q))
+    : all;
+
+  if(!filtered.length){
+    vfEl.dropdown.innerHTML = `<div class="vf-no-opts">No values found</div>`;
+  } else {
+    vfEl.dropdown.innerHTML = filtered.map((v,i)=>{
+      const already = S.vf.values.has(v);
+      return `<div class="vf-opt${already?' dimmed':''}" data-val="${esc(v)}">${esc(v)}${already?' ✓':''}</div>`;
+    }).join('');
+    vfEl.dropdown.querySelectorAll('.vf-opt').forEach(opt=>{
+      opt.addEventListener('mousedown', e=>{ e.preventDefault(); vfAddValue(opt.dataset.val); });
+    });
+  }
+  vfEl.dropdown.classList.add('open');
+}
+
+/* Add a value pill */
+function vfAddValue(val){
+  val = val.trim();
+  if(!val || !vfEl.col.value) return;
+  // If col changed, clear old pills
+  if(S.vf.col && S.vf.col !== vfEl.col.value) vfClearAllPills(false);
+  S.vf.col = vfEl.col.value;
+  if(S.vf.values.has(val)){ vfEl.input.value=''; vfEl.dropdown.classList.remove('open'); return; }
+  S.vf.values.add(val);
+  vfEl.input.value = '';
+  vfEl.dropdown.classList.remove('open');
+  vfRenderPills();
+  vfMaybeRerender();
+}
+
+/* Remove one pill */
+function vfRemoveValue(val){
+  S.vf.values.delete(val);
+  if(S.vf.values.size === 0) S.vf.col = '';
+  vfRenderPills();
+  vfMaybeRerender();
+}
+
+/* Clear all pills */
+function vfClearAllPills(rerender=true){
+  S.vf.values.clear();
+  S.vf.col = '';
+  vfRenderPills();
+  if(rerender) vfMaybeRerender();
+}
+
+/* Render pills into the pills box */
+function vfRenderPills(){
+  const hasPills = S.vf.values.size > 0;
+  vfEl.label.style.display = hasPills ? 'flex' : 'none';
+  vfEl.empty.style.display  = hasPills ? 'none' : 'inline';
+
+  // Remove old pills (keep the empty span)
+  [...vfEl.pills.querySelectorAll('.vf-pill')].forEach(p=>p.remove());
+
+  S.vf.values.forEach(v=>{
+    const pill = document.createElement('span');
+    pill.className = 'vf-pill';
+    pill.title = `Click to remove "${v}"`;
+    pill.innerHTML = `${esc(S.vf.col)}: ${esc(v)} <span class="vf-pill-x">✕</span>`;
+    pill.addEventListener('click', ()=>vfRemoveValue(v));
+    vfEl.pills.appendChild(pill);
+  });
+}
+
+/* Re-render cards/table if results are already visible */
+function vfMaybeRerender(){
+  if(!el.rPanel.classList.contains('hidden')) renderView();
+}
+
+/* Column change → reset values, update input state */
+vfEl.col.addEventListener('change', ()=>{
+  if(vfEl.col.value !== S.vf.col) vfClearAllPills(false);
+  const hasCol = !!vfEl.col.value;
+  vfEl.input.disabled = !hasCol;
+  vfEl.addBtn.disabled = !hasCol;
+  if(hasCol) vfEl.input.focus();
+  vfEl.dropdown.classList.remove('open');
+  vfMaybeRerender();
+});
+
+/* Input → live dropdown */
+vfEl.input.addEventListener('input', vfRenderDropdown);
+vfEl.input.addEventListener('focus', vfRenderDropdown);
+vfEl.input.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){
+    e.preventDefault();
+    const focused = vfEl.dropdown.querySelector('.vf-opt.focused');
+    if(focused) vfAddValue(focused.dataset.val);
+    else if(vfEl.input.value.trim()) vfAddValue(vfEl.input.value);
+  }
+  if(e.key==='ArrowDown'){
+    e.preventDefault();
+    const opts=[...vfEl.dropdown.querySelectorAll('.vf-opt')];
+    const cur=opts.findIndex(o=>o.classList.contains('focused'));
+    opts.forEach(o=>o.classList.remove('focused'));
+    if(opts[cur+1]) opts[cur+1].classList.add('focused');
+    else if(opts[0]) opts[0].classList.add('focused');
+  }
+  if(e.key==='ArrowUp'){
+    e.preventDefault();
+    const opts=[...vfEl.dropdown.querySelectorAll('.vf-opt')];
+    const cur=opts.findIndex(o=>o.classList.contains('focused'));
+    opts.forEach(o=>o.classList.remove('focused'));
+    if(opts[cur-1]) opts[cur-1].classList.add('focused');
+    else if(opts[opts.length-1]) opts[opts.length-1].classList.add('focused');
+  }
+  if(e.key==='Escape') vfEl.dropdown.classList.remove('open');
+});
+
+/* Add button */
+vfEl.addBtn.addEventListener('click', ()=>vfAddValue(vfEl.input.value));
+
+/* Clear all button */
+vfEl.clearAll.addEventListener('click', ()=>vfClearAllPills());
+
+/* Close dropdown on outside click */
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.vf-combo-wrap') && !e.target.closest('#vfCol'))
+    vfEl.dropdown.classList.remove('open');
+});
+
+/* Helper: does a row pass the active value filter? */
+function vfRowPass(rowA, rowB){
+  if(!S.vf.col || S.vf.values.size===0) return true;
+  const col = S.vf.col;
+  const vA = String(rowA?.[col]??'').trim();
+  const vB = String(rowB?.[col]??'').trim();
+  return S.vf.values.has(vA) || S.vf.values.has(vB);
+}
+
+/* ────────────────────────────────── */
+
+el.clearBtn.addEventListener('click',()=>{
+  vfClearAllPills(false);
+  vfEl.col.innerHTML='<option value="">— upload files first —</option>';
+  vfEl.col.disabled=true;
+  vfEl.input.disabled=true;
+  vfEl.addBtn.disabled=true;
+  S.csvA={headers:[],rows:[]};S.csvB={headers:[],rows:[]};
+  S.diffs=[];S.onlyA=[];S.onlyB=[];S.matched=0;S.allKeys=[];
+  ['A','B'].forEach(w=>{
+    const zone=w==='A'?el.zoneA:el.zoneB,nameEl=w==='A'?el.nameA:el.nameB,
+          keyEl=w==='A'?el.keyA:el.keyB,fileEl=w==='A'?el.fileA:el.fileB,
+          iconEl=w==='A'?el.iconA:el.iconB;
+    zone.classList.remove('loaded');
+    nameEl.className='fhint';nameEl.textContent='Click or drag to upload';
+    keyEl.disabled=true;keyEl.innerHTML=`<option>— upload CSV ${w} first —</option>`;
+    fileEl.value='';iconEl.textContent=w==='A'?'🅰️':'🅱️';
+  });
+  el.mapPosition.disabled=true; el.mapPosition.innerHTML='<option value="">— auto (uses key column) —</option>';
+  el.mapSurname.disabled=true;  el.mapSurname.innerHTML='<option value="">— not mapped —</option>';
+  el.mapDesc.disabled=true;     el.mapDesc.innerHTML='<option value="">— not mapped —</option>';
+  el.colGrid.innerHTML='<span class="cempty">Upload both files to see columns</span>';
+  el.selAll.disabled=true;el.selNone.disabled=true;el.runBtn.disabled=true;
+  el.rPanel.classList.add('hidden');
+});
+
+/* ════════════════════════════════════════════════════
+   CARD EXPAND MODAL — FLIP-style animation
+════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function wireModal(){
+  const overlay  = document.getElementById('cardOverlay');
+  const modal    = document.getElementById('cardModal');
+  const mHead    = document.getElementById('modalHead');
+  const mTypeBar = document.getElementById('modalTypeBar');
+  const mNum     = document.getElementById('modalNum');
+  const mName    = document.getElementById('modalName');
+  const mDesc    = document.getElementById('modalDesc');
+  const mPill    = document.getElementById('modalPill');
+  const mBody    = document.getElementById('modalBody');
+  const mClose   = document.getElementById('modalClose');
+
+  const TYPE_COLOURS = {
+    changed: '#FACC15',
+    'only-a':'#FF6B35',
+    'only-b':'#A78BFA',
+    same:    '#00FFD1',
+  };
+
+  let sourceCard = null;
+  let closing    = false;
+
+  /* ── helpers ── */
+  function setRect(el, r, extra={}){
+    Object.assign(el.style, {
+      top:    r.top    + 'px',
+      left:   r.left   + 'px',
+      width:  r.width  + 'px',
+      height: r.height + 'px',
+      ...extra
+    });
+  }
+
+  function targetRect(){
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const w  = Math.min(vw * 0.92, 880);
+    const h  = Math.min(vh * 0.88, 740);
+    return { top:(vh-h)/2, left:(vw-w)/2, width:w, height:h };
+  }
+
+  /* ── open ── */
+  window.openCardModal = function(card){
+    if(closing) return;
+    sourceCard = card;
+
+    /* populate modal content from the card's data */
+    const type    = [...card.classList].find(c=>c.startsWith('type-'))?.replace('type-','') || 'same';
+    const accentC = TYPE_COLOURS[type] || '#00FFD1';
+
+    mTypeBar.style.background = accentC;
+    mNum.textContent  = card.querySelector('.pc-num')?.textContent  || '';
+    mName.textContent = card.querySelector('.pc-surname')?.textContent || '—';
+    mDesc.textContent = card.querySelector('.pchead-desc:not(.empty)')?.textContent || '';
+    mPill.innerHTML   = card.querySelector('.pc-pill')?.outerHTML || '';
+
+    /* clone the body content (expanded) */
+    const body = card.querySelector('.pcbody');
+    if(body){
+      const clone = body.cloneNode(true);
+      /* remove the "return to search" button — not needed in modal */
+      clone.querySelector('.rts-btn')?.remove();
+      mBody.innerHTML = '';
+      mBody.appendChild(clone);
+      /* re-wire split drag inside modal */
+      mBody.querySelectorAll('.split-drag').forEach(handle=>{
+        handle.addEventListener('mousedown', e=>{
+          e.preventDefault();
+          const split = handle.closest('.split');
+          const startX = e.clientX, startW = split.getBoundingClientRect().width;
+          const startLeft = handle.offsetLeft + 3;
+          handle.classList.add('dragging');
+          const onMove = ev=>{
+            const dl = ev.clientX - startX;
+            const nl = Math.max(80, Math.min(startW-80, startLeft+dl));
+            split.style.gridTemplateColumns = `${(nl/startW*100).toFixed(1)}% 1fr`;
+          };
+          const onUp = ()=>{
+            handle.classList.remove('dragging');
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+          };
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+      });
+    }
+
+    /* dim source card */
+    card.style.opacity = '.35';
+    card.style.transition = 'opacity .32s ease';
+
+    /* step 1: place modal at source card rect with NO transition */
+    const src = card.getBoundingClientRect();
+    modal.style.transition = 'none';
+    modal.style.borderColor = accentC + '80';
+    setRect(modal, src, { opacity:'0', pointerEvents:'none', transform:'scale(1)' });
+
+    /* force reflow */
+    modal.offsetHeight; // eslint-disable-line
+
+    /* step 2: enable transition and fly to centre */
+    modal.style.transition = '';
+    const tgt = targetRect();
+    setRect(modal, tgt, { opacity:'1', pointerEvents:'all' });
+
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  /* ── close ── */
+  function closeModal(){
+    if(closing || !sourceCard) return;
+    closing = true;
+
+    /* fly back to source card */
+    const src = sourceCard.getBoundingClientRect();
+    setRect(modal, src, { opacity:'0' });
+
+    overlay.classList.remove('open');
+
+    modal.addEventListener('transitionend', function handler(e){
+      if(e.propertyName !== 'opacity' && e.propertyName !== 'top') return;
+      modal.removeEventListener('transitionend', handler);
+      modal.style.pointerEvents = 'none';
+      if(sourceCard){
+        sourceCard.style.opacity = '';
+        sourceCard.style.transition = '';
+        sourceCard = null;
+      }
+      mBody.innerHTML = '';
+      document.body.style.overflow = '';
+      closing = false;
+    });
+  }
+
+  mClose.addEventListener('click', closeModal);
+  overlay.addEventListener('click', e => { if(!e.target.closest('.step-modal')) closeModal(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+  /* reposition on resize while open */
+  window.addEventListener('resize', ()=>{
+    if(sourceCard && parseFloat(modal.style.opacity) > 0.5){
+      const tgt = targetRect();
+      setRect(modal, tgt);
+    }
+  });
+});
+
+/* ════════════════════════════════════════════════════
+   STEP HERO MODAL — same FLIP animation as card modal
+════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function wireStepModal(){
+  const overlay   = document.getElementById('cardOverlay');
+  const stepModal = document.getElementById('stepModal');
+  const smNum     = document.getElementById('smNum');
+  const smTitle   = document.getElementById('smTitle');
+  const smBody    = document.getElementById('smBody');
+  const smClose   = document.getElementById('smClose');
+
+  /* ── rich content for each step ── */
+  const STEPS = {
+    '01': {
+      num: '01', title: 'Upload Files',
+      lead: 'Drag & drop or click to load <strong>CSV A</strong> (your baseline) and <strong>CSV B</strong> (the updated version). Both files are processed entirely in your browser — nothing is uploaded to any server.',
+      tips: [
+        { icon: '🅰️', label: 'CSV A — Baseline', text: 'This is your <strong>original / reference</strong> file. Rows present here but not in B will be flagged as <strong>Only in A</strong>.' },
+        { icon: '🅱️', label: 'CSV B — Updated', text: 'This is the <strong>newer or modified</strong> file. Rows present here but not in A will be flagged as <strong>Only in B</strong>.' },
+        { icon: '📎', label: 'Accepted formats', text: 'Standard <strong>.csv</strong> files with a header row. UTF-8 encoding recommended. Files with quoted fields and commas inside values are supported.' },
+        { icon: '🔒', label: 'Privacy', text: 'Your data never leaves your device. All parsing and comparison happens locally using browser JavaScript — no server, no upload, no tracking.' },
+      ]
+    },
+    '02': {
+      num: '02', title: 'Configure the Comparison',
+      lead: 'Tell the tool how to match rows between the two files and which columns to compare.',
+      tips: [
+        { icon: '🔑', label: 'Key Column', text: 'The column that <strong>uniquely identifies each row</strong> — e.g. Position #, Employee ID, SKU. The tool uses this to pair rows across the two files. Pick a key that is stable and unique in both files.' },
+        { icon: '☑️', label: 'Columns to Compare', text: 'Tick any columns you want the tool to check for changes. You can use <strong>Select All / None</strong> to bulk-toggle, or hand-pick just the fields that matter.' },
+        { icon: '🔡', label: 'Ignore Case', text: 'When on, <strong>SMITH</strong> and <strong>smith</strong> are treated as equal. Useful for name or status fields where capitalisation may vary between exports.' },
+        { icon: '✂️', label: 'Trim Whitespace', text: 'Strips leading and trailing spaces before comparing. Catches differences that are <strong>invisible to the eye</strong> but would otherwise show as a change.' },
+        { icon: '🟰', label: 'Treat Missing as Empty', text: 'If a column exists in one file but not the other, treat the missing side as an empty string instead of skipping the comparison entirely.' },
+      ]
+    },
+    '02b': {
+      num: '02b', title: 'Map Card Display Fields',
+      lead: 'Optional — map columns to display labels so result cards show meaningful information instead of raw key values.',
+      tips: [
+        { icon: '🔢', label: 'Position / ID field', text: 'The column to show as the <strong>card number badge</strong> (e.g. Position #). Defaults to the key column value if left blank.' },
+        { icon: '👤', label: 'Name / Title field', text: 'The column to show as the <strong>large heading</strong> on each card — typically a surname, full name, or job title.' },
+        { icon: '📝', label: 'Description field', text: 'A secondary column shown in smaller text below the name — e.g. rank, department, or role description.' },
+        { icon: '💡', label: 'Tip', text: 'These mappings are display-only and do not affect the comparison logic. You can change them at any time and re-run to refresh the card labels.' },
+      ]
+    },
+    '03': {
+      num: '03', title: 'Filter by Value',
+      lead: 'Optional — narrow results to specific rows by picking a column and adding one or more values as filter pills.',
+      tips: [
+        { icon: '🗂️', label: 'Pick a column', text: 'Choose any column from the union of both CSV headers. The filter will check that column\'s value in <strong>either</strong> CSV A or CSV B for each row.' },
+        { icon: '🏷️', label: 'Add value pills', text: 'Type to search for values and click to add them as pills. Each pill represents one filter value. Multiple pills use <strong>OR logic</strong> — a row is shown if it matches any pill.' },
+        { icon: '✕', label: 'Remove pills', text: 'Click the × on a pill to remove it. Remove all pills to clear the filter entirely. The results update immediately.' },
+        { icon: '⚡', label: 'Combined filters', text: 'The value filter works together with the type filter chips (Changed, Only A, Only B, Matched) — both must pass for a row to appear.' },
+      ]
+    },
+    '04': {
+      num: '04', title: 'Run & Review Results',
+      lead: 'Hit <strong>Run Comparison</strong> to start. Results appear instantly as colour-coded cards or a flat table.',
+      tips: [
+        { icon: '🟡', label: 'Changed', text: 'Rows present in <strong>both</strong> files but with at least one differing value in the compared columns. Changed fields are highlighted in yellow.' },
+        { icon: '🟠', label: 'Only in A', text: 'Rows that exist in CSV A but have <strong>no matching key</strong> in CSV B — i.e. removed or not yet in B.' },
+        { icon: '🟣', label: 'Only in B', text: 'Rows that exist in CSV B but have <strong>no matching key</strong> in CSV A — i.e. new additions.' },
+        { icon: '🟢', label: 'Matched', text: 'Rows present in both files with <strong>identical values</strong> across all compared columns.' },
+        { icon: '🔍', label: 'Search & filter', text: 'Use the search bar to find cards by name or position number. Use the type chips to show only the categories you care about.' },
+        { icon: '💾', label: 'Export', text: 'Download any subset — Changed rows, Only-A rows, or Only-B rows — as a clean CSV for further processing or reporting.' },
+      ]
+    },
+  };
+
+  let srcEl   = null;
+  let closing = false;
+
+  function setRect(el, r, extra={}){
+    Object.assign(el.style, { top:r.top+'px', left:r.left+'px', width:r.width+'px', height:r.height+'px', ...extra });
+  }
+
+  function targetRect(){
+    const vw=window.innerWidth, vh=window.innerHeight;
+    const w=Math.min(vw*0.92, 860);
+    const h=Math.min(vh*0.88, 720);
+    return { top:(vh-h)/2, left:(vw-w)/2, width:w, height:h };
+  }
+
+  function openStep(el){
+    if(closing) return;
+    const key = el.dataset.step;
+    const data = STEPS[key];
+    if(!data) return;
+    srcEl = el;
+
+    /* populate */
+    smNum.textContent   = data.num;
+    smTitle.innerHTML   = data.title + (data.optional ? ' <span class="thb-opt">optional</span>' : '');
+    smBody.innerHTML    = `
+      <div class="sm-lead">${data.lead}</div>
+      <div class="sm-tips">${data.tips.map(t=>`
+        <div class="sm-tip">
+          <div class="sm-tip-icon">${t.icon}</div>
+          <div class="sm-tip-body">
+            <div class="sm-tip-label">${t.label}</div>
+            <div class="sm-tip-text">${t.text}</div>
+          </div>
+        </div>`).join('')}
+      </div>`;
+
+    /* dim source */
+    el.style.opacity   = '.35';
+    el.style.transition= 'opacity .32s ease';
+
+    /* snap to source rect, no transition */
+    const src = el.getBoundingClientRect();
+    stepModal.style.transition = 'none';
+    setRect(stepModal, src, { opacity:'0', pointerEvents:'none' });
+    stepModal.offsetHeight; // reflow
+
+    /* fly to centre */
+    stepModal.style.transition = '';
+    const tgt = targetRect();
+    setRect(stepModal, tgt, { opacity:'1', pointerEvents:'all' });
+
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeStep(){
+    if(closing || !srcEl) return;
+    closing = true;
+    const src = srcEl.getBoundingClientRect();
+    setRect(stepModal, src, { opacity:'0' });
+    overlay.classList.remove('open');
+    stepModal.addEventListener('transitionend', function h(e){
+      if(e.propertyName !== 'opacity' && e.propertyName !== 'top') return;
+      stepModal.removeEventListener('transitionend', h);
+      stepModal.style.pointerEvents = 'none';
+      if(srcEl){ srcEl.style.opacity=''; srcEl.style.transition=''; srcEl=null; }
+      smBody.innerHTML = '';
+      document.body.style.overflow = '';
+      closing = false;
+    });
+  }
+
+  /* wire step cards */
+  document.querySelectorAll('.thb-step[data-step]').forEach(el=>{
+    el.addEventListener('click', ()=> openStep(el));
+  });
+
+  smClose.addEventListener('click', closeStep);
+  overlay.addEventListener('click', e=>{ if(!e.target.closest('.card-modal') && !e.target.closest('.step-modal')) closeStep(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeStep(); });
+
+  window.addEventListener('resize', ()=>{
+    if(srcEl && parseFloat(stepModal.style.opacity) > 0.5){
+      setRect(stepModal, targetRect());
+    }
+  });
+});
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+})();
+</script>
+<!-- Step expand modal (reuses card-overlay) -->
+<div class="step-modal" id="stepModal">
+  <div class="sm-head">
+    <div class="sm-num" id="smNum"></div>
+    <div class="sm-head-text">
+      <div class="sm-title" id="smTitle"></div>
+    </div>
+    <button class="sm-close" id="smClose">✕</button>
+  </div>
+  <div class="sm-body" id="smBody"></div>
+</div>
+
+<!-- Card expand overlay -->
+<div class="card-overlay" id="cardOverlay"></div>
+<div class="card-modal" id="cardModal">
+  <div class="modal-head" id="modalHead">
+    <div class="modal-type-bar" id="modalTypeBar"></div>
+    <div class="modal-head-content">
+      <div class="modal-num" id="modalNum"></div>
+      <div class="modal-name" id="modalName"></div>
+      <div class="modal-desc" id="modalDesc"></div>
+      <div class="modal-pill" id="modalPill"></div>
+    </div>
+    <button class="modal-close" id="modalClose" title="Close">✕</button>
+  </div>
+  <div class="modal-body" id="modalBody"></div>
+</div>
+
+</body>
+</html>

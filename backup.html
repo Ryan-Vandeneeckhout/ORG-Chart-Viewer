@@ -5,85 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CommandGridPro</title>
   <link rel="stylesheet" href="shared.css"/>
-  <style>
-    /* ── Accent colour palette ── */
-    :root {
-      --c-teal:   #2dd4bf;
-      --c-orange: #fb923c;
-      --c-violet: #a78bfa;
-      --c-gold:   #fbbf24;
-      --c-sky:    #38bdf8;
-      --c-rose:   #fb7185;
-      --c-lime:   #a3e635;
-      --c-amber:  #f59e0b;
-      --c-cyan:   #22d3ee;
-    }
-
-    /* ── Default coloured state ── */
-    .nav-card[data-accent="teal"]   { --ac: var(--c-teal);   }
-    .nav-card[data-accent="orange"] { --ac: var(--c-orange); }
-    .nav-card[data-accent="violet"] { --ac: var(--c-violet); }
-    .nav-card[data-accent="gold"]   { --ac: var(--c-gold);   }
-    .nav-card[data-accent="sky"]    { --ac: var(--c-sky);    }
-    .nav-card[data-accent="rose"]   { --ac: var(--c-rose);   }
-    .nav-card[data-accent="lime"]   { --ac: var(--c-lime);   }
-    .nav-card[data-accent="amber"]  { --ac: var(--c-amber);  }
-    .nav-card[data-accent="cyan"]   { --ac: var(--c-cyan);   }
-
-    .nav-card {
-      background: color-mix(in srgb, var(--ac, #2dd4bf) 14%, #0d1117) !important;
-      border-color: color-mix(in srgb, var(--ac, #2dd4bf) 45%, transparent) !important;
-      transition: box-shadow 0.25s ease, transform 0.2s ease, background 0.25s ease !important;
-    }
-
-    .nav-card .card-icon-ring {
-      border-color: color-mix(in srgb, var(--ac, #2dd4bf) 50%, transparent) !important;
-      background: color-mix(in srgb, var(--ac, #2dd4bf) 12%, transparent) !important;
-    }
-
-    .nav-card svg {
-      stroke: var(--ac, #2dd4bf) !important;
-    }
-
-    .nav-card .card-bar {
-      background: var(--ac, #2dd4bf) !important;
-      opacity: 0.7;
-    }
-
-    .nav-card .card-label {
-      color: color-mix(in srgb, var(--ac, #2dd4bf) 70%, #e2e8f0) !important;
-    }
-
-    .nav-card .card-num {
-      color: color-mix(in srgb, var(--ac, #2dd4bf) 60%, #64748b) !important;
-    }
-
-    /* ── Hover: glow activates ── */
-    .nav-card:hover {
-      background: color-mix(in srgb, var(--ac, #2dd4bf) 22%, #0d1117) !important;
-      border-color: color-mix(in srgb, var(--ac, #2dd4bf) 75%, transparent) !important;
-      box-shadow:
-        0 0 16px color-mix(in srgb, var(--ac, #2dd4bf) 45%, transparent),
-        0 0 40px color-mix(in srgb, var(--ac, #2dd4bf) 20%, transparent),
-        inset 0 0 20px color-mix(in srgb, var(--ac, #2dd4bf) 8%, transparent) !important;
-      transform: translateY(-3px) scale(1.02) !important;
-    }
-
-    .nav-card:hover .card-icon-ring {
-      border-color: color-mix(in srgb, var(--ac, #2dd4bf) 80%, transparent) !important;
-      background: color-mix(in srgb, var(--ac, #2dd4bf) 20%, transparent) !important;
-      box-shadow: 0 0 12px color-mix(in srgb, var(--ac, #2dd4bf) 40%, transparent) !important;
-    }
-
-    .nav-card:hover .card-bar {
-      opacity: 1;
-      box-shadow: 0 0 8px var(--ac, #2dd4bf) !important;
-    }
-
-    .nav-card:hover .card-label {
-      color: var(--ac, #2dd4bf) !important;
-    }
-  </style>
 </head>
 <body>
 <div class="page">
@@ -147,9 +68,12 @@
   ================================================================ */
   const TOOLS = [
     { label: 'CSV Compare',      accent: 'teal',   icon: 'file',     action: 'tool-pdf.html'      },
+    { label: 'Tool 2',           accent: 'orange', icon: 'grid',     action: 'tool-2.html'        },
+    { label: 'Tool 3',           accent: 'violet', icon: 'star',     action: 'tool-3.html'        },
+    { label: 'Tool 4',           accent: 'gold',   icon: 'alert',    action: 'tool-4.html'        },
     { label: 'Command Pro All',  accent: 'sky',    icon: 'users',    action: 'tool-cgp.html'      },
+    { label: 'Tool 6',           accent: 'rose',   icon: 'radio',    action: 'tool-5.html'        },
     { label: 'Org Chart',        accent: 'cyan',   icon: 'layers',   action: 'tool-orgchart.html' },
-    { label: 'Tool 4',           accent: 'gold',   icon: 'star',     action: 'tool-4.html'        },
   ];
 
   /* ================================================================

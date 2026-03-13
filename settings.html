@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings — CommandGridPro</title>
+  <link rel="stylesheet" href="shared.css"/>
+  <style>
+    /* ── Settings page layout ── */
+    .settings-page {
+      flex: 1;
+      padding: clamp(24px,3vw,48px) clamp(16px,3vw,48px) 48px;
+      max-width: 1100px; width: 100%; margin: 0 auto;
+    }
+
+    .settings-header { margin-bottom: 36px; }
+
+    .settings-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(1.6rem,1.2rem + 2vw,2.6rem);
+      font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--text, #e8e8e8); line-height: 1;
+      display: flex; align-items: center; gap: 14px;
+      transition: color .4s;
+    }
+    .settings-title span { color: var(--teal); transition: color .4s; }
+
+    .settings-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(.72rem,.6rem + .3vw,.82rem);
+      color: var(--muted, #666); letter-spacing: .2em; margin-top: 8px;
+      transition: color .4s;
+    }
+    .settings-divider {
+      height: 1px;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--teal) 30%, transparent), transparent);
+      margin-top: 20px; transition: background .4s;
+    }
+
+    /* ── Section ── */
+    .settings-section { margin-bottom: 40px; }
+
+    .settings-section-head {
+      display: flex; align-items: baseline; gap: 14px;
+      margin-bottom: 16px;
+    }
+    .settings-section-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(1rem,.88rem + .5vw,1.2rem);
+      font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--text, #ccc); transition: color .4s;
+    }
+    .settings-section-note {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(.72rem,.62rem + .2vw,.8rem);
+      color: var(--muted, #555); letter-spacing: .1em; transition: color .4s;
+    }
+
+    /* ── Active theme banner ── */
+    .active-theme-banner {
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 20px;
+      background: var(--panel, #0c0c0c);
+      border: 1px solid color-mix(in srgb, var(--teal) 25%, transparent);
+      border-radius: 4px; margin-bottom: 20px;
+      transition: background .4s, border-color .4s;
+    }
+    .atb-swatch {
+      width: 36px; height: 36px; border-radius: 4px;
+      border: 1px solid rgba(255,255,255,.1);
+      flex-shrink: 0; display: block;
+      transition: background .4s;
+    }
+    .atb-info { flex: 1; min-width: 0; }
+    .atb-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(.95rem,.82rem + .4vw,1.1rem);
+      font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text, #e8e8e8); transition: color .4s;
+    }
+    .atb-note {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(.72rem,.62rem + .2vw,.8rem);
+      color: var(--muted, #888); letter-spacing: .08em; margin-top: 2px;
+      transition: color .4s;
+    }
+    .atb-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--teal);
+      border: 1px solid color-mix(in srgb, var(--teal) 30%, transparent);
+      background: color-mix(in srgb, var(--teal) 8%, transparent);
+      padding: 3px 10px; border-radius: 2px;
+      transition: color .4s, border-color .4s, background .4s;
+    }
+
+    /* ── Theme grid ── */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .theme-card {
+      position: relative;
+      background: var(--panel, #0c0c0c);
+      border: 1px solid var(--border, rgba(255,255,255,.1));
+      border-radius: 4px; padding: 14px 14px 12px;
+      cursor: pointer; text-align: left;
+      transition: border-color .2s, box-shadow .2s, background .4s;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .theme-card:hover {
+      border-color: color-mix(in srgb, var(--teal) 40%, var(--border));
+      background: var(--panel-soft, #111);
+    }
+    .theme-card.cgp-theme-active {
+      border-color: color-mix(in srgb, var(--teal) 60%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 20%, transparent), 0 4px 18px rgba(0,0,0,.5);
+    }
+    .theme-card.cgp-theme-active::after {
+      content: '✓';
+      position: absolute; top: 8px; right: 10px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .72rem; color: var(--teal);
+    }
+    .tc-swatch {
+      width: 100%; height: 28px; border-radius: 2px;
+      border: 1px solid rgba(255,255,255,.08);
+      flex-shrink: 0; display: block;
+    }
+    .tc-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(.88rem,.78rem + .3vw,1rem);
+      font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text, #ddd); transition: color .4s;
+    }
+    .tc-note {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(.68rem,.6rem + .2vw,.76rem);
+      color: var(--muted, #666); letter-spacing: .06em; line-height: 1.4;
+      transition: color .4s;
+    }
+
+    /* ── Settings rows ── */
+    .settings-rows {
+      display: flex; flex-direction: column; gap: 1px;
+      border: 1px solid var(--border, rgba(255,255,255,.08));
+      border-radius: 4px; overflow: hidden;
+      transition: border-color .4s;
+    }
+    .settings-row {
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 18px;
+      background: var(--panel, #0c0c0c);
+      border-bottom: 1px solid var(--border, rgba(255,255,255,.06));
+      transition: background .2s;
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row:hover { background: var(--panel-soft, #111); }
+
+    .sr-icon {
+      width: 32px; height: 32px; flex-shrink: 0;
+      border: 1px solid var(--border, rgba(255,255,255,.1));
+      border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; transition: border-color .4s;
+    }
+    .sr-info { flex: 1; min-width: 0; }
+    .sr-label {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(.9rem,.8rem + .3vw,1.02rem);
+      font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--text, #ccc); transition: color .4s;
+    }
+    .sr-desc {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(.72rem,.62rem + .2vw,.8rem);
+      color: var(--muted, #666); letter-spacing: .04em; margin-top: 2px;
+      transition: color .4s;
+    }
+    .sr-value {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(.72rem,.62rem + .2vw,.8rem);
+      color: var(--muted, #888); letter-spacing: .08em;
+      white-space: nowrap; transition: color .4s;
+    }
+    .sr-btn {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted, #777);
+      background: var(--panel-soft, #161616);
+      border: 1px solid var(--border, rgba(255,255,255,.1));
+      border-radius: 2px; padding: 4px 12px; cursor: pointer;
+      transition: color .15s, border-color .15s, background .4s;
+      white-space: nowrap;
+    }
+    .sr-btn:hover {
+      color: var(--teal);
+      border-color: color-mix(in srgb, var(--teal) 50%, transparent);
+    }
+
+    /* ── Module list ── */
+    .module-list { display: flex; flex-direction: column; gap: 8px; }
+    .module-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 16px;
+      background: var(--panel, #0c0c0c);
+      border: 1px solid var(--border, rgba(255,255,255,.08));
+      border-radius: 4px;
+      transition: border-color .15s, background .4s;
+    }
+    .module-item:hover {
+      border-color: color-mix(in srgb, var(--teal) 30%, var(--border));
+    }
+    .mi-num {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .72rem; color: var(--muted, #555); letter-spacing: .1em;
+      width: 28px; flex-shrink: 0; transition: color .4s;
+    }
+    .mi-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .mi-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(.9rem,.8rem + .3vw,1rem);
+      font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text, #ccc); flex: 1; transition: color .4s;
+    }
+    .mi-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .68rem; letter-spacing: .1em;
+      color: var(--muted, #555);
+      border: 1px solid var(--border, rgba(255,255,255,.08));
+      background: var(--panel-soft, #111);
+      padding: 2px 8px; border-radius: 2px;
+      transition: color .4s, background .4s, border-color .4s;
+    }
+
+    @media (max-width: 600px) {
+      .theme-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+      .settings-title { font-size: clamp(1.3rem,1rem + 3vw,1.8rem); }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="header-inner">
+      <div class="logo-mark" style="color:var(--teal)">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style="cursor:pointer" onclick="navigateTo('index.html')">
+          <rect x="1"  y="1"  width="11" height="11" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="16" y="1"  width="11" height="11" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="1"  y="16" width="11" height="11" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="16" y="16" width="11" height="11" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.2"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title" onclick="navigateTo('index.html')" style="cursor:pointer">COMMAND<span>GRID</span>PRO</h1>
+        <p class="tagline">Precision Tools. Zero Friction.</p>
+      </div>
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        ACTIVE
+      </div>
+      <button class="back-btn" onclick="navigateTo('index.html')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Back
+      </button>
+    </div>
+    <div class="divider"></div>
+  </header>
+
+  <div class="settings-page">
+
+    <div class="settings-header">
+      <div class="settings-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.7;color:var(--teal)">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>APP <span>SETTINGS</span></span>
+      </div>
+      <div class="settings-sub">— GLOBAL CONFIGURATION —</div>
+      <div class="settings-divider"></div>
+    </div>
+
+    <!-- Theme Section -->
+    <div class="settings-section">
+      <div class="settings-section-head">
+        <div class="settings-section-title">App Theme</div>
+        <div class="settings-section-note">Applies across all tools. Saved automatically.</div>
+      </div>
+
+      <div class="active-theme-banner" id="activeBanner">
+        <div class="atb-swatch" id="bannerSwatch"></div>
+        <div class="atb-info">
+          <div class="atb-name" id="bannerName">Commander</div>
+          <div class="atb-note" id="bannerNote">CGP industrial teal</div>
+        </div>
+        <div class="atb-label">ACTIVE</div>
+      </div>
+
+      <div class="theme-grid" id="themeGrid"></div>
+    </div>
+
+    <!-- App Settings -->
+    <div class="settings-section">
+      <div class="settings-section-head">
+        <div class="settings-section-title">Application</div>
+        <div class="settings-section-note">Behaviour and display preferences.</div>
+      </div>
+      <div class="settings-rows">
+        <div class="settings-row">
+          <div class="sr-icon">🌐</div>
+          <div class="sr-info">
+            <div class="sr-label">Data Storage</div>
+            <div class="sr-desc">All data stays local — nothing is transmitted or uploaded.</div>
+          </div>
+          <div class="sr-value">LOCAL ONLY</div>
+        </div>
+        <div class="settings-row">
+          <div class="sr-icon">🔄</div>
+          <div class="sr-info">
+            <div class="sr-label">Theme Persistence</div>
+            <div class="sr-desc">Selected theme is saved to browser localStorage.</div>
+          </div>
+          <div class="sr-value" id="themeKeyDisplay">cgp-app-theme</div>
+        </div>
+        <div class="settings-row">
+          <div class="sr-icon">🗑️</div>
+          <div class="sr-info">
+            <div class="sr-label">Clear Theme Preference</div>
+            <div class="sr-desc">Reset to the default Commander theme.</div>
+          </div>
+          <button class="sr-btn" id="clearThemeBtn">Reset Theme</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Module Index -->
+    <div class="settings-section">
+      <div class="settings-section-head">
+        <div class="settings-section-title">Module Index</div>
+        <div class="settings-section-note">All tools in this suite.</div>
+      </div>
+      <div class="module-list" id="moduleList"></div>
+    </div>
+
+    <!-- About -->
+    <div class="settings-section">
+      <div class="settings-section-head">
+        <div class="settings-section-title">About</div>
+      </div>
+      <div class="settings-rows">
+        <div class="settings-row">
+          <div class="sr-icon">📦</div>
+          <div class="sr-info">
+            <div class="sr-label">Suite</div>
+            <div class="sr-desc">CommandGridPro — browser-based precision tools</div>
+          </div>
+          <div class="sr-value">v1.0.0</div>
+        </div>
+        <div class="settings-row">
+          <div class="sr-icon">🏢</div>
+          <div class="sr-info">
+            <div class="sr-label">Organisation</div>
+            <div class="sr-desc">CFB North Bay</div>
+          </div>
+          <div class="sr-value">CFB · CGP</div>
+        </div>
+        <div class="settings-row">
+          <div class="sr-icon">⚡</div>
+          <div class="sr-info">
+            <div class="sr-label">Runtime</div>
+            <div class="sr-desc">100% client-side. No server required.</div>
+          </div>
+          <div class="sr-value">BROWSER</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.settings-page -->
+
+  <footer>
+    <span class="brand">CFB <span>North Bay</span></span>
+    <span class="fsep">×</span>
+    <span class="brand">Command<span>Grid</span>Pro</span>
+    <span class="fsep">|</span>
+    <span>Settings</span>
+    <span class="fsep">|</span>
+    <span>v1.0.0</span>
+  </footer>
+
+</div>
+<script src="shared.js"></script>
+<script>
+/* ── Module list ── */
+const MODULES = [
+  { num:'01', name:'CSV Compare',     accent:'#00FFD1', action:'tool-pdf.html',  desc:'Row-by-row CSV diff tool' },
+  { num:'02', name:'Tool 2',          accent:'#FF6B35', action:'tool-2.html',    desc:'Coming soon' },
+  { num:'03', name:'Tool 3',          accent:'#A78BFA', action:'tool-3.html',    desc:'Coming soon' },
+  { num:'04', name:'Tool 4',          accent:'#FACC15', action:'tool-4.html',    desc:'Coming soon' },
+  { num:'05', name:'Command Pro All', accent:'#38BDF8', action:'tool-cgp.html',  desc:'Org chart & CSV personnel viewer' },
+  { num:'06', name:'Tool 6',          accent:'#FB7185', action:'tool-5.html',    desc:'Coming soon' },
+];
+
+const ACCENT_DOTS = {
+  teal:'#00FFD1', orange:'#FF6B35', violet:'#A78BFA',
+  gold:'#FACC15', sky:'#38BDF8', rose:'#FB7185',
+};
+
+document.getElementById('moduleList').innerHTML = MODULES.map(m => `
+  <div class="module-item" onclick="navigateTo('${m.action}')" style="cursor:pointer">
+    <div class="mi-num">${m.num}</div>
+    <div class="mi-dot" style="background:${m.accent};box-shadow:0 0 8px ${m.accent}60"></div>
+    <div class="mi-name">${m.name}</div>
+    <div class="mi-badge">${m.desc}</div>
+  </div>`).join('');
+
+/* ── Theme grid ── */
+function updateBanner(theme) {
+  document.getElementById('bannerName').textContent = theme.name;
+  document.getElementById('bannerNote').textContent = theme.note;
+  const swatch = document.getElementById('bannerSwatch');
+  swatch.style.background = `linear-gradient(135deg, ${theme.swatch[0]}, ${theme.swatch[1]})`;
+}
+
+const grid = document.getElementById('themeGrid');
+CGP.THEMES.forEach(theme => {
+  const card = document.createElement('button');
+  card.type = 'button';
+  card.className = 'theme-card';
+  card.dataset.themeId = theme.id;
+  card.innerHTML = `
+    <div class="tc-swatch" style="background:linear-gradient(135deg,${theme.swatch[0]},${theme.swatch[1]})"></div>
+    <div class="tc-name">${theme.name}</div>
+    <div class="tc-note">${theme.note}</div>`;
+
+  card.addEventListener('click', () => {
+    CGP.applyTheme(theme.id);
+    updateBanner(theme);
+  });
+
+  grid.appendChild(card);
+});
+
+/* Set initial state */
+const saved = CGP.getSavedId();
+const savedTheme = CGP.getThemeById(saved);
+updateBanner(savedTheme);
+CGP.applyTheme(saved); /* ensure active classes set */
+
+/* ── Clear theme ── */
+document.getElementById('clearThemeBtn').addEventListener('click', () => {
+  CGP.applyTheme('commander');
+  updateBanner(CGP.getThemeById('commander'));
+});
+
+/* ── CGP tool re-theme hook ── */
+/* When this settings page loads inside a stack next to tool-cgp.html in
+   the same origin, postMessage is already handled in shared.js. */
+</script>
+</body>
+</html>

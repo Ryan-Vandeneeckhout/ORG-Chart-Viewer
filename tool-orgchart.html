@@ -1,0 +1,3899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Org Chart — CommandGridPro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="shared.js"></script>
+  <style>
+    :root {
+      --bg:        #080808;
+      --panel:     #0e0e0e;
+      --panel2:    #161616;
+      --text:      #f0f4ff;
+      --muted:     #8aa0c0;
+      --border:    #333;
+      --accent:    var(--theme-accent, #00ffd1);
+      --teal:      var(--theme-accent, #00ffd1);
+      --teal-dim:  var(--theme-accent-2, #00b89c);
+      --orange:    #ff7b2c;
+      --grid-line: rgba(0,255,209,.05);
+    }
+
+    * { box-sizing: border-box; }
+
+    /* Force dark background on all select option dropdowns — prevents white-on-white */
+    select option {
+      background: #0d1a2a;
+      color: var(--text);
+    }
+    select option:disabled { color: #4a607a; }
+
+    body {
+      margin: 0;
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      background: var(--bg);
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 40px 40px;
+      color: var(--text);
+      overflow-x: hidden;
+      overflow-y: auto;
+      opacity: 0;
+      transition: opacity 0.3s ease, background 0.4s ease;
+    }
+    body.fade-in  { opacity: 1; }
+    body.fade-out { opacity: 0; }
+
+    .wrap {
+      width: 100%;
+      max-width: 100vw;
+      margin: 0;
+      padding: 10px 1vw 0;
+      box-sizing: border-box;
+    }
+
+    /* ── CGP Standard Tool Header ── */
+    .cgp-tool-header {
+      position: sticky; top: 0; z-index: 200;
+      background: #050505;
+      border-bottom: 1px solid #333;
+      padding: 0 clamp(12px,2vw,24px);
+      height: 50px;
+      display: flex; align-items: center; gap: 14px;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .cgp-tool-header::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(0,255,209,.04), transparent);
+      pointer-events: none;
+    }
+    .cgp-hdr-logo {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(1rem, 1.2vw, 1.25rem);
+      font-weight: 700; letter-spacing: .18em;
+      color: var(--text); text-transform: uppercase; cursor: pointer;
+    }
+    .cgp-hdr-logo span { color: var(--teal); }
+    .cgp-hdr-sep { width: 1px; height: 16px; background: #444; }
+    .cgp-hdr-sub {
+      font-size: 11px; letter-spacing: .22em;
+      text-transform: uppercase; color: #888;
+    }
+    .cgp-back-btn {
+      margin-left: auto;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; letter-spacing: .2em; color: #888;
+      background: none; border: 1px solid #444; border-radius: 2px;
+      padding: 5px 12px; cursor: pointer;
+      transition: color .2s, border-color .2s, box-shadow .2s;
+    }
+    .cgp-back-btn:hover {
+      color: var(--teal); border-color: var(--teal);
+      box-shadow: 0 0 8px rgba(0,255,209,.15);
+    }
+    .cgp-settings-hdr-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px;
+      background: rgba(0,0,0,.2);
+      border: 1px solid var(--teal-dim); border-radius: 2px;
+      cursor: pointer; color: var(--teal-dim); margin-left: 6px;
+      transition: color .2s, border-color .2s, background .2s, transform .3s;
+    }
+    .cgp-settings-hdr-btn:hover {
+      color: var(--teal); border-color: var(--teal);
+      background: rgba(0,255,209,.1);
+      transform: rotate(60deg);
+    }
+    /* ── CGP Tool Footer ── */
+    .cgp-tool-footer {
+      display: flex; gap: 10px; justify-content: center; align-items: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; color: #666; letter-spacing: .12em;
+      padding: 14px 24px;
+      border-top: 1px solid #333;
+      margin-top: 6px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      height: calc(98vh - 48px);
+      height: calc(98dvh - 48px);
+    }
+
+    /* ── Settings drawer ── */
+    .drawer-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 300;
+    }
+    .drawer-overlay.open { display: block; }
+
+    .drawer {
+      position: fixed;
+      top: 0; left: 0;
+      width: 320px;
+      height: 100vh;
+      background: #050a14;
+      border-right: 1px solid var(--border);
+      box-shadow: 6px 0 40px rgba(0,0,0,.7);
+      z-index: 400;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(-100%);
+      transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+      overflow: hidden;
+    }
+    .drawer.open { transform: translateX(0); }
+
+    /* ── Highlight Panel (right-side drawer) ── */
+    .hl-panel {
+      position: fixed;
+      top: 0; right: 0;
+      width: 360px;
+      height: 100vh;
+      background: #050a14;
+      border-left: 1px solid var(--teal-dim);
+      box-shadow: -6px 0 40px rgba(0,0,0,.5);
+      z-index: 400;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+      overflow: hidden;
+    }
+    .hl-panel.open { transform: translateX(0); }
+
+    .hl-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      background: rgba(0,255,209,.02);
+    }
+    .hl-header h2 {
+      margin: 0;
+      font-size: 13px;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--teal);
+      font-weight: normal;
+    }
+
+    .hl-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .hl-section {
+      margin-bottom: 18px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .hl-section:last-child { border-bottom: none; margin-bottom: 0; }
+
+    .hl-section-title {
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--teal-dim);
+      margin: 0 0 10px;
+      border-left: 2px solid var(--teal-dim);
+      padding-left: 7px;
+    }
+
+    .hl-rule {
+      background: rgba(0,0,0,.3);
+      border: 1px solid var(--border);
+      border-radius: 0;
+      padding: 10px 11px;
+      margin-bottom: 8px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .hl-rule-fields { display: flex; flex-direction: column; gap: 6px; }
+
+    .hl-rule select,
+    .hl-rule input[type="text"] {
+      width: 100%;
+      padding: 6px 9px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      border-bottom: 1px solid #444;
+      background: rgba(0,0,0,.45);
+      color: var(--text);
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: .02em;
+      box-sizing: border-box;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .hl-rule select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2300b89c'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-color: rgba(0,0,0,.45);
+      padding-right: 24px;
+    }
+
+    .hl-rule select:focus,
+    .hl-rule input[type="text"]:focus {
+      border-color: var(--teal-dim);
+      border-bottom-color: var(--teal);
+      background-color: rgba(0,255,209,.03);
+      box-shadow: 0 0 0 1px rgba(0,255,209,.08);
+    }
+
+    .hl-rule input[type="text"]::placeholder { color: #4a607a; }
+
+    .hl-rule-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .hl-color-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .hl-color-label {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .hl-rule input[type="color"] {
+      width: 100%;
+      height: 30px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      cursor: pointer;
+      padding: 2px 3px;
+    }
+
+    .hl-delete-btn {
+      background: none;
+      border: 1px solid rgba(255,80,80,.3);
+      color: #ff8080;
+      border-radius: 2px;
+      font-size: 14px;
+      padding: 4px 7px;
+      cursor: pointer;
+      line-height: 1;
+      margin-top: 2px;
+    }
+    .hl-delete-btn:hover { background: rgba(255,80,80,.12); }
+
+    .hl-add-rule-btn {
+      width: 100%;
+      padding: 9px;
+      border-radius: 2px;
+      border: 1px dashed rgba(0,255,209,.2);
+      background: transparent;
+      color: var(--teal-dim);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .hl-add-rule-btn:hover { background: rgba(0,255,209,.05); border-color: rgba(0,255,209,.45); color: var(--teal); }
+
+    .hl-preset-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .hl-preset-row select {
+      padding: 7px 26px 7px 9px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      border-bottom: 1px solid #444;
+      background: rgba(0,0,0,.45);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2300b89c'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      appearance: none;
+      -webkit-appearance: none;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .hl-preset-row select:focus {
+      border-color: var(--teal-dim);
+      border-bottom-color: var(--teal);
+      box-shadow: 0 0 0 1px rgba(0,255,209,.08);
+    }
+
+    .hl-preset-name {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      border-bottom: 1px solid #444;
+      background: rgba(0,0,0,.45);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .03em;
+      margin-bottom: 6px;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .hl-preset-name:focus {
+      border-color: var(--teal-dim);
+      border-bottom-color: var(--teal);
+      box-shadow: 0 0 0 1px rgba(0,255,209,.08);
+    }
+    .hl-preset-name::placeholder { color: #4a607a; }
+
+    .hl-btn-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .hl-btn {
+      padding: 6px 12px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.3);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .hl-btn:hover { background: #2a3550; }
+    .hl-btn.accent {
+      background: rgba(13,217,196,.1);
+      border-color: var(--teal-dim);
+      color: var(--teal);
+    }
+    .hl-btn.danger { border-color: rgba(255,80,80,.4); color: #ff9090; }
+    .hl-btn.danger:hover { background: rgba(255,80,80,.1); }
+
+    .hl-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .hl-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+    }
+    .hl-legend-swatch {
+      width: 14px; height: 14px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,.15);
+    }
+
+    .btn-highlight {
+      background: rgba(255,123,44,.08);
+      border-color: rgba(255,123,44,.4);
+      color: var(--orange);
+    }
+    .btn-highlight:hover:not(:disabled) {
+      background: rgba(255,123,44,.15);
+      border-color: var(--orange);
+    }
+    .btn-highlight.active {
+      background: rgba(255,123,44,.18);
+      border-color: var(--orange);
+      box-shadow: 0 0 0 1px rgba(255,123,44,.25);
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      background: rgba(0,255,209,.02);
+    }
+    .drawer-header h2 {
+      margin: 0;
+      font-size: 13px;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--teal);
+      font-weight: normal;
+    }
+
+    .drawer-close {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--muted);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 2px;
+      line-height: 1;
+      font-family: 'Share Tech Mono', monospace;
+      transition: color .15s, border-color .15s, background .15s;
+    }
+    .drawer-close:hover { color: var(--text); border-color: #444; background: rgba(255,255,255,.04); }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px;
+    }
+
+    .drawer-section {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .drawer-section:last-child { border-bottom: none; margin-bottom: 0; }
+
+    .drawer-section-title {
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--teal-dim);
+      margin: 0 0 10px;
+      border-left: 2px solid var(--teal-dim);
+      padding-left: 7px;
+    }
+
+    /* Field mapping rows */
+    .map-row {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .map-label {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--muted);
+      text-align: right;
+      white-space: nowrap;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .map-label .required-dot {
+      color: #ff8080;
+      margin-left: 2px;
+    }
+
+    .map-row select {
+      width: 100%;
+      padding: 7px 28px 7px 9px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      border-bottom: 1px solid #444;
+      background: rgba(0,0,0,.45);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2300b89c'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 9px center;
+      color: var(--text);
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: .03em;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .map-row select:focus {
+      border-color: var(--teal-dim);
+      border-bottom-color: var(--teal);
+      background-color: rgba(0,255,209,.03);
+      box-shadow: 0 0 0 1px rgba(0,255,209,.08);
+    }
+
+    .map-row select:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+    }
+
+    .panel {
+      background: rgba(8,13,26,.92);
+      border: 1px solid var(--border);
+      border-radius: 0;
+      box-shadow: 0 0 0 1px rgba(13,217,196,.06), 0 12px 30px rgba(0,0,0,.4);
+    }
+
+    .main {
+      padding: 14px;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 10px;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-weight: bold;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 9px 11px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      border-bottom: 1px solid #444;
+      background: rgba(0,0,0,.45);
+      color: var(--text);
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      font-size: 12px;
+      letter-spacing: .03em;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--teal-dim);
+      border-bottom-color: var(--teal);
+      background: rgba(0,255,209,.03);
+      box-shadow: 0 0 0 1px rgba(0,255,209,.08), inset 0 -1px 0 var(--teal);
+    }
+
+    .field input::placeholder { color: #4a607a; }
+
+    .field input[type="file"] {
+      padding: 7px 10px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .field input[type="file"]::file-selector-button {
+      background: rgba(0,255,209,.08);
+      border: 1px solid var(--teal-dim);
+      color: var(--teal);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 2px;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: background .15s, border-color .15s;
+    }
+    .field input[type="file"]::file-selector-button:hover {
+      background: rgba(0,255,209,.15);
+      border-color: var(--teal);
+    }
+
+    .field select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2300b89c'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-row,
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      background: rgba(13,217,196,.08);
+      color: var(--teal);
+      padding: 8px 14px;
+      border-radius: 2px;
+      cursor: pointer;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      transition: background .15s, border-color .15s;
+    }
+
+    button:hover:not(:disabled) {
+      background: rgba(13,217,196,.15);
+      border-color: var(--teal);
+    }
+
+    button.secondary,
+    .root-chip {
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      border-color: var(--border);
+    }
+
+    button.secondary:hover:not(:disabled),
+    .root-chip:hover {
+      background: rgba(13,217,196,.07);
+      color: var(--teal);
+      border-color: var(--teal-dim);
+    }
+
+    button:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 2px;
+      background: rgba(0,0,0,.4);
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--teal-dim);
+      color: var(--muted);
+      font-size: 11px;
+      min-height: 36px;
+      line-height: 1.45;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    .status.error { border-left-color: #ff4040; color: #ff9090; }
+    .status.success { border-left-color: var(--teal); color: var(--teal); }
+
+    .helper {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-top: 6px;
+    }
+
+    .chart-wrap {
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 0;
+      padding: 18px;
+      min-height: 0;
+      flex: 1 1 auto;
+      cursor: grab;
+      touch-action: pan-x pan-y;
+      background:
+        radial-gradient(circle at top left, rgba(13,217,196,.04), transparent 280px),
+        rgba(0,0,0,.2);
+      /* Themed scrollbars */
+      scrollbar-width: thin;
+      scrollbar-color: var(--teal-dim) rgba(0,0,0,.3);
+    }
+
+    .chart-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+    .chart-wrap::-webkit-scrollbar-track { background: rgba(0,0,0,.3); }
+    .chart-wrap::-webkit-scrollbar-thumb {
+      background: var(--teal-dim);
+      border-radius: 0;
+    }
+    .chart-wrap::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+    .chart-wrap::-webkit-scrollbar-corner { background: rgba(0,0,0,.3); }
+
+    /* Drawer + HL panel scrollbars */
+    .drawer-body, .hl-body {
+      scrollbar-width: thin;
+      scrollbar-color: #2a3f55 rgba(0,0,0,.2);
+    }
+    .drawer-body::-webkit-scrollbar,
+    .hl-body::-webkit-scrollbar { width: 4px; }
+    .drawer-body::-webkit-scrollbar-track,
+    .hl-body::-webkit-scrollbar-track { background: transparent; }
+    .drawer-body::-webkit-scrollbar-thumb,
+    .hl-body::-webkit-scrollbar-thumb {
+      background: #2a3f55;
+      border-radius: 0;
+    }
+    .drawer-body::-webkit-scrollbar-thumb:hover,
+    .hl-body::-webkit-scrollbar-thumb:hover { background: var(--teal-dim); }
+
+    .chart-wrap.dragging { cursor: grabbing; }
+
+    .chart-root {
+      display: flex;
+      justify-content: center;
+      min-width: max-content;
+      min-height: max-content;
+      transform-origin: top left;
+    }
+
+    /* ── Focus bar ── */
+    .focus-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      margin-bottom: 10px;
+      background: rgba(13,217,196,.07);
+      border: 1px solid rgba(13,217,196,.3);
+      border-left: 3px solid var(--teal);
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+    }
+    .focus-bar-icon { color: var(--teal); font-size: 14px; }
+    .focus-bar-label { color: var(--text); }
+    .focus-bar-label strong { color: var(--teal); }
+    .focus-bar-sub { color: var(--muted); font-size: 11px; flex: 1; }
+    .focus-bar-back {
+      padding: 4px 12px;
+      font-size: 11px;
+      background: rgba(13,217,196,.08);
+      border-color: rgba(13,217,196,.4);
+      color: var(--teal);
+      letter-spacing: .06em;
+    }
+    .focus-bar-back:hover:not(:disabled) {
+      background: rgba(13,217,196,.18);
+      border-color: var(--teal);
+    }
+    .focus-bar-clear {
+      margin-left: auto;
+      padding: 4px 12px;
+      font-size: 11px;
+      background: rgba(255,255,255,.05);
+      border-color: rgba(13,217,196,.3);
+      color: var(--text);
+      letter-spacing: .06em;
+    }
+    .focus-bar-clear:hover:not(:disabled) {
+      background: rgba(255,80,80,.1);
+      border-color: rgba(255,80,80,.5);
+      color: #ff9090;
+    }
+
+    .empty {
+      display: grid;
+      place-items: center;
+      min-height: 100%;
+      color: var(--muted);
+      text-align: center;
+      padding: 30px;
+    }
+
+    .empty h3 { color: var(--teal); letter-spacing: .1em; font-size: 14px; }
+
+    .roots-list {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(13,217,196,.12);
+    }
+
+    .root-chip {
+      display: inline-block;
+      margin: 0 6px 6px 0;
+      padding: 5px 10px;
+      font-size: 11px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      letter-spacing: .06em;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    .root-chip.active {
+      background: rgba(13,217,196,.12);
+      border-color: var(--teal-dim);
+      color: var(--teal);
+    }
+
+    .root-chip.focus-active {
+      background: rgba(13,217,196,.05);
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    .search-action-pill {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: #050a14;
+      border: 1px solid var(--teal-dim);
+      border-top: 2px solid var(--teal);
+      border-radius: 0;
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      box-shadow: 0 6px 20px rgba(0,0,0,.5);
+      z-index: 100;
+      animation: pillIn 0.1s ease;
+    }
+
+    @keyframes pillIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .search-action-label {
+      font-size: 10px;
+      color: #8ac8e0;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: .06em;
+    }
+
+    .search-action-btn {
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      background: rgba(13,217,196,.06);
+      color: var(--teal);
+      cursor: pointer;
+      font-family: 'Courier New', Courier, monospace;
+      letter-spacing: .06em;
+      transition: background 0.1s;
+    }
+
+    .search-action-btn:hover { background: rgba(13,217,196,.14); border-color: var(--teal-dim); }
+
+    .search-action-btn.focus {
+      background: rgba(255,123,44,.08);
+      border-color: rgba(255,123,44,.4);
+      color: var(--orange);
+    }
+
+    .search-action-btn.focus:hover { background: rgba(255,123,44,.15); }
+
+    .search-action-btn.clear {
+      background: transparent;
+      border-color: transparent;
+      color: var(--muted);
+      padding: 4px 6px;
+    }
+
+    .search-action-btn.clear:hover { color: var(--text); }
+
+    #posSearchInput.is-focused-mode {
+      border-color: var(--teal);
+      background: rgba(13,217,196,.06);
+      color: var(--teal);
+    }
+
+    .tree ul {
+      position: relative;
+      padding-top: 24px;
+      padding-left: 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    .tree li {
+      list-style: none;
+      text-align: center;
+      position: relative;
+      padding: 24px 10px 0 10px;
+    }
+
+    .tree li::before,
+    .tree li::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 50%;
+      border-top: 1px solid rgba(13,217,196,.3);
+      width: 50%;
+      height: 24px;
+    }
+
+    .tree li::after {
+      right: auto;
+      left: 50%;
+      border-left: 1px solid rgba(13,217,196,.3);
+    }
+
+    .tree li:only-child::before,
+    .tree li:only-child::after {
+      display: none;
+    }
+
+    .tree li:only-child {
+      padding-top: 0;
+    }
+
+    .tree li:first-child::before,
+    .tree li:last-child::after {
+      border: 0 none;
+    }
+
+    .tree li:last-child::before {
+      border-right: 1px solid rgba(13,217,196,.3);
+      border-radius: 0;
+    }
+
+    .tree li:first-child::after {
+      border-radius: 0;
+    }
+
+    .tree ul ul::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      border-left: 1px solid rgba(13,217,196,.3);
+      width: 0;
+      height: 24px;
+    }
+
+    .node {
+      width: 220px;
+      background: rgba(18, 28, 48, 0.98);
+      border: 1px solid rgba(255,255,255,.1);
+      border-top: 2px solid var(--teal-dim);
+      padding: 0;
+      border-radius: 3px;
+      display: inline-block;
+      text-align: left;
+      box-shadow: 0 4px 16px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.04) inset;
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+      font-family: 'Rajdhani', 'Share Tech Mono', sans-serif;
+      overflow: hidden;
+    }
+
+    .node:hover {
+      border-color: var(--teal-dim);
+      border-top-color: var(--teal);
+      box-shadow: 0 0 0 1px rgba(13,217,196,.18), 0 8px 24px rgba(0,0,0,.5);
+      transform: translateY(-1px);
+    }
+
+    .node.selected {
+      border-color: var(--teal);
+      border-top-color: var(--teal);
+      box-shadow: 0 0 0 2px rgba(13,217,196,.3), 0 8px 24px rgba(0,0,0,.5);
+    }
+
+    /* Search/jump highlight — amber gold */
+    .node.search-highlight {
+      border-color: #f5c542 !important;
+      border-top-color: #ffd700 !important;
+      background: rgba(40, 32, 8, 0.98) !important;
+      box-shadow: 0 0 0 2px rgba(255,215,0,.25), 0 8px 24px rgba(0,0,0,.5) !important;
+    }
+    .node.search-highlight .node-pos-banner {
+      background: rgba(180,140,0,.25);
+      color: #ffd700;
+      border-bottom-color: rgba(255,215,0,.2);
+    }
+    .node.search-highlight .node-title { color: #ffe066; }
+    .node.search-highlight .node-subtitle { color: #ffc; }
+
+    .node.hl-active .node-title,
+    .node.hl-active .node-pos-banner,
+    .node.hl-active .node-subtitle,
+    .node.hl-active .node-reports-to,
+    .node.hl-active .node-field-key,
+    .node.hl-active .node-field-val,
+    .node.hl-active .node-extra-key,
+    .node.hl-active .node-extra-val,
+    .node.hl-active .node-meta { color: var(--hl-text, var(--text)); opacity: 1; }
+    .node.hl-active .node-reports-to span { color: var(--hl-text, var(--teal-dim)); }
+
+    /* Position banner */
+    .node-pos-banner {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: rgba(0,184,156,.12);
+      color: var(--teal);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: .12em;
+      padding: 6px 10px 5px;
+      margin-bottom: 0;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(13,217,196,.12);
+    }
+
+    /* Card body */
+    .node-card-body {
+      padding: 9px 11px 4px;
+    }
+
+    .node-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      line-height: 1.25;
+      margin-bottom: 1px;
+      word-break: break-word;
+      color: #e8eeff;
+      letter-spacing: .01em;
+    }
+
+    .node-subtitle {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6eede0;
+      margin-bottom: 4px;
+      word-break: break-word;
+      letter-spacing: .02em;
+    }
+
+    .node-reports-to {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: #4a6080;
+      margin-bottom: 2px;
+      letter-spacing: .04em;
+    }
+    .node-reports-to span {
+      color: #5a7a9a;
+    }
+
+    .node-divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,.06);
+      margin: 6px 0;
+    }
+
+    .node-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .node-field {
+      display: flex;
+      gap: 5px;
+      font-size: 10px;
+      line-height: 1.35;
+      align-items: baseline;
+    }
+
+    .node-field-key {
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--teal-dim);
+      flex-shrink: 0;
+      width: 46px;
+      text-align: right;
+      letter-spacing: .04em;
+      font-size: 9px;
+      text-transform: uppercase;
+    }
+
+    .node-field-val {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: #c8d8f0;
+      word-break: break-word;
+      flex: 1;
+    }
+
+    /* node-meta for cycle warning */
+    .node-meta {
+      margin: 4px 0 0;
+      font-size: 9px;
+      color: #ff9090;
+      padding: 4px 11px;
+      background: rgba(255,80,80,.06);
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* Edit button bar */
+    .node-edit-bar {
+      border-top: 1px solid rgba(255,255,255,.06);
+      margin-top: 6px;
+      padding: 0;
+      display: flex;
+    }
+
+    .node-edit-btn,
+    .node-focus-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 5px 8px;
+      background: rgba(0,0,0,.25);
+      border: none;
+      border-radius: 0;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      font-weight: normal;
+    }
+
+    .node-edit-btn {
+      flex: 1;
+      color: #4a6080;
+      border-right: 1px solid rgba(255,255,255,.05);
+    }
+    .node-edit-btn:hover:not(:disabled) {
+      background: rgba(0,255,209,.07);
+      color: var(--teal);
+    }
+
+    .node-focus-btn {
+      color: #3d5a3a;
+      flex-shrink: 0;
+      min-width: 62px;
+    }
+    .node-focus-btn:hover:not(:disabled) {
+      background: rgba(80,220,100,.08);
+      color: #7defa0;
+    }
+
+    /* Selected card — both buttons brighten */
+    .node.selected .node-edit-bar { border-top-color: rgba(0,255,209,.15); }
+    .node.selected .node-edit-btn { color: rgba(0,255,209,.45); }
+    .node.selected .node-focus-btn { color: rgba(80,220,100,.5); }
+
+    /* Search-highlight (gold) */
+    .node.search-highlight .node-edit-bar { border-top-color: rgba(255,215,0,.15); }
+    .node.search-highlight .node-edit-btn { color: rgba(255,215,0,.4); }
+    .node.search-highlight .node-edit-btn:hover:not(:disabled) { background: rgba(255,215,0,.08); color: #ffd700; }
+    .node.search-highlight .node-focus-btn { color: rgba(255,215,0,.35); }
+    .node.search-highlight .node-focus-btn:hover:not(:disabled) { background: rgba(255,215,0,.08); color: #ffd700; }
+
+    .btn-export {
+      background: rgba(13,217,196,.1);
+      border-color: var(--teal-dim);
+      color: var(--teal);
+    }
+
+    .btn-export:hover:not(:disabled) {
+      background: rgba(13,217,196,.18);
+      border-color: var(--teal);
+    }
+
+    .btn-export-changed {
+      background: rgba(255,123,44,.1);
+      border-color: rgba(255,123,44,.5);
+      color: var(--orange);
+    }
+
+    .btn-export-changed:hover:not(:disabled) {
+      background: rgba(255,123,44,.18);
+    }
+
+    .btn-export-changed .changed-count {
+      display: inline-block;
+      background: var(--orange);
+      color: #1a0800;
+      font-size: 10px;
+      font-weight: bold;
+      border-radius: 2px;
+      padding: 1px 5px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ── Centred modal popup ── */
+    .node-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .card-popup-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 500;
+      animation: backdropIn 0.15s ease;
+    }
+
+    @keyframes backdropIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .card-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 501;
+      background: #050a14;
+      border: 1px solid var(--teal-dim);
+      border-top: 2px solid var(--teal);
+      border-radius: 0;
+      box-shadow: 0 0 0 1px rgba(13,217,196,.12), 0 24px 60px rgba(0,0,0,.8);
+      width: 720px;
+      max-width: calc(100vw - 32px);
+      max-height: 85vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: popIn 0.15s ease;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: translate(-50%, -53%); }
+      to   { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    .popup-body {
+      overflow: hidden;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Tab bar */
+    .popup-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .popup-tab {
+      flex: 1;
+      padding: 10px 0;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .popup-tab:hover { color: var(--text); }
+
+    .popup-tab.active {
+      color: var(--teal);
+      border-bottom-color: var(--teal);
+    }
+
+    .popup-panel { display: none; }
+    .popup-panel.active {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr auto;
+      max-height: calc(85vh - 44px);
+    }
+
+    .popup-col {
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .popup-col-right {
+      border-left: 1px solid rgba(255,255,255,.07);
+      background: rgba(0,0,0,.12);
+    }
+
+    .popup-col-right .popup-section-divider:first-child {
+      margin-top: 0;
+    }
+
+    .popup-col-footer {
+      grid-column: 1 / -1;
+      padding: 10px 16px;
+      border-top: 1px solid rgba(255,255,255,.07);
+      background: rgba(0,0,0,.18);
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .popup-col-footer .popup-hint {
+      margin: 0;
+      flex: 1;
+      font-size: 11px;
+    }
+
+    .popup-field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+
+    .popup-field-label .req {
+      color: #ff8080;
+      margin-left: 2px;
+    }
+
+    .popup-field-label .opt-tag {
+      font-size: 10px;
+      font-weight: normal;
+      color: var(--muted);
+      margin-left: 5px;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .popup-section-divider {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 14px 0 10px;
+    }
+
+    .popup-section-divider span {
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .popup-section-divider::before,
+    .popup-section-divider::after {
+      content: '';
+      flex: 1;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .popup-field {
+      margin-bottom: 10px;
+    }
+
+    .card-popup input,
+    .card-popup select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--text);
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+
+    .card-popup input.error-field,
+    .card-popup select.error-field {
+      border-color: #ff6b6b;
+    }
+
+    .card-popup input::placeholder { color: var(--muted); }
+
+    .popup-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .popup-changed-badge {
+      display: inline-block;
+      font-size: 10px;
+      background: rgba(13,217,196,.12);
+      color: var(--teal);
+      border-radius: 2px;
+      padding: 1px 5px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .card-popup-btns {
+      display: flex;
+      gap: 7px;
+    }
+
+    .card-popup-btns button {
+      padding: 8px 18px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .card-popup-btns .btn-cancel {
+      background: linear-gradient(180deg, #27314f 0%, #1d2640 100%);
+    }
+
+    .btn-danger {
+      background: linear-gradient(180deg, #7a2020 0%, #5c1818 100%) !important;
+      border-color: #a03030 !important;
+    }
+
+    .btn-settings {
+      background: rgba(255,255,255,.04);
+      border-color: var(--border);
+      color: var(--muted);
+    }
+    .btn-settings:hover:not(:disabled) {
+      background: rgba(13,217,196,.08);
+      border-color: var(--teal-dim);
+      color: var(--teal);
+    }
+
+    .pos-search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .pos-search-wrap .search-icon {
+      position: absolute;
+      left: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    #posSearchInput {
+      padding: 7px 10px 7px 28px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.4);
+      color: var(--text);
+      font-size: 12px;
+      font-family: 'Courier New', Courier, monospace;
+      width: 200px;
+      transition: border-color 0.15s, width 0.2s;
+    }
+
+    #posSearchInput:focus {
+      outline: none;
+      border-color: var(--teal-dim);
+      width: 240px;
+    }
+
+    #posSearchInput:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+    }
+
+    #posSearchInput::placeholder { color: var(--muted); }
+
+    /* ── Extra fields checkbox list ── */
+    .extra-field-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      cursor: pointer;
+    }
+    .extra-field-item:last-child { border-bottom: none; }
+    .extra-field-item input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.4);
+      cursor: pointer;
+      position: relative;
+      transition: border-color .15s, background .15s;
+    }
+    .extra-field-item input[type="checkbox"]:checked {
+      background: rgba(0,255,209,.15);
+      border-color: var(--teal-dim);
+    }
+    .extra-field-item input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      top: -1px;
+      left: 1px;
+      font-size: 11px;
+      color: var(--teal);
+      line-height: 1;
+    }
+    .extra-field-item input[type="checkbox"]:hover { border-color: var(--teal-dim); }
+    .extra-field-label {
+      font-size: 11px;
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: .04em;
+      flex: 1;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .extra-field-item:has(input:checked) .extra-field-label { color: var(--teal); }
+
+    /* ── Card extra fields section ── */
+    .node-extra-fields {
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .node-extra-field {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      font-size: 10px;
+      line-height: 1.35;
+    }
+    .node-extra-key {
+      color: var(--muted);
+      flex-shrink: 0;
+      font-size: 9px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      min-width: 0;
+      max-width: 70px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .node-extra-val {
+      color: var(--text);
+      opacity: .8;
+      word-break: break-word;
+      flex: 1;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       RESPONSIVE LAYOUT
+       Breakpoints:
+         md  : ≤ 1023px  (tablet)
+         sm  : ≤  767px  (mobile)
+         xs  : ≤  479px  (small phone)
+    ═══════════════════════════════════════════════════════════ */
+
+    /* ── md: tablet ── */
+    @media (max-width: 1023px) {
+      .wrap { padding: 8px 12px 0; }
+
+      /* Toolbar: left group wraps, right group stays on same row below */
+      .toolbar {
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .toolbar-left  { gap: 6px; }
+      .toolbar-right { gap: 6px; justify-content: flex-start; }
+
+      /* Shrink zoom buttons to symbols only */
+      #zoomInBtn  { padding: 7px 11px; }
+      #zoomOutBtn { padding: 7px 11px; }
+      #zoomResetBtn { font-size: 10px; padding: 7px 10px; }
+
+      /* Export labels truncate */
+      #exportBtn         { font-size: 10px; padding: 7px 10px; }
+      #exportChangedBtn  { font-size: 10px; padding: 7px 10px; }
+
+      /* Drawers stay at fixed width but slightly narrower */
+      .drawer   { width: 300px; }
+      .hl-panel { width: 320px; }
+
+      /* Search input doesn't need to expand as much */
+      #posSearchInput       { width: 170px; }
+      #posSearchInput:focus { width: 210px; }
+    }
+
+    /* ── sm: mobile ── */
+    @media (max-width: 767px) {
+      /* Header: hide wordmark text, keep logo icon + tool name + buttons */
+      .cgp-hdr-logo   { display: none; }
+      .cgp-hdr-sep    { display: none; }
+      .cgp-hdr-sub    { font-size: 10px; letter-spacing: .14em; }
+      .cgp-back-btn   { padding: 5px 8px; font-size: 9px; gap: 4px; }
+      .cgp-tool-header { gap: 10px; padding: 0 12px; }
+
+      /* Layout takes full height with no bottom margin */
+      .layout { height: calc(100dvh - 50px); }
+
+      /* Drawers go full-width on mobile */
+      .drawer   { width: 100vw; max-width: 360px; }
+      .hl-panel { width: 100vw; max-width: 360px; }
+
+      /* Toolbar: single compact row of icon-buttons + search */
+      .toolbar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 8px;
+        align-items: center;
+      }
+      .toolbar-left  { gap: 4px; flex-wrap: nowrap; overflow-x: auto; }
+      .toolbar-right { gap: 4px; flex-wrap: nowrap; overflow-x: auto; flex: 1; justify-content: flex-end; }
+
+      /* Compact all toolbar buttons */
+      button {
+        padding: 7px 10px;
+        font-size: 10px;
+        letter-spacing: .04em;
+      }
+      #settingsBtn  { padding: 7px 10px; }
+      #zoomInBtn    { padding: 7px 9px; }
+      #zoomOutBtn   { padding: 7px 9px; }
+      #zoomResetBtn { padding: 7px 9px; font-size: 9px; letter-spacing: 0; }
+      #goRootBtn    { padding: 7px 9px; }
+      #hlBtn        { padding: 7px 9px; }
+
+      /* Hide text labels on zoom / root buttons, keep symbols */
+      #zoomInBtn::after    { content: ''; }
+      #zoomOutBtn::after   { content: ''; }
+
+      /* Collapse export buttons to icon-only */
+      #exportBtn        { font-size: 9px; padding: 7px 8px; letter-spacing: 0; }
+      #exportChangedBtn { font-size: 9px; padding: 7px 8px; letter-spacing: 0; }
+      .changed-count    { display: none; }
+
+      /* Chart meta wraps or hides on very small */
+      #chartMeta { font-size: 10px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      /* Search input */
+      #posSearchInput       { width: 120px; font-size: 11px; }
+      #posSearchInput:focus { width: 150px; }
+
+      /* Focus bar wraps */
+      .focus-bar {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      .focus-bar-sub    { display: none; }
+      .focus-bar-clear  { margin-left: 0; padding: 3px 9px; font-size: 10px; }
+      .focus-bar-back   { padding: 3px 9px; font-size: 10px; }
+
+      /* Cards narrower */
+      .node { width: 185px; }
+
+      /* Tree spacing tighter */
+      .tree li { padding: 18px 7px 0 7px; }
+      .tree ul  { padding-top: 18px; }
+      .tree ul ul::before { height: 18px; }
+      .tree li::before, .tree li::after { height: 18px; }
+
+      /* Chart wrap less padding */
+      .chart-wrap { padding: 12px; }
+
+      /* Search pill: stack buttons */
+      .search-action-pill { flex-wrap: wrap; gap: 4px; padding: 6px; }
+      .search-action-label { max-width: 110px; }
+    }
+
+    /* ── xs: small phone ── */
+    @media (max-width: 479px) {
+      .cgp-hdr-sub  { display: none; }
+      .cgp-back-btn { display: none; }
+      .cgp-tool-header { gap: 8px; padding: 0 10px; }
+
+      /* Full-width drawers */
+      .drawer   { width: 100vw; max-width: 100vw; }
+      .hl-panel { width: 100vw; max-width: 100vw; }
+
+      /* Layout */
+      .wrap    { padding: 6px 8px 0; }
+      .layout  { height: calc(100dvh - 50px); }
+
+      /* Even more compact toolbar */
+      .toolbar { gap: 4px; margin-bottom: 6px; }
+      .toolbar-left  { gap: 3px; }
+      .toolbar-right { gap: 3px; }
+
+      button {
+        padding: 6px 8px;
+        font-size: 9px;
+      }
+
+      /* Hide meta text entirely */
+      #chartMeta { display: none; }
+
+      /* Search shorter */
+      #posSearchInput       { width: 100px; }
+      #posSearchInput:focus { width: 130px; }
+
+      /* Cards */
+      .node { width: 165px; }
+      .node-title    { font-size: 13px; }
+      .node-subtitle { font-size: 11px; }
+      .node-pos-banner { font-size: 10px; padding: 5px 8px 4px; }
+      .node-card-body  { padding: 7px 9px 3px; }
+
+      /* Focus bar minimal */
+      .focus-bar { padding: 5px 8px; font-size: 10px; gap: 5px; }
+      .focus-bar-icon { display: none; }
+
+      /* Chart wrap */
+      .chart-wrap { padding: 8px; }
+
+      /* Tree tighter */
+      .tree li { padding: 14px 5px 0 5px; }
+      .tree ul  { padding-top: 14px; }
+    }
+
+    /* ── Touch-device drag hint ── */
+    @media (hover: none) and (pointer: coarse) {
+      .chart-wrap { cursor: default; }
+      .chart-wrap.dragging { cursor: default; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Settings drawer overlay ── -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+
+  <!-- ── Settings drawer ── -->
+  <div class="drawer" id="settingsDrawer">
+    <div class="drawer-header">
+      <h2>⚙ Settings</h2>
+      <button class="drawer-close" id="drawerCloseBtn" title="Close">✕</button>
+    </div>
+    <div class="drawer-body">
+
+      <!-- CSV Upload -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">Data Source</div>
+        <div class="field">
+          <label for="csvFile">CSV file</label>
+          <input id="csvFile" type="file" accept=".csv,text/csv" />
+        </div>
+        <div class="field">
+          <label for="searchInput">Find root / position</label>
+          <input id="searchInput" type="text" placeholder="Search…" disabled />
+        </div>
+        <div class="btn-row" style="margin-top:4px;">
+          <button id="renderBtn" disabled>Render Chart</button>
+          <button id="resetBtn" class="secondary">Reset</button>
+        </div>
+        <div class="status" id="statusBox">Waiting for CSV upload.</div>
+      </div>
+
+      <!-- Column mapping -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">Column Mapping</div>
+        <div class="helper" style="margin:0 0 12px;">Map your CSV columns to the fixed card fields.</div>
+
+        <div class="map-row">
+          <span class="map-label">Position <span class="required-dot">*</span></span>
+          <select id="positionHeader" disabled><option value="">Upload CSV first</option></select>
+        </div>
+        <div class="map-row">
+          <span class="map-label">ReportsTo <span class="required-dot">*</span></span>
+          <select id="reportsToHeader" disabled><option value="">Upload CSV first</option></select>
+        </div>
+        <div class="map-row">
+          <span class="map-label">Name</span>
+          <select id="mapName" disabled><option value="">— none —</option></select>
+        </div>
+        <div class="map-row">
+          <span class="map-label">Title</span>
+          <select id="mapTitle" disabled><option value="">— none —</option></select>
+        </div>
+        <div class="map-row">
+          <span class="map-label">Section</span>
+          <select id="mapSection" disabled><option value="">— none —</option></select>
+        </div>
+        <div class="map-row">
+          <span class="map-label">Rank</span>
+          <select id="mapRank" disabled><option value="">— none —</option></select>
+        </div>
+      </div>
+
+      <!-- Roots -->
+      <div class="drawer-section" id="rootsWrap" hidden>
+        <div class="drawer-section-title">Top-Level Roots</div>
+        <div id="rootsList"></div>
+      </div>
+
+      <!-- Extra Card Details -->
+      <div class="drawer-section" id="extraFieldsWrap" hidden>
+        <div class="drawer-section-title">Extra Card Details</div>
+        <div class="helper" style="margin:0 0 10px;">Select additional CSV columns to display on each card.</div>
+        <div id="extraFieldsList"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Highlight Panel (right side) ── -->
+  <div class="hl-panel" id="hlPanel">
+    <div class="hl-header">
+      <h2>🎨 Highlight Rules</h2>
+      <button class="drawer-close" id="hlCloseBtn" title="Close">✕</button>
+    </div>
+    <div class="hl-body">
+
+      <!-- Preset Management -->
+      <div class="hl-section">
+        <div class="hl-section-title">Presets</div>
+        <div class="hl-preset-row">
+          <select id="hlPresetSelect"><option value="">— select preset —</option></select>
+          <button class="hl-btn" id="hlLoadPresetBtn" title="Load selected preset">Load</button>
+          <button class="hl-btn danger" id="hlDeletePresetBtn" title="Delete selected preset">Delete</button>
+        </div>
+        <input id="hlPresetName" class="hl-preset-name" type="text" placeholder="Preset name…" autocomplete="off" />
+        <div class="hl-btn-row">
+          <button class="hl-btn accent" id="hlSavePresetBtn">💾 Save Preset</button>
+          <button class="hl-btn" id="hlExportBtn">⬇ Export JSON</button>
+          <button class="hl-btn" id="hlImportBtn">⬆ Import JSON</button>
+          <input id="hlImportFile" type="file" accept=".json" style="display:none" />
+        </div>
+      </div>
+
+      <!-- Rules -->
+      <div class="hl-section">
+        <div class="hl-section-title">Rules <span style="color:#3d5280;font-weight:normal;font-size:10px;text-transform:none;letter-spacing:0">(first match wins)</span></div>
+        <div id="hlRulesList"></div>
+        <button class="hl-add-rule-btn" id="hlAddRuleBtn">＋ Add Rule</button>
+      </div>
+
+      <!-- Legend -->
+      <div class="hl-section" id="hlLegendSection" hidden>
+        <div class="hl-section-title">Active Legend</div>
+        <div class="hl-legend" id="hlLegend"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Main app ── -->
+  <div class="wrap">
+    <header class="cgp-tool-header">
+      <svg width="20" height="20" viewBox="0 0 28 28" fill="none" style="flex-shrink:0;cursor:pointer" onclick="navigateTo('index.html')">
+        <rect x="1"  y="1"  width="11" height="11" stroke="var(--teal)" stroke-width="1.5"/>
+        <rect x="16" y="1"  width="11" height="11" stroke="var(--teal)" stroke-width="1.5"/>
+        <rect x="1"  y="16" width="11" height="11" stroke="var(--teal)" stroke-width="1.5"/>
+        <rect x="16" y="16" width="11" height="11" stroke="var(--teal)" stroke-width="1.5" fill="var(--teal)" fill-opacity="0.15"/>
+      </svg>
+      <span class="cgp-hdr-logo" onclick="navigateTo('index.html')">COMMAND<span>GRID</span>PRO</span>
+      <div class="cgp-hdr-sep"></div>
+      <span class="cgp-hdr-sub">ORG CHART</span>
+      <button class="cgp-back-btn" onclick="navigateTo('index.html')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        BACK
+      </button>
+      <button class="cgp-settings-hdr-btn" onclick="navigateTo('settings.html')" title="Settings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </header>
+
+    <div class="layout">
+      <main class="panel main">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <button id="settingsBtn" class="btn-settings">☰ Settings</button>
+            <button id="zoomOutBtn" class="secondary" disabled>− Zoom</button>
+            <button id="zoomResetBtn" class="secondary" disabled>Reset Zoom</button>
+            <button id="zoomInBtn" class="secondary" disabled>+ Zoom</button>
+            <button id="goRootBtn" class="secondary" disabled title="Clear focus and jump to root">⌂ Root</button>
+            <button id="hlBtn" class="btn-highlight" disabled>🎨 Highlight</button>
+          </div>
+          <div class="toolbar-right">
+            <div class="pos-search-wrap">
+              <span class="search-icon">⌕</span>
+              <input id="posSearchInput" type="text" placeholder="Find position…" disabled autocomplete="off" />
+              <div id="searchActionPill" class="search-action-pill" hidden>
+                <span id="searchActionLabel" class="search-action-label"></span>
+                <button id="jumpBtn" class="search-action-btn">↓ Jump</button>
+                <button id="focusBtn" class="search-action-btn focus">⊙ Focus Subtree</button>
+              </div>
+            </div>
+            <button id="exportChangedBtn" class="btn-export-changed" disabled>⬇ Export Changed <span class="changed-count" id="changedCount">0</span></button>
+            <button id="exportBtn" class="btn-export" disabled>⬇ Export All CSV</button>
+            <div id="chartMeta" style="font-size:12px; color:var(--muted);">No chart rendered.</div>
+          </div>
+        </div>
+
+        <div id="focusBar" class="focus-bar" hidden>
+          <span class="focus-bar-icon">⊙</span>
+          <button id="focusBackBtn" class="focus-bar-back" hidden>← Back</button>
+          <span class="focus-bar-label">Focused on: <strong id="focusBarName"></strong></span>
+          <span class="focus-bar-sub" id="focusBarSub"></span>
+          <button id="clearFocusBtn" class="focus-bar-clear">✕ Show full chart</button>
+        </div>
+
+        <div class="chart-wrap" id="chartWrap">
+          <div class="empty" id="emptyState">
+            <div>
+              <h3 style="margin-top:0;">No chart yet</h3>
+              <p>Open <strong>Settings</strong>, upload a CSV, map your columns, then click <strong>Render Chart</strong>.</p>
+            </div>
+          </div>
+          <div class="chart-root" id="chartRoot" style="display:none;"></div>
+        </div>
+      </main>
+    </div>
+    <footer class="cgp-tool-footer">
+      <span style="font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:.18em;font-size:.85rem;color:#999;text-transform:uppercase">CFB <span style="color:var(--teal,#00ffd1);opacity:.5">North Bay</span></span>
+      <span style="color:#333;font-family:'Share Tech Mono',monospace;font-size:.65rem;margin:0 4px">×</span>
+      <span style="font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:.18em;font-size:.85rem;color:#999;text-transform:uppercase">Command<span style="color:var(--teal,#00ffd1);opacity:.5">Grid</span>Pro</span>
+      <span style="color:#333;font-family:'Share Tech Mono',monospace;font-size:.65rem;margin:0 8px">|</span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:#777;letter-spacing:.1em">ORG CHART · v1.0.0</span>
+    </footer>
+  </div>
+
+  <script>
+    // ── Global error safety net ──────────────────────────────────────────────
+    window.addEventListener('error', function(evt) {
+      console.error('[OrgChart] Uncaught error:', evt.message, 'at', evt.filename + ':' + evt.lineno + ':' + evt.colno, evt.error || '');
+    });
+    window.addEventListener('unhandledrejection', function(evt) {
+      console.error('[OrgChart] Unhandled promise rejection:', evt.reason);
+    });
+    // ────────────────────────────────────────────────────────────────────────
+    const state = {
+      headers: [],
+      rows: [],
+      originalRows: [],
+      changedIndices: new Set(),
+      treeData: null,
+      roots: [],
+      selectedRoot: null,
+      focusRoot: null,
+      focusHistory: [],      // stack of previous focusRoot values
+      selectedCard: null,
+      searchHighlight: null, // position currently highlighted via search/jump
+      zoom: 1,
+      dragging: false,
+      dragX: 0, dragY: 0,
+      startLeft: 0, startTop: 0,
+      highlightRules: [],   // [{id, column, matchType, value, bg, border, label, textColor}]
+      hlPresets: {},        // {presetName: [rules array]}
+      extraCardFields: []   // [headerName, ...] — extra CSV columns shown on card
+    };
+
+    // DOM refs
+    const csvFile             = document.getElementById('csvFile');
+    const positionHeader      = document.getElementById('positionHeader');
+    const reportsToHeader     = document.getElementById('reportsToHeader');
+    const mapName             = document.getElementById('mapName');
+    const mapTitle            = document.getElementById('mapTitle');
+    const mapSection          = document.getElementById('mapSection');
+    const mapRank             = document.getElementById('mapRank');
+    const searchInput         = document.getElementById('searchInput');
+    const renderBtn           = document.getElementById('renderBtn');
+    const resetBtn            = document.getElementById('resetBtn');
+    const statusBox           = document.getElementById('statusBox');
+    const rootsWrap           = document.getElementById('rootsWrap');
+    const rootsList           = document.getElementById('rootsList');
+    const extraFieldsWrap     = document.getElementById('extraFieldsWrap');
+    const extraFieldsList     = document.getElementById('extraFieldsList');
+    const chartRoot           = document.getElementById('chartRoot');
+    const emptyState          = document.getElementById('emptyState');
+    const chartMeta           = document.getElementById('chartMeta');
+    const zoomInBtn           = document.getElementById('zoomInBtn');
+    const zoomOutBtn          = document.getElementById('zoomOutBtn');
+    const zoomResetBtn        = document.getElementById('zoomResetBtn');
+    const goRootBtn           = document.getElementById('goRootBtn');
+    const hlBtn               = document.getElementById('hlBtn');
+    const chartWrap           = document.getElementById('chartWrap');
+    const exportBtn           = document.getElementById('exportBtn');
+    const exportChangedBtn    = document.getElementById('exportChangedBtn');
+    const changedCountEl      = document.getElementById('changedCount');
+    const posSearchInput      = document.getElementById('posSearchInput');
+    const searchActionPill    = document.getElementById('searchActionPill');
+    const searchActionLabel   = document.getElementById('searchActionLabel');
+    const jumpBtn             = document.getElementById('jumpBtn');
+    const focusBtn            = document.getElementById('focusBtn');
+    const clearFocusBtn       = document.getElementById('clearFocusBtn');
+    const focusBar            = document.getElementById('focusBar');
+    const focusBarName        = document.getElementById('focusBarName');
+    const focusBarSub         = document.getElementById('focusBarSub');
+    const focusBackBtn        = document.getElementById('focusBackBtn');
+    const settingsBtn         = document.getElementById('settingsBtn');
+    const settingsDrawer      = document.getElementById('settingsDrawer');
+    const drawerOverlay       = document.getElementById('drawerOverlay');
+    const drawerCloseBtn      = document.getElementById('drawerCloseBtn');
+
+    // All field-mapping selects in order
+    const fieldMapSelects = [positionHeader, reportsToHeader, mapName, mapTitle, mapSection, mapRank];
+
+    // Re-populate extra fields whenever a column mapping changes
+    fieldMapSelects.forEach(function(sel) {
+      sel.addEventListener('change', function() {
+        if (state.headers.length) populateExtraFields();
+      });
+    });
+
+    // Drawer open/close
+    function openDrawer()  { settingsDrawer.classList.add('open');  drawerOverlay.classList.add('open');  }
+    function closeDrawer() { settingsDrawer.classList.remove('open'); drawerOverlay.classList.remove('open'); }
+
+    settingsBtn.addEventListener('click', function(e) { e.stopPropagation(); openDrawer(); });
+    drawerCloseBtn.addEventListener('click', closeDrawer);
+    drawerOverlay.addEventListener('click', closeDrawer);
+    settingsDrawer.addEventListener('click', function(e) { e.stopPropagation(); });
+
+    csvFile.addEventListener('change', handleFileUpload);
+    renderBtn.addEventListener('click', function() { closeDrawer(); renderChart(); });
+    resetBtn.addEventListener('click', resetAll);
+    searchInput.addEventListener('input', renderRootChips);
+    zoomInBtn.addEventListener('click', function () { setZoom(state.zoom + 0.1); });
+    zoomOutBtn.addEventListener('click', function () { setZoom(state.zoom - 0.1); });
+    zoomResetBtn.addEventListener('click', function () { setZoom(1); });
+    goRootBtn.addEventListener('click', function () {
+      posSearchInput.value = '';
+      posSearchInput.classList.remove('is-focused-mode');
+      hidePill();
+      if (state.focusRoot) {
+        var returnTo = state.focusRoot;
+        state.focusRoot = null;
+        state.focusHistory = [];
+        if (returnTo) state.selectedCard = returnTo;
+        renderChart();
+      } else {
+        scrollToCard(state.selectedRoot);
+      }
+    });
+    exportBtn.addEventListener('click', exportCSV);
+    exportChangedBtn.addEventListener('click', exportChangedCSV);
+
+    // ── Position search + action pill ──
+    var pendingSearchMatch = null;
+
+    function showPill(matchedPosition) {
+      pendingSearchMatch = matchedPosition;
+      searchActionLabel.textContent = '"' + matchedPosition + '"';
+      searchActionPill.hidden = false;
+    }
+
+    function hidePill() {
+      searchActionPill.hidden = true;
+      pendingSearchMatch = null;
+    }
+
+    function countDescendants(treeNode) {
+      if (!treeNode || !treeNode.children) return 0;
+      var count = 0;
+      treeNode.children.forEach(function(c) { count += 1 + countDescendants(c); });
+      return count;
+    }
+
+    function updateFocusBar() {
+      if (!state.focusRoot) {
+        focusBar.hidden = true;
+        focusBackBtn.hidden = true;
+        posSearchInput.classList.remove('is-focused-mode');
+        return;
+      }
+      focusBar.hidden = false;
+      focusBackBtn.hidden = state.focusHistory.length === 0;
+      posSearchInput.classList.add('is-focused-mode');
+      posSearchInput.value = state.focusRoot;
+      var subCount = state.treeData ? countDescendants(state.treeData) : 0;
+      focusBarName.textContent = state.focusRoot;
+      focusBarSub.textContent = subCount > 0 ? '· ' + subCount + ' subordinate' + (subCount === 1 ? '' : 's') : '· no subordinates';
+    }
+
+    focusBackBtn.addEventListener('click', function() {
+      if (state.focusHistory.length === 0) return;
+      // When going back, select the current focus node so we scroll to it
+      var returnTo = state.focusRoot;
+      state.focusRoot = state.focusHistory.pop();
+      if (returnTo) state.selectedCard = returnTo;
+      renderChart();
+    });
+
+    function clearFocusRoot() {
+      // Remember the focus position — after expanding back to full chart we scroll
+      // to it so the user lands exactly where they were (proper "back" behaviour).
+      var returnTo = state.focusRoot || state.selectedCard;
+      state.focusRoot = null;
+      state.focusHistory = [];
+      state.searchHighlight = null;
+      if (returnTo) state.selectedCard = returnTo;
+      posSearchInput.value = '';
+      posSearchInput.classList.remove('is-focused-mode');
+      hidePill();
+      renderChart();
+    }
+
+    posSearchInput.addEventListener('input', function() {
+      var val = posSearchInput.value.trim();
+      if (!val) {
+        hidePill();
+        state.searchHighlight = null;
+        safeRerender();
+        return;
+      }
+      var allPositions = getAllPositionNames();
+      var match = allPositions.find(function(p){ return p.toLowerCase() === val.toLowerCase(); })
+               || allPositions.find(function(p){ return p.toLowerCase().indexOf(val.toLowerCase()) !== -1; });
+      if (match) showPill(match); else hidePill();
+    });
+
+    posSearchInput.addEventListener('change', function() {
+      var val = posSearchInput.value.trim();
+      if (!val) { hidePill(); return; }
+      var allPositions = getAllPositionNames();
+      var match = allPositions.find(function(p){ return p.toLowerCase() === val.toLowerCase(); })
+               || allPositions.find(function(p){ return p.toLowerCase().indexOf(val.toLowerCase()) !== -1; });
+      if (match) showPill(match);
+    });
+
+    posSearchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (pendingSearchMatch) { jumpToPosition(pendingSearchMatch); hidePill(); }
+      }
+      if (e.key === 'Escape') {
+        posSearchInput.value = '';
+        state.searchHighlight = null;
+        hidePill();
+        posSearchInput.blur();
+        safeRerender();
+      }
+    });
+
+    jumpBtn.addEventListener('click', function() {
+      if (pendingSearchMatch) { jumpToPosition(pendingSearchMatch); hidePill(); }
+    });
+
+    focusBtn.addEventListener('click', function() {
+      if (!pendingSearchMatch) return;
+      if (state.focusRoot) state.focusHistory.push(state.focusRoot);
+      state.focusRoot = pendingSearchMatch;
+      hidePill();
+      renderChart();
+    });
+
+    clearFocusBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      clearFocusRoot();
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!searchActionPill.hidden && !searchActionPill.contains(e.target) && e.target !== posSearchInput) {
+        hidePill();
+      }
+    });
+
+    chartWrap.addEventListener('wheel', handleWheelZoom, { passive: false });
+    chartWrap.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', dragMove);
+    window.addEventListener('mouseup', endDrag);
+
+    function setStatus(message, type) {
+      statusBox.textContent = message;
+      statusBox.className = type ? 'status ' + type : 'status';
+    }
+
+    function setZoom(value, evt) {
+      var next = Math.max(0.2, Math.min(2.5, Number(value)));
+
+      if (evt && state.zoom > 0) {
+        var rect = chartWrap.getBoundingClientRect();
+        var localX = evt.clientX - rect.left;
+        var localY = evt.clientY - rect.top;
+        var contentX = chartWrap.scrollLeft + localX;
+        var contentY = chartWrap.scrollTop + localY;
+        var ratio = next / state.zoom;
+
+        state.zoom = next;
+        chartRoot.style.transform = 'scale(' + state.zoom + ')';
+        chartWrap.scrollLeft = (contentX * ratio) - localX;
+        chartWrap.scrollTop = (contentY * ratio) - localY;
+      } else {
+        state.zoom = next;
+        chartRoot.style.transform = 'scale(' + state.zoom + ')';
+      }
+
+      chartMeta.textContent = buildMetaText();
+    }
+
+    function handleWheelZoom(evt) {
+      if (!state.treeData) {
+        return;
+      }
+      evt.preventDefault();
+      var target = state.zoom * Math.exp(-evt.deltaY * 0.0015);
+      setZoom(target, evt);
+    }
+
+    function startDrag(evt) {
+      if (!state.treeData) {
+        return;
+      }
+      if (evt.target.closest('button,input,select')) {
+        return;
+      }
+      state.dragging = true;
+      state.dragX = evt.clientX;
+      state.dragY = evt.clientY;
+      state.startLeft = chartWrap.scrollLeft;
+      state.startTop = chartWrap.scrollTop;
+      chartWrap.classList.add('dragging');
+    }
+
+    function dragMove(evt) {
+      if (!state.dragging) {
+        return;
+      }
+      chartWrap.scrollLeft = state.startLeft - (evt.clientX - state.dragX);
+      chartWrap.scrollTop = state.startTop - (evt.clientY - state.dragY);
+    }
+
+    function endDrag() {
+      state.dragging = false;
+      chartWrap.classList.remove('dragging');
+    }
+
+    function resetAll() {
+      // Close any open overlays first
+      closeAllPopups();
+      if (typeof closeHlPanel === 'function' && hlPanelOpen) closeHlPanel();
+
+      state.headers = [];
+      state.rows = [];
+      state.originalRows = [];
+      state.changedIndices = new Set();
+      state.treeData = null;
+      state.roots = [];
+      state.focusRoot = null;
+      state.focusHistory = [];
+      state.selectedRoot = null;
+      state.selectedCard = null;
+      state.searchHighlight = null;
+      state.extraCardFields = [];
+      state.zoom = 1;
+
+      csvFile.value = '';
+      fieldMapSelects.forEach(function(s) {
+        s.innerHTML = '';
+        var o = document.createElement('option');
+        o.value = ''; o.textContent = s === positionHeader || s === reportsToHeader ? 'Upload CSV first' : '— none —';
+        s.appendChild(o);
+        s.disabled = true;
+      });
+
+      searchInput.disabled = true;
+      searchInput.value = '';
+      renderBtn.disabled = true;
+      zoomInBtn.disabled = true;
+      zoomOutBtn.disabled = true;
+      zoomResetBtn.disabled = true;
+      goRootBtn.disabled = true;
+      hlBtn.disabled = true;
+      exportBtn.disabled = true;
+      exportChangedBtn.disabled = true;
+      if (changedCountEl) changedCountEl.textContent = '0';
+      posSearchInput.disabled = true;
+      posSearchInput.value = '';
+      posSearchInput.classList.remove('is-focused-mode');
+      hidePill();
+
+      rootsWrap.hidden = true;
+      rootsList.innerHTML = '';
+      extraFieldsWrap.hidden = true;
+      extraFieldsList.innerHTML = '';
+      chartRoot.innerHTML = '';
+      chartRoot.style.display = 'none';
+      chartRoot.style.transform = 'scale(1)';
+      emptyState.style.display = 'grid';
+      chartMeta.textContent = 'No chart rendered.';
+      focusBar.hidden = true;
+      setStatus('Waiting for CSV upload.');
+    }
+
+    function populateFieldSelect(selectEl, headers, allowBlank, autoKeywords) {
+      selectEl.innerHTML = '';
+      var blank = document.createElement('option');
+      blank.value = '';
+      blank.textContent = '— none —';
+      selectEl.appendChild(blank);
+      headers.forEach(function(h) {
+        var o = document.createElement('option');
+        o.value = h; o.textContent = h;
+        selectEl.appendChild(o);
+      });
+      selectEl.disabled = false;
+      if (autoKeywords) {
+        var picked = autoPickHeader(headers, autoKeywords);
+        if (picked) selectEl.value = picked;
+      }
+    }
+
+    function populateExtraFields() {
+      var schemaKeys = new Set([
+        positionHeader.value,
+        reportsToHeader.value,
+        mapName.value,
+        mapTitle.value,
+        mapSection.value,
+        mapRank.value
+      ].filter(Boolean));
+
+      var available = state.headers.filter(function(h) { return !schemaKeys.has(h); });
+
+      if (!available.length) {
+        extraFieldsWrap.hidden = true;
+        return;
+      }
+
+      // Keep only valid checked fields
+      state.extraCardFields = state.extraCardFields.filter(function(f) {
+        return available.indexOf(f) !== -1;
+      });
+
+      extraFieldsList.innerHTML = '';
+      available.forEach(function(header) {
+        var item = document.createElement('label');
+        item.className = 'extra-field-item';
+
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = header;
+        cb.checked = state.extraCardFields.indexOf(header) !== -1;
+        cb.addEventListener('change', function() {
+          if (cb.checked) {
+            if (state.extraCardFields.indexOf(header) === -1) state.extraCardFields.push(header);
+          } else {
+            state.extraCardFields = state.extraCardFields.filter(function(f) { return f !== header; });
+          }
+          if (state.treeData) safeRerender();
+        });
+
+        var lbl = document.createElement('span');
+        lbl.className = 'extra-field-label';
+        lbl.textContent = header;
+
+        item.appendChild(cb);
+        item.appendChild(lbl);
+        extraFieldsList.appendChild(item);
+      });
+
+      extraFieldsWrap.hidden = false;
+    }
+
+    async function handleFileUpload(evt) {
+      var file = evt.target.files && evt.target.files[0];
+      if (!file) return;
+      try {
+        var text = await file.text();
+        var parsed = parseCSV(text);
+        if (!parsed.headers.length) throw new Error('No headers detected in CSV.');
+
+        state.headers = parsed.headers;
+        state.rows = parsed.rows;
+        // Deep snapshot for change tracking
+        state.originalRows = parsed.rows.map(function(r) { return Object.assign({}, r); });
+        state.changedIndices = new Set();
+        state.treeData = null;
+        state.roots = [];
+        state.selectedRoot = null;
+        setZoom(1);
+
+        // Populate required selects
+        ['positionHeader','reportsToHeader'].forEach(function(id) {
+          var sel = document.getElementById(id);
+          sel.innerHTML = '';
+          var blank = document.createElement('option');
+          blank.value = ''; blank.textContent = 'Choose column';
+          sel.appendChild(blank);
+          parsed.headers.forEach(function(h) {
+            var o = document.createElement('option'); o.value = h; o.textContent = h;
+            sel.appendChild(o);
+          });
+          sel.disabled = false;
+        });
+        positionHeader.value  = autoPickHeader(parsed.headers, ['position','posn','id','pos']) || '';
+        reportsToHeader.value = autoPickHeader(parsed.headers, ['reports to','reportsto','supervisor','manager','parent','reportsTo']) || '';
+
+        // Populate optional field maps
+        populateFieldSelect(mapName,    parsed.headers, true, ['name','employee','full name','fullname','person']);
+        populateFieldSelect(mapTitle,   parsed.headers, true, ['title','job title','jobtitle','role']);
+        populateFieldSelect(mapSection, parsed.headers, true, ['section','department','dept','team','division','group']);
+        populateFieldSelect(mapRank,    parsed.headers, true, ['rank','grade','level','band','pay grade']);
+
+        state.extraCardFields = [];
+        populateExtraFields();
+
+        searchInput.disabled = false;
+        renderBtn.disabled = false;
+
+        rootsWrap.hidden = true;
+        rootsList.innerHTML = '';
+        chartRoot.innerHTML = '';
+        chartRoot.style.display = 'none';
+        emptyState.style.display = 'grid';
+        chartMeta.textContent = 'Loaded ' + state.rows.length + ' rows.';
+        setStatus('Loaded ' + state.rows.length + ' rows from ' + file.name + '. Map columns then render.', 'success');
+        openDrawer();
+      } catch (error) {
+        console.error(error);
+        setStatus(error.message || 'Unable to parse CSV.', 'error');
+      }
+    }
+
+    function autoPickHeader(headers, keywords) {
+      var normalizedHeaders = headers.map(function (h) {
+        return { original: h, normalized: normalize(h) };
+      });
+
+      for (var i = 0; i < keywords.length; i++) {
+        var key = keywords[i];
+        var match = normalizedHeaders.find(function (h) {
+          return h.normalized.indexOf(normalize(key)) !== -1;
+        });
+        if (match) {
+          return match.original;
+        }
+      }
+      return '';
+    }
+
+    function normalize(value) {
+      return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+
+    function parseCSV(text) {
+      var rows = [];
+      var lines = [];
+      var current = '';
+      var row = [];
+      var inQuotes = false;
+
+      for (var i = 0; i < text.length; i++) {
+        var char = text[i];
+        var next = text[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          row.push(current);
+          current = '';
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+          if (char === '\r' && next === '\n') {
+            i++;
+          }
+          row.push(current);
+          if (row.some(function (cell) { return String(cell).trim() !== ''; })) {
+            lines.push(row);
+          }
+          row = [];
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+
+      if (current.length > 0 || row.length > 0) {
+        row.push(current);
+        if (row.some(function (cell) { return String(cell).trim() !== ''; })) {
+          lines.push(row);
+        }
+      }
+
+      if (!lines.length) {
+        return { headers: [], rows: [] };
+      }
+
+      var headers = lines[0].map(function (h) { return String(h).trim(); });
+
+      // Warn about duplicate header names — second occurrence silently overwrites first in row objects
+      var headerSeen = new Set();
+      var dupHeaders = [];
+      headers.forEach(function(h) {
+        if (h && headerSeen.has(h)) dupHeaders.push(h);
+        headerSeen.add(h);
+      });
+      if (dupHeaders.length) {
+        console.warn('[OrgChart] parseCSV: duplicate column headers detected — values from later columns will overwrite earlier ones:', dupHeaders);
+      }
+
+      for (var r = 1; r < lines.length; r++) {
+        var values = lines[r];
+        var record = {};
+        headers.forEach(function (header, index) {
+          record[header] = String(values[index] == null ? '' : values[index]).trim();
+        });
+        rows.push(record);
+      }
+
+      return { headers: headers, rows: rows };
+    }
+
+    function renderChart() {
+      try {
+        _renderChart();
+      } catch (err) {
+        console.error('[OrgChart] renderChart error:', err);
+        setStatus('Render failed: ' + (err && err.message ? err.message : String(err)), 'error');
+      }
+    }
+
+    function _renderChart() {
+      var previousSelectedCard = state.selectedCard;
+      var positionKey  = positionHeader.value;
+      var reportsToKey = reportsToHeader.value;
+      var nameKey      = mapName.value;
+      var titleKey     = mapTitle.value;
+      var sectionKey   = mapSection.value;
+      var rankKey      = mapRank.value;
+
+      if (!positionKey || !reportsToKey) {
+        setStatus('Please map both Position and Reports To columns first.', 'error');
+        openDrawer();
+        return;
+      }
+
+      var cleaned = state.rows.map(function (row, index) {
+        var copy = Object.assign({}, row);
+        copy.__position  = String(row[positionKey]  || '').trim();
+        copy.__reportsTo = String(row[reportsToKey] || '').trim();
+        copy.__name      = nameKey    ? String(row[nameKey]    || '').trim() : '';
+        copy.__title     = titleKey   ? String(row[titleKey]   || '').trim() : '';
+        copy.__section   = sectionKey ? String(row[sectionKey] || '').trim() : '';
+        copy.__rank      = rankKey    ? String(row[rankKey]    || '').trim() : '';
+        copy.__rowNumber = index + 2;
+        return copy;
+      }).filter(function (row) { return row.__position; });
+
+      if (!cleaned.length) {
+        setStatus('No usable rows found.', 'error');
+        return;
+      }
+
+      var nodeMap = new Map();
+      var childrenMap = new Map();
+      var duplicates = [];
+
+      cleaned.forEach(function (row) {
+        if (nodeMap.has(row.__position)) duplicates.push(row.__position);
+        nodeMap.set(row.__position, row);
+        if (!childrenMap.has(row.__position)) childrenMap.set(row.__position, []);
+      });
+
+      var roots = [];
+      cleaned.forEach(function (row) {
+        var parent = row.__reportsTo;
+        if (!parent || !nodeMap.has(parent) || parent === row.__position) {
+          roots.push(row.__position);
+        } else {
+          childrenMap.get(parent).push(row.__position);
+        }
+      });
+
+      state.roots = Array.from(new Set(roots));
+
+      // Only update selectedRoot when we are NOT in focus mode — focusRoot overrides rendering
+      // and selectedRoot should stay stable so returning to full chart works correctly
+      if (!state.focusRoot) {
+        state.selectedRoot = (state.selectedRoot && nodeMap.has(state.selectedRoot))
+          ? state.selectedRoot : (state.roots[0] || null);
+      }
+
+      // Validate focusRoot — find its exact key in nodeMap (case-insensitive)
+      if (state.focusRoot) {
+        var focusKey = null;
+        nodeMap.forEach(function(_, key) {
+          if (key.toLowerCase() === state.focusRoot.toLowerCase()) focusKey = key;
+        });
+        state.focusRoot = focusKey; // null if not found, corrected case if found
+        // If focusRoot can't be found in the data, fall back gracefully
+        if (!state.focusRoot) {
+          state.selectedRoot = state.roots[0] || null;
+        }
+      }
+
+      // The root to actually render from — focusRoot takes priority over selectedRoot
+      var renderRoot = state.focusRoot || state.selectedRoot;
+
+      renderRootChips();
+      state.selectedCard = previousSelectedCard && nodeMap.has(previousSelectedCard) ? previousSelectedCard : null;
+
+      if (!renderRoot) {
+        setStatus('No root nodes found.', 'error');
+        return;
+      }
+
+      var activePath = new Set();
+
+      function buildNode(positionName) {
+        if (activePath.has(positionName)) {
+          return { cycle: true, position: positionName, reportsTo: '', name:'', title:'', section:'', rank:'', rowNumber:'-', rowData: null, extraData: {}, children: [] };
+        }
+        activePath.add(positionName);
+        var row = nodeMap.get(positionName);
+        if (!row) {
+          activePath.delete(positionName);
+          return { cycle: false, position: positionName, reportsTo: '', name:'', title:'', section:'', rank:'', rowNumber:'-', rowData: null, extraData: {}, children: [] };
+        }
+        var childNodes = (childrenMap.get(positionName) || []).map(buildNode);
+        activePath.delete(positionName);
+
+        // Collect any extra card fields
+        var extraData = {};
+        state.extraCardFields.forEach(function(h) {
+          extraData[h] = row[h] ? String(row[h]).trim() : '';
+        });
+
+        return {
+          position:  row.__position,
+          reportsTo: row.__reportsTo,
+          name:      row.__name,
+          title:     row.__title,
+          section:   row.__section,
+          rank:      row.__rank,
+          rowNumber: row.__rowNumber,
+          rowData:   row,
+          extraData: extraData,
+          children:  childNodes
+        };
+      }
+
+      state.treeData = buildNode(renderRoot);
+      chartRoot.innerHTML = '';
+      chartRoot.appendChild(renderTree(state.treeData));
+      chartRoot.style.display = 'flex';
+      emptyState.style.display = 'none';
+      zoomInBtn.disabled = false;
+      zoomOutBtn.disabled = false;
+      zoomResetBtn.disabled = false;
+      goRootBtn.disabled = false;
+      hlBtn.disabled = false;
+      exportBtn.disabled = false;
+      populatePosSearch();
+      chartRoot.style.transform = 'scale(' + state.zoom + ')';
+      applyHighlights();
+      updateFocusBar();
+
+      var orphanCount = cleaned.filter(function (r) {
+        return r.__reportsTo && !nodeMap.has(r.__reportsTo);
+      }).length;
+      var duplicateCount = Array.from(new Set(duplicates)).length;
+
+      var msg = state.focusRoot
+        ? 'Showing subtree from "' + renderRoot + '".'
+        : 'Rendered from root "' + renderRoot + '" · ' + cleaned.length + ' nodes.';
+      if (duplicateCount) msg += ' Duplicates: ' + duplicateCount + '.';
+      if (orphanCount)    msg += ' Missing parents: ' + orphanCount + '.';
+
+      setStatus(msg, 'success');
+      chartMeta.textContent = buildMetaText(cleaned.length, duplicateCount, orphanCount, renderRoot);
+
+      if (state.selectedCard) {
+        requestAnimationFrame(function () { scrollToCard(state.selectedCard); });
+      }
+    }
+
+    function scrollToCard(positionName) {
+      if (!positionName) return;
+      var card = chartRoot.querySelector('[data-position="' + CSS.escape(positionName) + '"]');
+      if (!card) return;
+
+      // card rect is in scaled space; chartRoot uses transform:scale so we need
+      // to account for zoom when computing the scroll target.
+      var wrapRect = chartWrap.getBoundingClientRect();
+      var cardRect = card.getBoundingClientRect();
+
+      // Centre of the card relative to the chartWrap viewport
+      var cardCentreX = cardRect.left - wrapRect.left + cardRect.width  / 2;
+      var cardCentreY = cardRect.top  - wrapRect.top  + cardRect.height / 2;
+
+      // Target scroll: bring the card centre to the middle of chartWrap
+      var targetLeft = chartWrap.scrollLeft + cardCentreX - wrapRect.width  / 2;
+      var targetTop  = chartWrap.scrollTop  + cardCentreY - wrapRect.height / 2;
+
+      chartWrap.scrollTo({ left: targetLeft, top: targetTop, behavior: 'smooth' });
+    }
+
+    function buildMetaText(totalRows, duplicateCount, orphanCount, renderRoot) {
+      var parts = [];
+      // When called without renderRoot (e.g. from setZoom), derive it from state
+      var effectiveRoot = renderRoot || state.focusRoot || state.selectedRoot || null;
+      if (state.focusRoot) {
+        parts.push('Focus: ' + state.focusRoot);
+      } else if (effectiveRoot) {
+        parts.push('Root: ' + effectiveRoot);
+      }
+      parts.push('Zoom: ' + Math.round(state.zoom * 100) + '%');
+      parts.push('Rows: ' + (totalRows != null ? totalRows : (state.rows.length || 0)));
+      if (duplicateCount) {
+        parts.push('Duplicates: ' + duplicateCount);
+      }
+      if (orphanCount) {
+        parts.push('Missing parents: ' + orphanCount);
+      }
+      return parts.join(' • ');
+    }
+
+    function renderRootChips() {
+      var term = normalize(searchInput.value);
+      rootsList.innerHTML = '';
+
+      var filtered = state.roots.filter(function (root) {
+        return normalize(root).indexOf(term) !== -1;
+      });
+      rootsWrap.hidden = filtered.length === 0;
+
+      filtered.forEach(function (root) {
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'root-chip' + (root === state.selectedRoot && !state.focusRoot ? ' active' : '');
+        chip.textContent = root;
+        chip.addEventListener('click', function () {
+          state.selectedRoot = root;
+          state.focusRoot = null;
+          state.focusHistory = [];
+          posSearchInput.value = '';
+          posSearchInput.classList.remove('is-focused-mode');
+          hidePill();
+          renderChart();
+        });
+        rootsList.appendChild(chip);
+      });
+    }
+
+    function renderTree(node) {
+      if (!node) {
+        console.warn('[OrgChart] renderTree called with null/undefined node');
+        return document.createDocumentFragment();
+      }
+      var wrapper = document.createElement('div');
+      wrapper.className = 'tree';
+      var ul = document.createElement('ul');
+      try {
+        ul.appendChild(renderNode(node));
+      } catch (err) {
+        console.error('[OrgChart] renderNode error for node "' + (node && node.position) + '":', err);
+        var errMsg = document.createElement('div');
+        errMsg.style.cssText = 'color:#ff9090;font-size:11px;padding:8px;';
+        errMsg.textContent = '⚠ Render error: ' + (err && err.message ? err.message : String(err));
+        ul.appendChild(errMsg);
+      }
+      wrapper.appendChild(ul);
+      return wrapper;
+    }
+
+    function closeAllPopups() {
+      document.querySelectorAll('.card-popup').forEach(function (p) { p.remove(); });
+      document.querySelectorAll('.card-popup-backdrop').forEach(function (b) { b.remove(); });
+    }
+
+    // Safe inline re-render — used by card clicks, search, focus btn, etc.
+    // Always guards against null treeData and logs errors.
+    function safeRerender() {
+      if (!state.treeData) return;
+      try {
+        chartRoot.innerHTML = '';
+        chartRoot.appendChild(renderTree(state.treeData));
+        applyHighlights();
+      } catch (err) {
+        console.error('[OrgChart] safeRerender error:', err);
+      }
+    }
+
+    function rowIsDifferentFromOriginal(rowIndex) {
+      var current  = state.rows[rowIndex];
+      var original = state.originalRows[rowIndex];
+      // New rows (appended, no original) are always considered changed
+      if (!original) return true;
+      return state.headers.some(function(h) {
+        return String(current[h]  == null ? '' : current[h]).trim() !==
+               String(original[h] == null ? '' : original[h]).trim();
+      });
+    }
+
+    function recomputeChanged(rowIndex) {
+      if (rowIndex >= 0) {
+        if (rowIsDifferentFromOriginal(rowIndex)) {
+          state.changedIndices.add(rowIndex);
+        } else {
+          state.changedIndices.delete(rowIndex);
+        }
+      }
+      if (changedCountEl) changedCountEl.textContent = state.changedIndices.size;
+      exportChangedBtn.disabled = state.changedIndices.size === 0;
+    }
+
+    function populatePosSearch() {
+      var positions = getAllPositionNames();
+      posSearchInput.disabled = positions.length === 0;
+    }
+
+    function jumpToPosition(positionName) {
+      var positionKey = positionHeader.value;
+      // Find exact match (case-insensitive)
+      var allPositions = getAllPositionNames();
+      var match = allPositions.find(function(p) {
+        return p.toLowerCase() === positionName.toLowerCase();
+      });
+      if (!match) {
+        // Try partial match
+        match = allPositions.find(function(p) {
+          return p.toLowerCase().indexOf(positionName.toLowerCase()) !== -1;
+        });
+      }
+      if (!match) {
+        setStatus('Position "' + positionName + '" not found in current chart.', 'error');
+        return;
+      }
+
+      // Set search highlight on the matched card
+      state.searchHighlight = match;
+
+      // If the target position isn't in the currently rendered tree, we may need to
+      // switch the root first
+      var cardEl = chartRoot.querySelector('[data-position="' + CSS.escape(match) + '"]');
+      if (!cardEl) {
+        // Find which root contains this position and switch to it
+        var positionKey2 = positionHeader.value;
+        var reportsToKey2 = reportsToHeader.value;
+        var nodeMap2 = new Map();
+        state.rows.forEach(function(r) {
+          var p = String(r[positionKey2]||'').trim();
+          if (p) nodeMap2.set(p, String(r[reportsToKey2]||'').trim());
+        });
+        // Walk up to find root
+        var visited = new Set();
+        var cur = match;
+        while (cur && nodeMap2.has(cur) && nodeMap2.get(cur) && nodeMap2.has(nodeMap2.get(cur))) {
+          if (visited.has(cur)) break;
+          visited.add(cur);
+          cur = nodeMap2.get(cur);
+        }
+        if (cur && state.roots.indexOf(cur) !== -1) {
+          state.selectedRoot = cur;
+          state.selectedCard = match;
+          renderChart();
+        }
+      } else {
+        state.selectedCard = match;
+        safeRerender();
+        requestAnimationFrame(function() { scrollToCard(match); });
+      }
+
+      posSearchInput.value = match;
+      setStatus('Jumped to "' + match + '".', 'success');
+    }
+
+    function getAllPositionNames() {
+      var positionKey = positionHeader.value;
+      return state.rows.map(function (r) { return String(r[positionKey] || '').trim(); }).filter(Boolean);
+    }
+
+    function openCardPopup(nodeWrap, position) {
+      closeAllPopups();
+
+      var positionKey  = positionHeader.value;
+      var reportsToKey = reportsToHeader.value;
+      var nameKey      = mapName.value;
+      var titleKey     = mapTitle.value;
+      var sectionKey   = mapSection.value;
+      var rankKey      = mapRank.value;
+
+      // Keys covered by the fixed schema (skip them in the "extra" section)
+      var schemaKeys = new Set([positionKey, reportsToKey, nameKey, titleKey, sectionKey, rankKey].filter(Boolean));
+
+      // Extra columns from CSV not covered by schema
+      var extraHeaders = state.headers.filter(function(h) { return !schemaKeys.has(h); });
+
+      var rowIndex = state.rows.findIndex(function (r) {
+        return String(r[positionKey] || '').trim() === position;
+      });
+      var currentRow       = rowIndex >= 0 ? state.rows[rowIndex] : null;
+      var currentReportsTo = currentRow ? String(currentRow[reportsToKey] || '').trim() : '';
+
+      function getField(key) { return currentRow && key ? String(currentRow[key] || '').trim() : ''; }
+
+      // ── popup shell ──
+      var popup = document.createElement('div');
+      popup.className = 'card-popup';
+      popup.addEventListener('click', function (e) { e.stopPropagation(); });
+
+      // Tab bar with close button
+      var tabBar = document.createElement('div');
+      tabBar.className = 'popup-tabs';
+      var tabEdit = document.createElement('button');
+      tabEdit.type = 'button'; tabEdit.className = 'popup-tab active'; tabEdit.textContent = '✏️ Edit';
+      var tabAdd = document.createElement('button');
+      tabAdd.type = 'button'; tabAdd.className = 'popup-tab'; tabAdd.textContent = '＋ Add Child';
+      var closeX = document.createElement('button');
+      closeX.type = 'button';
+      closeX.textContent = '✕';
+      closeX.style.cssText = 'background:none;border:none;color:var(--muted);font-size:16px;padding:0 14px;cursor:pointer;flex-shrink:0;';
+      closeX.addEventListener('click', function(e){ e.stopPropagation(); closeAllPopups(); });
+      tabBar.appendChild(tabEdit); tabBar.appendChild(tabAdd); tabBar.appendChild(closeX);
+      popup.appendChild(tabBar);
+
+      // Close on Escape
+      function onKeyDown(e) { if (e.key === 'Escape') { closeAllPopups(); document.removeEventListener('keydown', onKeyDown); } }
+      document.addEventListener('keydown', onKeyDown);
+
+      var body = document.createElement('div');
+      body.className = 'popup-body';
+      popup.appendChild(body);
+
+      // ── Helper: build a labelled input field ──
+      // required=true adds a red star; required=false adds "(optional)" tag
+      function makeField(labelText, value, placeholder, required) {
+        var f   = document.createElement('div'); f.className = 'popup-field';
+        var lbl = document.createElement('label'); lbl.className = 'popup-field-label';
+        lbl.textContent = labelText;
+        if (required) {
+          var star = document.createElement('span'); star.className = 'req'; star.textContent = ' *';
+          lbl.appendChild(star);
+        } else {
+          var opt = document.createElement('span'); opt.className = 'opt-tag'; opt.textContent = 'optional';
+          lbl.appendChild(opt);
+        }
+        var inp = document.createElement('input'); inp.type = 'text'; inp.value = value;
+        if (placeholder) inp.placeholder = placeholder;
+        f.appendChild(lbl); f.appendChild(inp);
+        return { field: f, input: inp };
+      }
+
+      // ── Section divider ──
+      function makeDivider(label) {
+        var d = document.createElement('div'); d.className = 'popup-section-divider';
+        var s = document.createElement('span'); s.textContent = label;
+        d.appendChild(s);
+        return d;
+      }
+
+      // ════════════════════════════════
+      // EDIT PANEL
+      // ════════════════════════════════
+      var editPanel = document.createElement('div');
+      editPanel.className = 'popup-panel active';
+
+      // ── Left column: Required + Card Fields ──
+      var editLeft = document.createElement('div');
+      editLeft.className = 'popup-col';
+
+      editLeft.appendChild(makeDivider('Required'));
+      var posField = makeField('Position ID', position, '', true);
+      editLeft.appendChild(posField.field);
+
+      // Reports To (required)
+      var rtField = document.createElement('div'); rtField.className = 'popup-field';
+      var rtLbl   = document.createElement('label'); rtLbl.className = 'popup-field-label';
+      rtLbl.innerHTML = 'Reports To <span class="req">*</span>';
+      var rtBadge = document.createElement('span'); rtBadge.className = 'popup-changed-badge'; rtBadge.textContent = 'will move'; rtBadge.style.display = 'none';
+      rtLbl.appendChild(rtBadge);
+      var rtSel = document.createElement('select');
+      var blankOpt = document.createElement('option'); blankOpt.value = ''; blankOpt.textContent = '— none (root) —';
+      rtSel.appendChild(blankOpt);
+      getAllPositionNames().forEach(function (name) {
+        if (name === position) return;
+        var opt = document.createElement('option'); opt.value = name; opt.textContent = name;
+        if (name === currentReportsTo) opt.selected = true;
+        rtSel.appendChild(opt);
+      });
+      rtSel.addEventListener('change', function () {
+        rtBadge.style.display = rtSel.value !== currentReportsTo ? '' : 'none';
+      });
+      rtField.appendChild(rtLbl); rtField.appendChild(rtSel);
+      editLeft.appendChild(rtField);
+
+      var nameField  = nameKey    ? makeField('Name',    getField(nameKey),    'Full name',   false) : null;
+      var titleField = titleKey   ? makeField('Title',   getField(titleKey),   'Job title',   false) : null;
+      var secField   = sectionKey ? makeField('Section', getField(sectionKey), 'Department',  false) : null;
+      var rankField  = rankKey    ? makeField('Rank',    getField(rankKey),    'Grade/level', false) : null;
+
+      if (nameField || titleField || secField || rankField) {
+        editLeft.appendChild(makeDivider('Card Fields'));
+        if (nameField)  editLeft.appendChild(nameField.field);
+        if (titleField) editLeft.appendChild(titleField.field);
+        if (secField)   editLeft.appendChild(secField.field);
+        if (rankField)  editLeft.appendChild(rankField.field);
+      }
+
+      editPanel.appendChild(editLeft);
+
+      // ── Right column: Additional Data ──
+      var editRight = document.createElement('div');
+      editRight.className = 'popup-col popup-col-right';
+
+      var editExtraInputs = {};
+      if (extraHeaders.length > 0) {
+        editRight.appendChild(makeDivider('Additional Data'));
+        extraHeaders.forEach(function(h) {
+          var ef = makeField(h, getField(h), '', false);
+          editExtraInputs[h] = ef.input;
+          editRight.appendChild(ef.field);
+        });
+      } else {
+        var noExtra = document.createElement('div');
+        noExtra.style.cssText = 'color:#3d5280;font-size:12px;padding:8px 0;';
+        noExtra.textContent = 'No additional columns in this CSV.';
+        editRight.appendChild(noExtra);
+      }
+      editPanel.appendChild(editRight);
+
+      // ── Footer: buttons ──
+      var editFooter = document.createElement('div');
+      editFooter.className = 'popup-col-footer';
+      var editBtns = document.createElement('div'); editBtns.className = 'card-popup-btns';
+      var saveBtn       = document.createElement('button'); saveBtn.type = 'button'; saveBtn.textContent = 'Save Changes';
+      var cancelEditBtn = document.createElement('button'); cancelEditBtn.type = 'button'; cancelEditBtn.className = 'btn-cancel'; cancelEditBtn.textContent = 'Cancel';
+      editBtns.appendChild(cancelEditBtn); editBtns.appendChild(saveBtn);
+      editFooter.appendChild(editBtns);
+      editPanel.appendChild(editFooter);
+
+      body.appendChild(editPanel);
+
+      // ════════════════════════════════
+      // ADD CHILD PANEL
+      // ════════════════════════════════
+      var addPanel = document.createElement('div');
+      addPanel.className = 'popup-panel';
+
+      // ── Left column: Required + Card Fields ──
+      var addLeft = document.createElement('div');
+      addLeft.className = 'popup-col';
+
+      var addHint = document.createElement('div'); addHint.className = 'popup-hint';
+      addHint.style.marginBottom = '10px';
+      addHint.textContent = 'New position will report directly to "' + position + '".';
+      addLeft.appendChild(addHint);
+
+      addLeft.appendChild(makeDivider('Required'));
+      var addPosF = makeField('Position ID', '', 'Unique ID e.g. POS-042', true);
+      addLeft.appendChild(addPosF.field);
+
+      var addNameF  = nameKey    ? makeField('Name',    '', 'Full name',   false) : null;
+      var addTitleF = titleKey   ? makeField('Title',   '', 'Job title',   false) : null;
+      var addSecF   = sectionKey ? makeField('Section', '', 'Department',  false) : null;
+      var addRankF  = rankKey    ? makeField('Rank',    '', 'Grade/level', false) : null;
+
+      if (addNameF || addTitleF || addSecF || addRankF) {
+        addLeft.appendChild(makeDivider('Card Fields'));
+        if (addNameF)  addLeft.appendChild(addNameF.field);
+        if (addTitleF) addLeft.appendChild(addTitleF.field);
+        if (addSecF)   addLeft.appendChild(addSecF.field);
+        if (addRankF)  addLeft.appendChild(addRankF.field);
+      }
+      addPanel.appendChild(addLeft);
+
+      // ── Right column: Additional Data ──
+      var addRight = document.createElement('div');
+      addRight.className = 'popup-col popup-col-right';
+
+      var addExtraInputs = {};
+      if (extraHeaders.length > 0) {
+        addRight.appendChild(makeDivider('Additional Data'));
+        extraHeaders.forEach(function(h) {
+          var ef = makeField(h, '', '', false);
+          addExtraInputs[h] = ef.input;
+          addRight.appendChild(ef.field);
+        });
+      } else {
+        var noExtraAdd = document.createElement('div');
+        noExtraAdd.style.cssText = 'color:#3d5280;font-size:12px;padding:8px 0;';
+        noExtraAdd.textContent = 'No additional columns in this CSV.';
+        addRight.appendChild(noExtraAdd);
+      }
+      addPanel.appendChild(addRight);
+
+      // ── Footer ──
+      var addFooter = document.createElement('div');
+      addFooter.className = 'popup-col-footer';
+      var addBtns = document.createElement('div'); addBtns.className = 'card-popup-btns';
+      var doAddBtn    = document.createElement('button'); doAddBtn.type = 'button'; doAddBtn.textContent = 'Add Position';
+      var cancelAddBtn= document.createElement('button'); cancelAddBtn.type = 'button'; cancelAddBtn.className = 'btn-cancel'; cancelAddBtn.textContent = 'Cancel';
+      addBtns.appendChild(cancelAddBtn); addBtns.appendChild(doAddBtn);
+      addFooter.appendChild(addBtns);
+      addPanel.appendChild(addFooter);
+
+      body.appendChild(addPanel);
+
+      // ── backdrop + mount on body ──
+      var backdrop = document.createElement('div');
+      backdrop.className = 'card-popup-backdrop';
+      backdrop.addEventListener('click', function() { closeAllPopups(); });
+      document.body.appendChild(backdrop);
+      document.body.appendChild(popup);
+
+      // ── Tab switching ──
+      function switchTab(aTab, aPanel, bTab, bPanel, focusEl) {
+        aTab.classList.add('active'); bTab.classList.remove('active');
+        aPanel.classList.add('active'); bPanel.classList.remove('active');
+        if (focusEl) setTimeout(function(){ focusEl.focus(); }, 40);
+      }
+      tabEdit.addEventListener('click', function(e){ e.stopPropagation(); switchTab(tabEdit,editPanel,tabAdd,addPanel,posField.input); });
+      tabAdd.addEventListener('click',  function(e){ e.stopPropagation(); switchTab(tabAdd,addPanel,tabEdit,editPanel,addPosF.input); });
+
+      setTimeout(function(){ posField.input.focus(); posField.input.select(); }, 40);
+
+      cancelEditBtn.addEventListener('click', function(e){ e.stopPropagation(); closeAllPopups(); });
+      cancelAddBtn.addEventListener('click',  function(e){ e.stopPropagation(); closeAllPopups(); });
+
+      // ── SAVE EDIT ──
+      function doSave(e) {
+        e.stopPropagation();
+        try {
+          var newName      = posField.input.value.trim();
+          var newReportsTo = rtSel.value;
+
+          if (!newName) { posField.input.classList.add('error-field'); posField.input.focus(); return; }
+          posField.input.classList.remove('error-field');
+
+          if (newName.toLowerCase() !== position.toLowerCase()) {
+            var conflict = state.rows.some(function(r){ return String(r[positionKey]||'').trim().toLowerCase() === newName.toLowerCase(); });
+            if (conflict) { posField.input.classList.add('error-field'); setStatus('Position "'+newName+'" already exists.','error'); posField.input.focus(); return; }
+          }
+
+          var posChanged     = newName !== position;
+          var reportsChanged = newReportsTo !== currentReportsTo;
+          var schemaChanged  = (nameKey    && nameField   && nameField.input.value.trim()   !== getField(nameKey))   ||
+                               (titleKey   && titleField  && titleField.input.value.trim()  !== getField(titleKey))  ||
+                               (sectionKey && secField    && secField.input.value.trim()    !== getField(sectionKey))||
+                               (rankKey    && rankField   && rankField.input.value.trim()   !== getField(rankKey));
+          var extraChanged   = extraHeaders.some(function(h){ return editExtraInputs[h].value.trim() !== getField(h); });
+
+          if (!posChanged && !reportsChanged && !schemaChanged && !extraChanged) { closeAllPopups(); return; }
+
+          if (rowIndex >= 0) {
+            var targetRow = state.rows[rowIndex];
+            targetRow[positionKey]  = newName;
+            targetRow[reportsToKey] = newReportsTo;
+            if (nameKey    && nameField)  targetRow[nameKey]    = nameField.input.value.trim();
+            if (titleKey   && titleField) targetRow[titleKey]   = titleField.input.value.trim();
+            if (sectionKey && secField)   targetRow[sectionKey] = secField.input.value.trim();
+            if (rankKey    && rankField)  targetRow[rankKey]    = rankField.input.value.trim();
+            extraHeaders.forEach(function(h){ targetRow[h] = editExtraInputs[h].value.trim(); });
+          }
+          if (posChanged) {
+            // Update all rows that report to the old position name
+            state.rows.forEach(function(r){ if (String(r[reportsToKey]||'').trim()===position) r[reportsToKey]=newName; });
+            // Update navigation state references to the old name
+            if (state.selectedRoot === position) state.selectedRoot = newName;
+            if (state.focusRoot === position) state.focusRoot = newName;
+            state.focusHistory = state.focusHistory.map(function(h){ return h === position ? newName : h; });
+            if (state.searchHighlight === position) state.searchHighlight = newName;
+          }
+
+          closeAllPopups();
+          state.selectedCard = newName;
+          var msgs = [];
+          if (posChanged)     msgs.push('renamed to "'+newName+'"');
+          if (reportsChanged) msgs.push('moved under "'+(newReportsTo||'root')+'"');
+          if (schemaChanged || extraChanged) msgs.push('details updated');
+          recomputeChanged(rowIndex);
+          renderChart();
+          setStatus('"'+position+'" '+msgs.join(', ')+'.','success');
+        } catch (err) {
+          console.error('[OrgChart] doSave error for "' + position + '":', err);
+          setStatus('Save failed: ' + (err && err.message ? err.message : String(err)), 'error');
+        }
+      }
+
+      saveBtn.addEventListener('click', doSave);
+      posField.input.addEventListener('keydown', function(e){ if(e.key==='Enter') doSave(e); });
+
+      // ── ADD CHILD ──
+      function doAdd(e) {
+        e.stopPropagation();
+        try {
+          var newPos = addPosF.input.value.trim();
+          if (!newPos) { addPosF.input.classList.add('error-field'); addPosF.input.focus(); return; }
+          addPosF.input.classList.remove('error-field');
+          var exists = state.rows.some(function(r){ return String(r[positionKey]||'').trim().toLowerCase()===newPos.toLowerCase(); });
+          if (exists) { addPosF.input.classList.add('error-field'); setStatus('Position "'+newPos+'" already exists.','error'); addPosF.input.focus(); return; }
+
+          var newRow = {};
+          state.headers.forEach(function(h){ newRow[h]=''; });
+          newRow[positionKey]  = newPos;
+          newRow[reportsToKey] = position;
+          if (nameKey    && addNameF)  newRow[nameKey]    = addNameF.input.value.trim();
+          if (titleKey   && addTitleF) newRow[titleKey]   = addTitleF.input.value.trim();
+          if (sectionKey && addSecF)   newRow[sectionKey] = addSecF.input.value.trim();
+          if (rankKey    && addRankF)  newRow[rankKey]    = addRankF.input.value.trim();
+          extraHeaders.forEach(function(h){ newRow[h] = addExtraInputs[h].value.trim(); });
+
+          state.rows.push(newRow);
+          recomputeChanged(state.rows.length - 1);
+          closeAllPopups();
+          state.selectedCard = newPos;
+          renderChart();
+          setStatus('Added "'+newPos+'" under "'+position+'".','success');
+        } catch (err) {
+          console.error('[OrgChart] doAdd error under "' + position + '":', err);
+          setStatus('Add failed: ' + (err && err.message ? err.message : String(err)), 'error');
+        }
+      }
+
+      doAddBtn.addEventListener('click', doAdd);
+      addPosF.input.addEventListener('keydown', function(e){ if(e.key==='Enter') doAdd(e); });
+    }
+
+    function renderNode(node) {
+      var li = document.createElement('li');
+      var nodeWrap = document.createElement('div');
+      nodeWrap.className = 'node-wrap';
+
+      var card = document.createElement('div');
+      var isSelected = state.selectedCard === node.position;
+      var isSearchHit = state.searchHighlight === node.position;
+      card.className = 'node' + (isSelected ? ' selected' : '') + (isSearchHit ? ' search-highlight' : '');
+      card.setAttribute('data-position', node.position);
+
+      // Card click only selects — no popup
+      card.addEventListener('click', function (evt) {
+        evt.stopPropagation();
+        closeAllPopups();
+        state.selectedCard = node.position;
+        safeRerender();
+      });
+
+      // ── Position banner (full-width centered strip) ──
+      var posBanner = document.createElement('div');
+      posBanner.className = 'node-pos-banner';
+      posBanner.textContent = node.position;
+      card.appendChild(posBanner);
+
+      // ── Card body wrapper ──
+      var body = document.createElement('div');
+      body.className = 'node-card-body';
+
+      // ── Name (primary title line) ──
+      var nameEl = document.createElement('div');
+      nameEl.className = 'node-title';
+      nameEl.textContent = node.name || '—';
+      body.appendChild(nameEl);
+
+      // ── Job Title (subtitle line) ──
+      if (node.title) {
+        var titleEl = document.createElement('div');
+        titleEl.className = 'node-subtitle';
+        titleEl.textContent = node.title;
+        body.appendChild(titleEl);
+      }
+
+      // ── Reports To line ──
+      if (node.reportsTo) {
+        var rtEl = document.createElement('div');
+        rtEl.className = 'node-reports-to';
+        var rtArrow = document.createTextNode('\u2191 ');
+        var rtSpan = document.createElement('span');
+        rtSpan.textContent = node.reportsTo;
+        rtEl.appendChild(rtArrow);
+        rtEl.appendChild(rtSpan);
+        body.appendChild(rtEl);
+      }
+
+      // ── Section & Rank ──
+      var hasSection = !!node.section;
+      var hasRank    = !!node.rank;
+      if (hasSection || hasRank) {
+        var hr = document.createElement('hr');
+        hr.className = 'node-divider';
+        body.appendChild(hr);
+
+        var fieldsEl = document.createElement('div');
+        fieldsEl.className = 'node-fields';
+
+        if (hasSection) {
+          var sRow = document.createElement('div'); sRow.className = 'node-field';
+          var sKey = document.createElement('span'); sKey.className = 'node-field-key'; sKey.textContent = 'Sect';
+          var sVal = document.createElement('span'); sVal.className = 'node-field-val'; sVal.textContent = node.section;
+          sRow.appendChild(sKey); sRow.appendChild(sVal); fieldsEl.appendChild(sRow);
+        }
+        if (hasRank) {
+          var rRow = document.createElement('div'); rRow.className = 'node-field';
+          var rKey = document.createElement('span'); rKey.className = 'node-field-key'; rKey.textContent = 'Rank';
+          var rVal = document.createElement('span'); rVal.className = 'node-field-val'; rVal.textContent = node.rank;
+          rRow.appendChild(rKey); rRow.appendChild(rVal); fieldsEl.appendChild(rRow);
+        }
+        body.appendChild(fieldsEl);
+      }
+
+      // ── Extra card fields ──
+      var extraKeys = node.extraData ? Object.keys(node.extraData).filter(function(k) { return node.extraData[k]; }) : [];
+      if (extraKeys.length) {
+        var exHr = document.createElement('hr');
+        exHr.className = 'node-divider';
+        body.appendChild(exHr);
+
+        var exFields = document.createElement('div');
+        exFields.className = 'node-extra-fields';
+
+        extraKeys.forEach(function(k) {
+          var row = document.createElement('div');
+          row.className = 'node-extra-field';
+          var key = document.createElement('span');
+          key.className = 'node-extra-key';
+          key.textContent = k;
+          key.title = k;
+          var val = document.createElement('span');
+          val.className = 'node-extra-val';
+          val.textContent = node.extraData[k];
+          row.appendChild(key);
+          row.appendChild(val);
+          exFields.appendChild(row);
+        });
+
+        body.appendChild(exFields);
+      }
+
+      card.appendChild(body);
+
+      // ── Cycle warning ──
+      if (node.cycle) {
+        var meta = document.createElement('div');
+        meta.className = 'node-meta';
+        meta.textContent = '⚠ Cycle detected';
+        card.appendChild(meta);
+      }
+
+      // ── Edit button bar at card bottom ──
+      if (!node.cycle) {
+        var editBar = document.createElement('div');
+        editBar.className = 'node-edit-bar';
+
+        var editBtn = document.createElement('button');
+        editBtn.className = 'node-edit-btn';
+        editBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit';
+        editBtn.title = 'Edit this position or add a child';
+        editBtn.addEventListener('click', function (evt) {
+          evt.stopPropagation();
+          try {
+            state.selectedCard = node.position;
+            safeRerender();
+            var freshCard = chartRoot.querySelector('[data-position="' + CSS.escape(node.position) + '"]');
+            if (!freshCard) {
+              console.warn('[OrgChart] editBtn: card not found in DOM after rerender for position "' + node.position + '"');
+              return;
+            }
+            var wrap = freshCard.closest('.node-wrap') || freshCard.parentElement;
+            openCardPopup(wrap, node.position);
+          } catch (err) {
+            console.error('[OrgChart] editBtn click error for "' + node.position + '":', err);
+          }
+        });
+
+        var focusCardBtn = document.createElement('button');
+        focusCardBtn.className = 'node-focus-btn';
+        focusCardBtn.innerHTML = '⊙ Focus';
+        focusCardBtn.title = 'Focus subtree on this position';
+        focusCardBtn.addEventListener('click', function (evt) {
+          evt.stopPropagation();
+          if (state.focusRoot) state.focusHistory.push(state.focusRoot);
+          state.focusRoot = node.position;
+          state.selectedCard = null;
+          renderChart();
+        });
+
+        editBar.appendChild(editBtn);
+        editBar.appendChild(focusCardBtn);
+        card.appendChild(editBar);
+      }
+
+      nodeWrap.appendChild(card);
+      li.appendChild(nodeWrap);
+
+      if (node.children && node.children.length) {
+        var ul = document.createElement('ul');
+        node.children.forEach(function (child) { ul.appendChild(renderNode(child)); });
+        li.appendChild(ul);
+      }
+      return li;
+    }
+
+    function exportCSV() {
+      if (!state.headers.length || !state.rows.length) return;
+      downloadCSV(state.rows, 'org_chart_export.csv');
+      setStatus('Exported ' + state.rows.length + ' rows to org_chart_export.csv', 'success');
+    }
+
+    function exportChangedCSV() {
+      if (!state.changedIndices.size) return;
+      var changedRows = state.rows.filter(function(_, i) { return state.changedIndices.has(i); });
+      downloadCSV(changedRows, 'org_chart_changes.csv');
+      setStatus('Exported ' + changedRows.length + ' changed row' + (changedRows.length === 1 ? '' : 's') + ' to org_chart_changes.csv', 'success');
+    }
+
+    function downloadCSV(rows, filename) {
+      try {
+        function escapeCell(val) {
+          var s = String(val == null ? '' : val);
+          if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+            return '"' + s.replace(/"/g, '""') + '"';
+          }
+          return s;
+        }
+        var lines = [];
+        lines.push(state.headers.map(escapeCell).join(','));
+        rows.forEach(function(row) {
+          lines.push(state.headers.map(function(h) { return escapeCell(row[h]); }).join(','));
+        });
+        var blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('[OrgChart] downloadCSV error:', err);
+        setStatus('Export failed: ' + (err && err.message ? err.message : String(err)), 'error');
+      }
+    }
+
+    // ── Highlight Panel ──────────────────────────────────────────────────────
+    const hlPanel         = document.getElementById('hlPanel');
+    const hlCloseBtn      = document.getElementById('hlCloseBtn');
+    const hlRulesList     = document.getElementById('hlRulesList');
+    const hlAddRuleBtn    = document.getElementById('hlAddRuleBtn');
+    const hlPresetSelect  = document.getElementById('hlPresetSelect');
+    const hlPresetName    = document.getElementById('hlPresetName');
+    const hlSavePresetBtn = document.getElementById('hlSavePresetBtn');
+    const hlLoadPresetBtn = document.getElementById('hlLoadPresetBtn');
+    const hlDeletePresetBtn = document.getElementById('hlDeletePresetBtn');
+    const hlExportBtn     = document.getElementById('hlExportBtn');
+    const hlImportBtn     = document.getElementById('hlImportBtn');
+    const hlImportFile    = document.getElementById('hlImportFile');
+    const hlLegendSection = document.getElementById('hlLegendSection');
+    const hlLegend        = document.getElementById('hlLegend');
+
+    var hlPanelOpen = false;
+
+    function openHlPanel()  { hlPanel.classList.add('open'); hlPanelOpen = true; hlBtn.classList.add('active'); }
+    function closeHlPanel() { hlPanel.classList.remove('open'); hlPanelOpen = false; hlBtn.classList.remove('active'); }
+
+    hlBtn.addEventListener('click', function(e) { e.stopPropagation(); hlPanelOpen ? closeHlPanel() : openHlPanel(); });
+    hlCloseBtn.addEventListener('click', closeHlPanel);
+    hlPanel.addEventListener('click', function(e) { e.stopPropagation(); });
+    document.addEventListener('click', function(e) {
+      if (hlPanelOpen && !hlPanel.contains(e.target) && e.target !== hlBtn) closeHlPanel();
+    });
+
+    // ── Rule rendering ──
+    var hlRuleIdCounter = 0;
+
+    var DEFAULT_PALETTE = [
+      { bg: '#1a3a6a', border: '#3a6aaa', textColor: '#9bc1ff', label: 'Blue' },
+      { bg: '#1a5c2a', border: '#2a7a3a', textColor: '#80d090', label: 'Green' },
+      { bg: '#5c2a1a', border: '#aa4a3a', textColor: '#ff9080', label: 'Red' },
+      { bg: '#4a3a00', border: '#7a6200', textColor: '#ffd060', label: 'Amber' },
+      { bg: '#3a1a6a', border: '#7040b0', textColor: '#c090ff', label: 'Purple' },
+      { bg: '#1a5c5c', border: '#2a9090', textColor: '#70e0e0', label: 'Teal' },
+      { bg: '#5c1a4a', border: '#aa3080', textColor: '#ff80c0', label: 'Pink' },
+      { bg: '#3a3a3a', border: '#707070', textColor: '#c0c0c0', label: 'Grey' },
+    ];
+
+    function makeRule(overrides) {
+      return Object.assign({
+        id: ++hlRuleIdCounter,
+        column: '',
+        matchType: 'exact',
+        value: '',
+        bg: '#1a3a6a',
+        border: '#3a6aaa',
+        textColor: '#9bc1ff',
+        label: ''
+      }, overrides || {});
+    }
+
+    function renderHlRules() {
+      hlRulesList.innerHTML = '';
+      state.highlightRules.forEach(function(rule, idx) {
+        var div = document.createElement('div');
+        div.className = 'hl-rule';
+        div.dataset.id = rule.id;
+
+        // Left: fields
+        var fields = document.createElement('div');
+        fields.className = 'hl-rule-fields';
+
+        // Column select
+        var colSel = document.createElement('select');
+        colSel.title = 'Column to match';
+        var blankOpt = document.createElement('option');
+        blankOpt.value = ''; blankOpt.textContent = '— column —';
+        colSel.appendChild(blankOpt);
+        state.headers.forEach(function(h) {
+          var o = document.createElement('option');
+          o.value = h; o.textContent = h;
+          if (h === rule.column) o.selected = true;
+          colSel.appendChild(o);
+        });
+        colSel.addEventListener('change', function() { rule.column = colSel.value; applyHighlights(); });
+
+        // Match type + value row
+        var matchRow = document.createElement('div');
+        matchRow.className = 'hl-rule-row';
+
+        var matchSel = document.createElement('select');
+        ['exact','contains','starts','ends','regex'].forEach(function(m) {
+          var o = document.createElement('option');
+          o.value = m;
+          o.textContent = {exact:'= Exact', contains:'∋ Contains', starts:'^ Starts', ends:'$ Ends', regex:'~ Regex'}[m];
+          if (m === rule.matchType) o.selected = true;
+          matchSel.appendChild(o);
+        });
+        matchSel.addEventListener('change', function() { rule.matchType = matchSel.value; applyHighlights(); });
+
+        var valDatalistId = 'hl-val-list-' + rule.id;
+        var valDatalist = document.createElement('datalist');
+        valDatalist.id = valDatalistId;
+
+        function populateValDatalist(column) {
+          valDatalist.innerHTML = '';
+          if (!column) return;
+          var seen = new Set();
+          state.rows.forEach(function(row) {
+            var v = String(row[column] == null ? '' : row[column]).trim();
+            if (v && !seen.has(v)) { seen.add(v); var o = document.createElement('option'); o.value = v; valDatalist.appendChild(o); }
+          });
+        }
+
+        populateValDatalist(rule.column);
+
+        // Re-populate when column changes
+        colSel.addEventListener('change', function() { populateValDatalist(rule.column); });
+
+        var valInput = document.createElement('input');
+        valInput.type = 'text';
+        valInput.setAttribute('list', valDatalistId);
+        valInput.placeholder = 'value…';
+        valInput.value = rule.value;
+        valInput.autocomplete = 'off';
+        valInput.addEventListener('input', function() { rule.value = valInput.value; applyHighlights(); });
+
+        matchRow.appendChild(valDatalist);
+
+        matchRow.appendChild(matchSel);
+        matchRow.appendChild(valInput);
+
+        // Color row
+        var colorRow = document.createElement('div');
+        colorRow.className = 'hl-color-row';
+
+        function makeColorField(labelText, stateKey, currentVal) {
+          var wrap = document.createElement('div');
+          var lbl = document.createElement('div');
+          lbl.className = 'hl-color-label';
+          lbl.textContent = labelText;
+          var inp = document.createElement('input');
+          inp.type = 'color';
+          inp.value = currentVal;
+          inp.addEventListener('input', function() { rule[stateKey] = inp.value; applyHighlights(); });
+          wrap.appendChild(lbl);
+          wrap.appendChild(inp);
+          return wrap;
+        }
+
+        colorRow.appendChild(makeColorField('Background', 'bg', rule.bg));
+        colorRow.appendChild(makeColorField('Border', 'border', rule.border));
+        colorRow.appendChild(makeColorField('Text', 'textColor', rule.textColor));
+
+        // Label input
+        var labelInput = document.createElement('input');
+        labelInput.type = 'text';
+        labelInput.placeholder = 'Legend label (optional)';
+        labelInput.value = rule.label || '';
+        labelInput.addEventListener('input', function() { rule.label = labelInput.value; updateHlLegend(); });
+
+        // Palette swatches
+        var swatchRow = document.createElement('div');
+        swatchRow.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;';
+        DEFAULT_PALETTE.forEach(function(p) {
+          var sw = document.createElement('button');
+          sw.title = p.label;
+          sw.style.cssText = 'width:18px;height:18px;border-radius:4px;border:1px solid '+p.border+';background:'+p.bg+';cursor:pointer;padding:0;';
+          sw.addEventListener('click', function() {
+            rule.bg = p.bg; rule.border = p.border; rule.textColor = p.textColor;
+            renderHlRules(); applyHighlights();
+          });
+          swatchRow.appendChild(sw);
+        });
+
+        // Move up/down
+        var orderRow = document.createElement('div');
+        orderRow.style.cssText = 'display:flex;gap:4px;margin-top:2px;';
+        var upBtn = document.createElement('button');
+        upBtn.className = 'hl-btn'; upBtn.style.cssText = 'padding:3px 8px;font-size:11px;';
+        upBtn.textContent = '↑'; upBtn.title = 'Move up';
+        upBtn.disabled = idx === 0;
+        upBtn.addEventListener('click', function() {
+          var tmp = state.highlightRules[idx-1];
+          state.highlightRules[idx-1] = state.highlightRules[idx];
+          state.highlightRules[idx] = tmp;
+          renderHlRules(); applyHighlights();
+        });
+        var downBtn = document.createElement('button');
+        downBtn.className = 'hl-btn'; downBtn.style.cssText = 'padding:3px 8px;font-size:11px;';
+        downBtn.textContent = '↓'; downBtn.title = 'Move down';
+        downBtn.disabled = idx === state.highlightRules.length - 1;
+        downBtn.addEventListener('click', function() {
+          var tmp = state.highlightRules[idx+1];
+          state.highlightRules[idx+1] = state.highlightRules[idx];
+          state.highlightRules[idx] = tmp;
+          renderHlRules(); applyHighlights();
+        });
+        orderRow.appendChild(upBtn);
+        orderRow.appendChild(downBtn);
+
+        fields.appendChild(colSel);
+        fields.appendChild(matchRow);
+        fields.appendChild(colorRow);
+        fields.appendChild(swatchRow);
+        fields.appendChild(labelInput);
+        fields.appendChild(orderRow);
+
+        // Right: delete
+        var delBtn = document.createElement('button');
+        delBtn.className = 'hl-delete-btn';
+        delBtn.textContent = '✕';
+        delBtn.title = 'Remove rule';
+        delBtn.addEventListener('click', function() {
+          state.highlightRules.splice(idx, 1);
+          renderHlRules(); applyHighlights();
+        });
+
+        div.appendChild(fields);
+        div.appendChild(delBtn);
+        hlRulesList.appendChild(div);
+      });
+
+      updateHlLegend();
+    }
+
+    hlAddRuleBtn.addEventListener('click', function() {
+      state.highlightRules.push(makeRule());
+      renderHlRules();
+    });
+
+    // ── Apply highlights to cards ──
+    function matchesRule(rule, rowData) {
+      if (!rule.column || !rule.value) return false;
+      var cellVal = String(rowData ? (rowData[rule.column] || '') : '').trim();
+      var ruleVal = rule.value.trim();
+      if (!ruleVal) return false;
+      try {
+        switch (rule.matchType) {
+          case 'exact':    return cellVal.toLowerCase() === ruleVal.toLowerCase();
+          case 'contains': return cellVal.toLowerCase().indexOf(ruleVal.toLowerCase()) !== -1;
+          case 'starts':   return cellVal.toLowerCase().startsWith(ruleVal.toLowerCase());
+          case 'ends':     return cellVal.toLowerCase().endsWith(ruleVal.toLowerCase());
+          case 'regex':    return new RegExp(ruleVal, 'i').test(cellVal);
+        }
+      } catch(e) { return false; }
+      return false;
+    }
+
+    function applyHighlights() {
+      var cards = chartRoot.querySelectorAll('.node[data-position]');
+      // Build a position→rowData lookup from treeData
+      var rowLookup = {};
+      state.rows.forEach(function(row) {
+        var posKey = positionHeader.value;
+        if (posKey && row[posKey]) rowLookup[String(row[posKey]).trim()] = row;
+      });
+
+      cards.forEach(function(card) {
+        var pos = card.getAttribute('data-position');
+        var rowData = rowLookup[pos];
+        var matched = null;
+        for (var i = 0; i < state.highlightRules.length; i++) {
+          if (matchesRule(state.highlightRules[i], rowData)) { matched = state.highlightRules[i]; break; }
+        }
+        if (matched) {
+          card.style.background = matched.bg;
+          card.style.borderColor = matched.border;
+          card.style.setProperty('--hl-text', matched.textColor);
+          card.classList.add('hl-active');
+        } else {
+          card.style.background = '';
+          card.style.borderColor = '';
+          card.style.removeProperty('--hl-text');
+          card.classList.remove('hl-active');
+        }
+      });
+
+      updateHlLegend();
+    }
+
+    function updateHlLegend() {
+      var active = state.highlightRules.filter(function(r) { return r.column && r.value; });
+      if (!active.length) { hlLegendSection.hidden = true; return; }
+      hlLegendSection.hidden = false;
+      hlLegend.innerHTML = '';
+      active.forEach(function(r) {
+        var item = document.createElement('div');
+        item.className = 'hl-legend-item';
+        var swatch = document.createElement('div');
+        swatch.className = 'hl-legend-swatch';
+        swatch.style.background = r.bg;
+        swatch.style.borderColor = r.border;
+        var lbl = document.createElement('span');
+        lbl.style.color = 'var(--text)';
+        var matchLabel = {exact:'=', contains:'∋', starts:'^', ends:'$', regex:'~'}[r.matchType] || '=';
+        lbl.textContent = (r.label || r.column) + ' ' + matchLabel + ' "' + r.value + '"';
+        item.appendChild(swatch);
+        item.appendChild(lbl);
+        hlLegend.appendChild(item);
+      });
+    }
+
+    // ── Preset management ──
+    function renderPresetSelect() {
+      hlPresetSelect.innerHTML = '<option value="">— select preset —</option>';
+      Object.keys(state.hlPresets).sort().forEach(function(name) {
+        var o = document.createElement('option');
+        o.value = name; o.textContent = name;
+        hlPresetSelect.appendChild(o);
+      });
+    }
+
+    hlSavePresetBtn.addEventListener('click', function() {
+      var name = hlPresetName.value.trim();
+      if (!name) { hlPresetName.focus(); return; }
+      try {
+        state.hlPresets[name] = JSON.parse(JSON.stringify(state.highlightRules));
+        renderPresetSelect();
+        hlPresetSelect.value = name;
+        setStatus('Preset "' + name + '" saved.', 'success');
+      } catch (err) {
+        console.error('[OrgChart] hlSavePreset error:', err);
+        setStatus('Save preset failed: ' + (err && err.message ? err.message : String(err)), 'error');
+      }
+    });
+
+    hlLoadPresetBtn.addEventListener('click', function() {
+      var name = hlPresetSelect.value;
+      if (!name || !state.hlPresets[name]) return;
+      try {
+        state.highlightRules = JSON.parse(JSON.stringify(state.hlPresets[name]));
+        // Re-assign IDs to avoid collisions
+        state.highlightRules.forEach(function(r) { r.id = ++hlRuleIdCounter; });
+        renderHlRules();
+        applyHighlights();
+        setStatus('Loaded preset "' + name + '".', 'success');
+      } catch (err) {
+        console.error('[OrgChart] hlLoadPreset error:', err);
+        setStatus('Load preset failed: ' + (err && err.message ? err.message : String(err)), 'error');
+      }
+    });
+
+    hlDeletePresetBtn.addEventListener('click', function() {
+      var name = hlPresetSelect.value;
+      if (!name) return;
+      delete state.hlPresets[name];
+      renderPresetSelect();
+      setStatus('Deleted preset "' + name + '".', 'success');
+    });
+
+    // ── Export / Import ──
+    hlExportBtn.addEventListener('click', function() {
+      try {
+        var payload = { rules: state.highlightRules, presets: state.hlPresets };
+        var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = 'highlight_settings.json';
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+        setStatus('Highlight settings exported.', 'success');
+      } catch (err) {
+        console.error('[OrgChart] hlExport error:', err);
+        setStatus('Export failed: ' + (err && err.message ? err.message : String(err)), 'error');
+      }
+    });
+
+    hlImportBtn.addEventListener('click', function() { hlImportFile.value = ''; hlImportFile.click(); });
+
+    hlImportFile.addEventListener('change', function() {
+      var file = hlImportFile.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onerror = function() {
+        console.error('[OrgChart] FileReader error reading highlight import file');
+        setStatus('Import failed: could not read file.', 'error');
+      };
+      reader.onload = function(e) {
+        try {
+          var payload = JSON.parse(e.target.result);
+          if (!payload || typeof payload !== 'object') throw new Error('Invalid format: expected a JSON object.');
+          if (payload.rules != null) {
+            if (!Array.isArray(payload.rules)) throw new Error('Invalid format: "rules" must be an array.');
+            state.highlightRules = payload.rules;
+            state.highlightRules.forEach(function(r) { r.id = ++hlRuleIdCounter; });
+          }
+          if (payload.presets != null) {
+            if (typeof payload.presets !== 'object' || Array.isArray(payload.presets)) throw new Error('Invalid format: "presets" must be an object.');
+            state.hlPresets = payload.presets;
+            renderPresetSelect();
+          }
+          renderHlRules();
+          applyHighlights();
+          setStatus('Highlight settings imported.', 'success');
+        } catch(err) {
+          console.error('[OrgChart] Highlight import parse error:', err);
+          setStatus('Import failed: ' + (err && err.message ? err.message : 'invalid JSON.'), 'error');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // ── Enable hlBtn on render ──
+
+    resetAll();
+  </script>
+</body>
+</html>
