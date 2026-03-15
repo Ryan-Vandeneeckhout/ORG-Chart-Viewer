@@ -3,9 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Compare CSV files, isolate changes, and export cleaner command-ready results with CommandGridPro."/>
+  <meta name="theme-color" content="#00ffd1"/>
+  <meta property="og:title" content="CSV Comparison Tool — CommandGridPro"/>
+  <meta property="og:description" content="Compare CSV files, isolate changes, and export cleaner command-ready results with CommandGridPro."/>
+  <meta property="og:type" content="website"/>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.svg"/>
+  <link rel="manifest" href="site.webmanifest"/>
+
   <title>CFB North Bay CSV Comparison Tool</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css"/>
   <script src="shared.js"></script>
   <style>
     :root {
@@ -75,48 +85,6 @@
     *::-webkit-scrollbar-track { background: #0e0e0e; }
     *::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
     *::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
-
-    /* header */
-    header {
-      position: sticky; top: 0; z-index: 50;
-      background: #050505;
-      border-bottom: 1px solid #444;
-      padding: 0 clamp(16px,3vw,32px); height: 52px;
-      display: flex; align-items: center; gap: 16px;
-    }
-    /* grid lines visible through header */
-    header::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(90deg, transparent, #00FFD108, transparent);
-      pointer-events: none;
-    }
-    .hdr-logo {
-      font-family: 'Rajdhani', sans-serif; font-size:clamp(1rem,1rem + .5vw,1.3rem); font-weight: 700;
-      color: var(--text); letter-spacing: .18em; text-transform: uppercase;
-      position: relative; z-index: 1;
-    }
-    .hdr-logo span { color:var(--theme-accent, #00ffd1); }
-    .hdr-sep  { width: 1px; height: 18px; background: #555; position: relative; z-index: 1; }
-    .hdr-sub  { font-family: var(--mono); font-size:clamp(.83rem,.65rem + .4vw,.95rem); color:#aaa; font-weight: 400; letter-spacing: .2em; text-transform: uppercase; position: relative; z-index: 1; }
-    .hdr-back-btn {
-      margin-left: auto;
-      display: inline-flex; align-items: center; gap: 6px;
-      font-family: var(--mono); font-size: clamp(.75rem,.6rem + .3vw,.85rem);
-      font-weight: 400; letter-spacing: .12em; text-transform: uppercase;
-      color:#aaa; background: #161616;
-      border: 1px solid #666; border-radius: var(--r);
-      padding: 5px 12px; cursor: pointer;
-      transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
-      position: relative; z-index: 1;
-      /* override global button styles */
-      box-shadow: none;
-    }
-    .hdr-back-btn:hover {
-      border-color:var(--theme-accent, #00ffd1); color:var(--theme-accent, #00ffd1);
-      background: #001a14; box-shadow: 0 0 8px #00FFD120;
-    }
-
     /* page */
     .page { max-width: 1340px; margin: 0 auto; padding: clamp(20px,3vw,36px) clamp(16px,3vw,32px); display: flex; flex-direction: column; gap: 20px; position: relative; z-index: 1; }
     .page-h { display: flex; align-items: center; gap: 10px; }
@@ -843,41 +811,13 @@
       text-transform: uppercase; vertical-align: middle; margin-left: 4px;
     }
 
-    /* ── Tool footer ── */
-    .tool-footer {
-      display: flex; align-items: center; justify-content: center;
-      gap: 14px; flex-wrap: wrap;
-      padding: clamp(16px,2vw,24px) clamp(16px,3vw,32px);
-      border-top: 1px solid #444;
-      margin-top: auto;
-      position: relative; z-index: 1;
-    }
-
-    .tf-brand {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: clamp(.78rem,.68rem + .3vw,.92rem);
-      font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
-      color:#999;
-    }
-    .tf-brand span { color:#00FFD180; }
-
-    .tf-sep {
-      font-family: var(--mono); font-size: .65rem;
-      color:#777; letter-spacing: .1em;
-    }
-
-    .tf-copy {
-      font-family: var(--mono); font-size: clamp(.65rem,.55rem + .2vw,.72rem);
-      color:#777; letter-spacing: .1em;
-    }
 
     /* ═══════════════════════════════════════
        RESPONSIVE — tablet (≤768px)
     ═══════════════════════════════════════ */
     @media (max-width: 768px) {
       /* header — hide subtitle on tight screens */
-      .hdr-sub { display: none; }
-      .hdr-sep { display: none; }
+      .tagline { display: none; }
 
       /* panels tighter padding */
       .panel { padding: 14px 12px; }
@@ -923,7 +863,7 @@
       /* header — compact */
       header { height: 46px; gap: 10px; padding: 0 12px; }
       header svg { width: 16px; height: 16px; }
-      .hdr-logo { font-size: 1rem; letter-spacing: .1em; }
+      .brand-title { font-size: 1rem; letter-spacing: .1em; }
 
       /* page padding */
       .page { padding: 12px; gap: 12px; }
@@ -994,29 +934,7 @@
 </head>
 <body>
 
-<header>
-  <svg width="20" height="20" viewBox="0 0 28 28" fill="none" style="flex-shrink:0">
-    <rect x="1"  y="1"  width="11" height="11" stroke="var(--theme-accent,#00FFD1)" stroke-width="1.5"/>
-    <rect x="16" y="1"  width="11" height="11" stroke="var(--theme-accent,#00FFD1)" stroke-width="1.5"/>
-    <rect x="1"  y="16" width="11" height="11" stroke="var(--theme-accent,#00FFD1)" stroke-width="1.5"/>
-    <rect x="16" y="16" width="11" height="11" stroke="var(--theme-accent,#00FFD1)" stroke-width="1.5" fill="#00FFD1" fill-opacity="0.15"/>
-  </svg>
-  <span class="hdr-logo">CFB <span>NORTH BAY</span></span>
-  <div class="hdr-sep"></div>
-  <span class="hdr-sub">CSV Comparison Tool</span>
-  <button class="hdr-back-btn" onclick="navigateTo('index.html')">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="15 18 9 12 15 6"/>
-    </svg>
-    Back
-  </button>
-  <button class="settings-btn" onclick="navigateTo('settings.html')" title="Settings" style="margin-left:6px">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-    </svg>
-  </button>
-</header>
+<header data-cgp-header data-tagline="CSV Comparison Tool"></header>
 
 <div class="page">
 
@@ -1235,13 +1153,7 @@
     <div class="rbody" id="rbody"></div>
   </div>
   <!-- Footer -->
-  <footer class="tool-footer">
-    <span class="tf-brand">CFB <span>North Bay</span></span>
-    <span class="tf-sep">×</span>
-    <span class="tf-brand">Command<span>Grid</span>Pro</span>
-    <span class="tf-sep">|</span>
-    <span class="tf-copy">© 2026 · All rights reserved</span>
-  </footer>
+  <footer data-cgp-footer data-page="CSV Comparison Tool" data-version="v1.0.0"></footer>
 
 </div>
 

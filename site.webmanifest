@@ -1,0 +1,23 @@
+{
+  "name": "CommandGridPro",
+  "short_name": "CGP",
+  "description": "CommandGridPro is a tactical-style browser toolkit for CSV comparison, PDF workflows, org chart building, and command support utilities.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#00ffd1",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="CommandGridPro touch icon">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9ffcff"/>
+      <stop offset="100%" stop-color="#00ffd1"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="#081018"/>
+  <g stroke="url(#g)" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="22" y="22" width="48" height="48" rx="10"/>
+    <rect x="110" y="22" width="48" height="48" rx="10"/>
+    <rect x="22" y="110" width="48" height="48" rx="10"/>
+    <rect x="110" y="110" width="48" height="48" rx="10"/>
+    <path d="M70 46h40M46 70v40M134 70v40M70 134h40" opacity=".9"/>
+  </g>
+  <circle cx="90" cy="90" r="18" fill="url(#g)"/>
+  <circle cx="90" cy="90" r="30" fill="none" stroke="#7df9ff" stroke-opacity=".28" stroke-width="4"/>
+</svg>

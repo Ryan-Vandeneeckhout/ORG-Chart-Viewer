@@ -3,6 +3,15 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Tune CommandGridPro themes, accents, and interface preferences from one clean settings dashboard."/>
+  <meta name="theme-color" content="#00ffd1"/>
+  <meta property="og:title" content="Settings — CommandGridPro"/>
+  <meta property="og:description" content="Tune CommandGridPro themes, accents, and interface preferences from one clean settings dashboard."/>
+  <meta property="og:type" content="website"/>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.svg"/>
+  <link rel="manifest" href="site.webmanifest"/>
+
   <title>Settings — CommandGridPro</title>
   <link rel="stylesheet" href="shared.css"/>
   <style>
@@ -94,24 +103,35 @@
       transition: color .4s, border-color .4s, background .4s;
     }
 
+    
+
     /* ── Theme grid ── */
+
     .theme-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      align-items: stretch;
     }
     .theme-card {
       position: relative;
+      width: 100%;
+      min-height: 122px;
       background: var(--panel, #0c0c0c);
       border: 1px solid var(--border, rgba(255,255,255,.1));
       border-radius: 4px; padding: 14px 14px 12px;
       cursor: pointer; text-align: left;
-      transition: border-color .2s, box-shadow .2s, background .4s;
+      transition: border-color .2s, box-shadow .2s, background .4s, transform .18s ease;
       display: flex; flex-direction: column; gap: 8px;
+      align-items: stretch;
+      justify-content: flex-start;
+      appearance: none;
+      -webkit-appearance: none;
     }
     .theme-card:hover {
       border-color: color-mix(in srgb, var(--teal) 40%, var(--border));
       background: var(--panel-soft, #111);
+      transform: translateY(-1px);
     }
     .theme-card.cgp-theme-active {
       border-color: color-mix(in srgb, var(--teal) 60%, transparent);
@@ -234,6 +254,107 @@
       transition: color .4s, background .4s, border-color .4s;
     }
 
+
+    /* ── Design mode switcher ── */
+    .mode-switcher {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .mode-card {
+      position: relative;
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid var(--border, rgba(255,255,255,.08));
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--panel) 92%, rgba(255,255,255,.01)), color-mix(in srgb, var(--panel-soft) 96%, transparent));
+      cursor: pointer;
+      text-align: left;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .4s;
+    }
+    .mode-card:hover {
+      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--theme-accent, var(--teal)) 34%, transparent);
+      box-shadow: 0 14px 30px rgba(0,0,0,.18);
+    }
+    .mode-card.cgp-style-active {
+      border-color: color-mix(in srgb, var(--theme-accent, var(--teal)) 58%, transparent);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--theme-accent, var(--teal)) 18%, transparent),
+        0 18px 34px color-mix(in srgb, var(--theme-accent, var(--teal)) 12%, rgba(0,0,0,.22));
+    }
+    .mode-card.cgp-style-active::after {
+      content: 'ACTIVE';
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .14em;
+      color: var(--theme-accent, var(--teal));
+    }
+    .mode-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.02rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text, #e8e8e8);
+    }
+    .mode-note {
+      margin-top: 8px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .74rem;
+      line-height: 1.5;
+      color: var(--muted, #999);
+      letter-spacing: .06em;
+    }
+    .mode-preview {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .mode-preview span {
+      height: 10px;
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.08);
+      background:
+        linear-gradient(90deg,
+          color-mix(in srgb, var(--theme-accent, var(--teal)) 18%, rgba(255,255,255,.02)),
+          color-mix(in srgb, var(--theme-accent-2, var(--theme-accent, var(--teal))) 18%, rgba(255,255,255,.01)));
+      opacity: .92;
+    }
+
+    body[data-cgp-style-mode="modern"] .active-theme-banner,
+    body[data-cgp-style-mode="modern"] .theme-card,
+    body[data-cgp-style-mode="modern"] .settings-rows,
+    body[data-cgp-style-mode="modern"] .settings-row,
+    body[data-cgp-style-mode="modern"] .module-item,
+    body[data-cgp-style-mode="modern"] .sr-btn {
+      border-radius: 18px;
+    }
+    body[data-cgp-style-mode="modern"] .theme-card,
+    body[data-cgp-style-mode="modern"] .module-item,
+    body[data-cgp-style-mode="modern"] .settings-row {
+      box-shadow: 0 14px 24px rgba(0,0,0,.14);
+    }
+    body[data-cgp-style-mode="modern"] .theme-card {
+      background:
+        linear-gradient(180deg,
+          color-mix(in srgb, var(--panel, #121212) 90%, rgba(255,255,255,.02)),
+          color-mix(in srgb, var(--panel-soft, #161616) 96%, rgba(255,255,255,.01)));
+    }
+
+    .theme-card, .mode-card, .sr-btn {
+      outline: none;
+    }
+
+    @media (max-width: 760px) {
+      .mode-switcher { grid-template-columns: 1fr; }
+    }
+
     @media (max-width: 600px) {
       .theme-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
       .settings-title { font-size: clamp(1.3rem,1rem + 3vw,1.8rem); }
@@ -243,33 +364,7 @@
 <body>
 <div class="page">
 
-  <header>
-    <div class="header-inner">
-      <div class="logo-mark" style="color:var(--teal)">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style="cursor:pointer" onclick="navigateTo('index.html')">
-          <rect x="1"  y="1"  width="11" height="11" stroke="currentColor" stroke-width="1.5"/>
-          <rect x="16" y="1"  width="11" height="11" stroke="currentColor" stroke-width="1.5"/>
-          <rect x="1"  y="16" width="11" height="11" stroke="currentColor" stroke-width="1.5"/>
-          <rect x="16" y="16" width="11" height="11" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.2"/>
-        </svg>
-      </div>
-      <div>
-        <h1 class="brand-title" onclick="navigateTo('index.html')" style="cursor:pointer">COMMAND<span>GRID</span>PRO</h1>
-        <p class="tagline">Precision Tools. Zero Friction.</p>
-      </div>
-      <div class="status-badge">
-        <span class="status-dot"></span>
-        ACTIVE
-      </div>
-      <button class="back-btn" onclick="navigateTo('index.html')">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6"/>
-        </svg>
-        Back
-      </button>
-    </div>
-    <div class="divider"></div>
-  </header>
+  <header data-cgp-header></header>
 
   <div class="settings-page">
 
@@ -285,11 +380,22 @@
       <div class="settings-divider"></div>
     </div>
 
+
+    <!-- Design Mode -->
+    <div class="settings-section">
+      <div class="settings-section-head">
+        <div class="settings-section-title">Design Mode</div>
+        <div class="settings-section-note">Switch between the original command look and a softer modern web shell.</div>
+      </div>
+
+      <div class="mode-switcher" id="modeSwitcher"></div>
+    </div>
+
     <!-- Theme Section -->
     <div class="settings-section">
       <div class="settings-section-head">
         <div class="settings-section-title">App Theme</div>
-        <div class="settings-section-note">Applies across all tools. Saved automatically.</div>
+        <div class="settings-section-note">Applies across all tools. 56 themes available and saved automatically.</div>
       </div>
 
       <div class="active-theme-banner" id="activeBanner">
@@ -382,27 +488,19 @@
 
   </div><!-- /.settings-page -->
 
-  <footer>
-    <span class="brand">CFB <span>North Bay</span></span>
-    <span class="fsep">×</span>
-    <span class="brand">Command<span>Grid</span>Pro</span>
-    <span class="fsep">|</span>
-    <span>Settings</span>
-    <span class="fsep">|</span>
-    <span>v1.0.0</span>
-  </footer>
+  <footer data-cgp-footer data-page="Settings" data-version="v1.0.0"></footer>
 
 </div>
 <script src="shared.js"></script>
 <script>
 /* ── Module list ── */
 const MODULES = [
-  { num:'01', name:'CSV Compare',     accent:'#00FFD1', action:'tool-pdf.html',  desc:'Row-by-row CSV diff tool' },
-  { num:'02', name:'Tool 2',          accent:'#FF6B35', action:'tool-2.html',    desc:'Coming soon' },
-  { num:'03', name:'Tool 3',          accent:'#A78BFA', action:'tool-3.html',    desc:'Coming soon' },
-  { num:'04', name:'Tool 4',          accent:'#FACC15', action:'tool-4.html',    desc:'Coming soon' },
-  { num:'05', name:'Command Pro All', accent:'#38BDF8', action:'tool-cgp.html',  desc:'Org chart & CSV personnel viewer' },
-  { num:'06', name:'Tool 6',          accent:'#FB7185', action:'tool-5.html',    desc:'Coming soon' },
+  { num:'01', name:'CSV Compare',      accent:'#00FFD1', action:'tool-pdf.html',      desc:'Row-by-row CSV diff tool' },
+  { num:'02', name:'PDF Form Filler',  accent:'#A78BFA', action:'tool-cgp-pdf.html',  desc:'Fill AcroForm PDFs from CSV data' },
+  { num:'03', name:'Command Pro All',  accent:'#38BDF8', action:'tool-cgp.html',      desc:'Org chart & CSV personnel viewer' },
+  { num:'04', name:'Org Chart',        accent:'#22D3EE', action:'tool-orgchart.html', desc:'Org chart builder' },
+  { num:'05', name:'Tool 5',           accent:'#FACC15', action:'tool-5.html',        desc:'Coming soon' },
+  { num:'06', name:'Tool 6',           accent:'#FB7185', action:'tool-6.html',        desc:'Coming soon' },
 ];
 
 const ACCENT_DOTS = {
@@ -417,6 +515,26 @@ document.getElementById('moduleList').innerHTML = MODULES.map(m => `
     <div class="mi-name">${m.name}</div>
     <div class="mi-badge">${m.desc}</div>
   </div>`).join('');
+
+
+/* ── Design mode switcher ── */
+const modeSwitcher = document.getElementById('modeSwitcher');
+CGP.STYLE_MODES.forEach(mode => {
+  const card = document.createElement('button');
+  card.type = 'button';
+  card.className = 'mode-card';
+  card.dataset.styleModeId = mode.id;
+  card.innerHTML = `
+    <div class="mode-name">${mode.name}</div>
+    <div class="mode-note">${mode.note}</div>
+    <div class="mode-preview"><span></span><span></span><span></span></div>
+  `;
+  card.addEventListener('click', () => {
+    CGP.applyStyleMode(mode.id);
+  });
+  modeSwitcher.appendChild(card);
+});
+CGP.applyStyleMode(CGP.getSavedStyleMode());
 
 /* ── Theme grid ── */
 function updateBanner(theme) {
@@ -450,6 +568,7 @@ const saved = CGP.getSavedId();
 const savedTheme = CGP.getThemeById(saved);
 updateBanner(savedTheme);
 CGP.applyTheme(saved); /* ensure active classes set */
+CGP.applyStyleMode(CGP.getSavedStyleMode());
 
 /* ── Clear theme ── */
 document.getElementById('clearThemeBtn').addEventListener('click', () => {

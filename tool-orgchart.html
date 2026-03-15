@@ -1154,6 +1154,7 @@
     /* Card body */
     .node-card-body {
       padding: 9px 11px 4px;
+      text-align: center;
     }
 
     .node-title {
@@ -1165,6 +1166,7 @@
       word-break: break-word;
       color: #e8eeff;
       letter-spacing: .01em;
+      text-align: center;
     }
 
     .node-subtitle {
@@ -1175,6 +1177,7 @@
       margin-bottom: 4px;
       word-break: break-word;
       letter-spacing: .02em;
+      text-align: center;
     }
 
     .node-reports-to {
@@ -1396,9 +1399,9 @@
       border-top: 2px solid var(--teal);
       border-radius: 0;
       box-shadow: 0 0 0 1px rgba(13,217,196,.12), 0 24px 60px rgba(0,0,0,.8);
-      width: 720px;
+      width: 880px;
       max-width: calc(100vw - 32px);
-      max-height: 85vh;
+      max-height: 88vh;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -1414,6 +1417,8 @@
       overflow: hidden;
       flex: 1;
       min-height: 0;
+      display: flex;
+      flex-direction: column;
     }
 
     /* Tab bar */
@@ -1446,19 +1451,20 @@
 
     .popup-panel { display: none; }
     .popup-panel.active {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr auto;
-      max-height: calc(85vh - 44px);
+      display: flex;
+      flex-direction: column;
+      max-height: calc(88vh - 44px);
+      min-height: 0;
     }
 
     .popup-col {
       padding: 16px;
       overflow-y: auto;
+      min-height: 0;
     }
 
     .popup-col-right {
-      border-left: 1px solid rgba(255,255,255,.07);
+      border-top: 1px solid rgba(255,255,255,.07);
       background: rgba(0,0,0,.12);
     }
 
@@ -1467,7 +1473,6 @@
     }
 
     .popup-col-footer {
-      grid-column: 1 / -1;
       padding: 10px 16px;
       border-top: 1px solid rgba(255,255,255,.07);
       background: rgba(0,0,0,.18);
@@ -1530,6 +1535,7 @@
 
     .popup-field {
       margin-bottom: 10px;
+      min-width: 0;
     }
 
     .card-popup input,
@@ -1569,13 +1575,107 @@
 
     .popup-combo {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 154px;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 8px;
       align-items: stretch;
     }
 
     .popup-combo select {
       min-width: 0;
+    }
+
+    .popup-picker-toggle {
+      min-width: 98px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #1f2a44 0%, #172038 100%);
+      color: var(--text);
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .popup-picker-toggle:hover {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 1px rgba(13,217,196,.18), 0 0 12px rgba(13,217,196,.12);
+    }
+
+    .popup-picker-wrap {
+      display: none;
+      margin-top: 8px;
+    }
+
+    .popup-picker-wrap.open {
+      display: block;
+    }
+
+    .popup-picker-wrap select {
+      width: 100%;
+    }
+
+    .popup-group {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.02);
+      margin-bottom: 12px;
+    }
+
+    .popup-group-head {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      background: rgba(255,255,255,.02);
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .popup-group-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .popup-group-meta {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .popup-group-chevron {
+      color: var(--muted);
+      font-size: 11px;
+      transition: transform .15s ease;
+      flex-shrink: 0;
+    }
+
+    .popup-group.collapsed .popup-group-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .popup-group-body {
+      padding: 12px;
+    }
+
+    .popup-group.collapsed .popup-group-body {
+      display: none;
+    }
+
+    .popup-subgrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px 12px;
+    }
+
+    .popup-subgrid .popup-field {
+      margin-bottom: 0;
     }
 
     .popup-combo-hint {
@@ -1624,6 +1724,22 @@
 
     .card-popup-btns .btn-cancel {
       background: linear-gradient(180deg, #27314f 0%, #1d2640 100%);
+    }
+
+    @media (max-width: 760px) {
+      .card-popup {
+        width: calc(100vw - 18px);
+        max-height: 92vh;
+      }
+      .popup-combo {
+        grid-template-columns: 1fr;
+      }
+      .popup-picker-toggle {
+        width: 100%;
+      }
+      .popup-subgrid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .btn-danger {
@@ -1736,14 +1852,17 @@
       margin-top: 6px;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 6px;
+      text-align: center;
     }
     .node-extra-field {
       display: flex;
-      align-items: baseline;
-      gap: 5px;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
       font-size: 10px;
       line-height: 1.35;
+      text-align: center;
     }
     .node-extra-key {
       color: var(--muted);
@@ -1752,16 +1871,17 @@
       letter-spacing: .06em;
       text-transform: uppercase;
       min-width: 0;
-      max-width: 70px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      white-space: normal;
+      text-align: center;
     }
     .node-extra-val {
       color: var(--text);
       opacity: .8;
       word-break: break-word;
-      flex: 1;
+      flex: none;
+      text-align: center;
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -2284,6 +2404,13 @@
       });
     });
 
+    bindCompositeAutoMatch(mapUnit, mapUnitDesc, 'unit-desc');
+    bindCompositeAutoMatch(mapUnitDesc, mapUnit, 'unit-base');
+    bindCompositeAutoMatch(mapSection, mapSectionDesc, 'section-desc');
+    bindCompositeAutoMatch(mapSectionDesc, mapSection, 'section-base');
+    bindCompositeAutoMatch(reportsToHeader, mapReportsToDesc, 'reports-desc');
+    bindCompositeAutoMatch(mapReportsToDesc, reportsToHeader, 'reports-base');
+
     // Drawer open/close
     function openDrawer()  { settingsDrawer.classList.add('open');  drawerOverlay.classList.add('open');  }
     function closeDrawer() { settingsDrawer.classList.remove('open'); drawerOverlay.classList.remove('open'); }
@@ -2693,6 +2820,10 @@
         populateFieldSelect(mapRank,          parsed.headers, true, ['rank','grade','level','band','pay grade']);
         populateFieldSelect(mapService,       parsed.headers, true, ['service','service component','component','svc']);
 
+        autoMatchCompositePartner(mapUnit, mapUnitDesc, 'unit-desc');
+        autoMatchCompositePartner(mapSection, mapSectionDesc, 'section-desc');
+        autoMatchCompositePartner(reportsToHeader, mapReportsToDesc, 'reports-desc');
+
         state.extraCardFields = [];
         populateExtraFields();
 
@@ -2732,6 +2863,118 @@
 
     function normalize(value) {
       return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+
+    function normalizeHeaderKey(value) {
+      return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+    }
+
+    function autoMatchCompositePartner(sourceSelect, targetSelect, pairType) {
+      if (!sourceSelect || !targetSelect || !state.headers.length) return '';
+      var selected = sourceSelect.value;
+      if (!selected) return '';
+
+      var selectedNorm = normalize(selected);
+      var selectedKey = normalizeHeaderKey(selected);
+      var wantsDescription = pairType === 'unit-desc' || pairType === 'section-desc' || pairType === 'reports-desc';
+      var counterpart = '';
+
+      function classifyHeader(header) {
+        var norm = normalize(header);
+        var key = normalizeHeaderKey(header);
+        var isDescription = key.indexOf('description') !== -1;
+        var family = '';
+
+        if (key.indexOf('reportsto') !== -1 || key.indexOf('supervisor') !== -1 || key.indexOf('manager') !== -1 || key.indexOf('parent') !== -1) {
+          family = 'reports';
+        } else if (key.indexOf('section') !== -1) {
+          family = 'section';
+        } else if (key.indexOf('unit') !== -1) {
+          family = 'unit';
+        }
+
+        return {
+          header: header,
+          norm: norm,
+          key: key,
+          family: family,
+          isDescription: isDescription,
+          baseKey: key.replace(/description/g, '')
+        };
+      }
+
+      var selectedMeta = classifyHeader(selected);
+      var family = selectedMeta.family;
+      if (!family) {
+        if (pairType.indexOf('unit') === 0) family = 'unit';
+        else if (pairType.indexOf('section') === 0) family = 'section';
+        else if (pairType.indexOf('reports') === 0) family = 'reports';
+      }
+
+      var metas = state.headers.filter(function(header) {
+        return header !== selected;
+      }).map(classifyHeader);
+
+      function pickMatch(predicate) {
+        for (var i = 0; i < metas.length; i++) {
+          if (predicate(metas[i])) return metas[i].header;
+        }
+        return '';
+      }
+
+      counterpart = pickMatch(function(meta) {
+        return meta.family === family && meta.baseKey === selectedMeta.baseKey && meta.isDescription === wantsDescription;
+      });
+
+      if (!counterpart) {
+        counterpart = pickMatch(function(meta) {
+          return meta.family === family && meta.isDescription === wantsDescription && (
+            meta.key.indexOf(selectedMeta.baseKey) !== -1 ||
+            selectedMeta.baseKey.indexOf(meta.baseKey) !== -1
+          );
+        });
+      }
+
+      if (!counterpart && wantsDescription) {
+        counterpart = pickMatch(function(meta) {
+          return meta.family === family && meta.isDescription;
+        });
+      }
+
+      if (!counterpart && !wantsDescription) {
+        counterpart = pickMatch(function(meta) {
+          return meta.family === family && !meta.isDescription;
+        });
+      }
+
+      if (!counterpart) {
+        if (wantsDescription) {
+          counterpart = pickMatch(function(meta) {
+            return meta.key !== selectedKey && meta.key.indexOf(selectedKey) !== -1 && meta.isDescription;
+          });
+        } else {
+          counterpart = pickMatch(function(meta) {
+            return meta.key !== selectedKey && selectedKey.indexOf(meta.key) !== -1 && !meta.isDescription;
+          });
+        }
+      }
+
+      if (counterpart && targetSelect.value !== counterpart) {
+        targetSelect.__autoMatching = true;
+        targetSelect.value = counterpart;
+        targetSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        targetSelect.__autoMatching = false;
+      }
+      return counterpart;
+    }
+
+    function bindCompositeAutoMatch(sourceSelect, targetSelect, pairType) {
+      if (!sourceSelect || !targetSelect) return;
+      sourceSelect.addEventListener('change', function() {
+        if (!state.headers.length) return;
+        if (sourceSelect.__autoMatching) return;
+        autoMatchCompositePartner(sourceSelect, targetSelect, pairType);
+      });
     }
 
     function parseCSV(text) {
@@ -3247,11 +3490,15 @@
       var nameKey      = mapName.value;
       var titleKey     = mapTitle.value;
       var sectionKey   = mapSection.value;
+      var sectionDescKey = mapSectionDesc.value;
+      var unitKey      = mapUnit.value;
+      var unitDescKey  = mapUnitDesc.value;
       var rankKey      = mapRank.value;
       var serviceKey   = mapService.value;
+      var reportsToDescKey = mapReportsToDesc.value;
 
       // Keys covered by the fixed schema (skip them in the "extra" section)
-      var schemaKeys = new Set([positionKey, reportsToKey, nameKey, titleKey, sectionKey, rankKey, serviceKey].filter(Boolean));
+      var schemaKeys = new Set([positionKey, reportsToKey, reportsToDescKey, nameKey, titleKey, sectionKey, sectionDescKey, unitKey, unitDescKey, rankKey, serviceKey].filter(Boolean));
 
       // Extra columns from CSV not covered by schema
       var extraHeaders = state.headers.filter(function(h) { return !schemaKeys.has(h); });
@@ -3335,7 +3582,18 @@
 
         var distinctValues = options.values || getDistinctValues(csvHeader, options.omitValue);
         var pick = null;
+        var pickerWrap = null;
+        var pickerToggle = null;
+
         if (distinctValues.length) {
+          pickerToggle = document.createElement('button');
+          pickerToggle.type = 'button';
+          pickerToggle.className = 'popup-picker-toggle';
+          pickerToggle.textContent = options.toggleLabel || 'CSV values';
+
+          pickerWrap = document.createElement('div');
+          pickerWrap.className = 'popup-picker-wrap';
+
           pick = document.createElement('select');
           var chooseOpt = document.createElement('option');
           chooseOpt.value = '';
@@ -3353,28 +3611,117 @@
             inp.dispatchEvent(new Event('input', { bubbles: true }));
             inp.dispatchEvent(new Event('change', { bubbles: true }));
           });
-          combo.appendChild(pick);
+          pickerToggle.addEventListener('click', function () {
+            pickerWrap.classList.toggle('open');
+          });
+          combo.appendChild(pickerToggle);
+          pickerWrap.appendChild(pick);
         }
 
         f.appendChild(lbl);
         f.appendChild(combo);
+        if (pickerWrap) f.appendChild(pickerWrap);
 
         if (pick) {
           var hint = document.createElement('span');
           hint.className = 'popup-combo-hint';
-          hint.textContent = 'Type any value or choose one already in the CSV.';
+          hint.textContent = 'Type freely or open CSV values only when needed.';
           f.appendChild(hint);
         }
 
-        return { field: f, input: inp, select: pick, values: distinctValues };
+        return { field: f, input: inp, select: pick, values: distinctValues, pickerWrap: pickerWrap, pickerToggle: pickerToggle };
       }
 
-      // ── Section divider ──
-      function makeDivider(label) {
-        var d = document.createElement('div'); d.className = 'popup-section-divider';
-        var s = document.createElement('span'); s.textContent = label;
-        d.appendChild(s);
-        return d;
+      function makeGroup(title, meta, startCollapsed) {
+        var wrap = document.createElement('section');
+        wrap.className = 'popup-group' + (startCollapsed ? ' collapsed' : '');
+
+        var head = document.createElement('button');
+        head.type = 'button';
+        head.className = 'popup-group-head';
+
+        var textWrap = document.createElement('div');
+        var titleEl = document.createElement('div');
+        titleEl.className = 'popup-group-title';
+        titleEl.textContent = title;
+        textWrap.appendChild(titleEl);
+        if (meta) {
+          var metaEl = document.createElement('div');
+          metaEl.className = 'popup-group-meta';
+          metaEl.textContent = meta;
+          textWrap.appendChild(metaEl);
+        }
+
+        var chev = document.createElement('span');
+        chev.className = 'popup-group-chevron';
+        chev.textContent = '▾';
+
+        head.appendChild(textWrap);
+        head.appendChild(chev);
+
+        var body = document.createElement('div');
+        body.className = 'popup-group-body';
+
+        head.addEventListener('click', function () {
+          wrap.classList.toggle('collapsed');
+        });
+
+        wrap.appendChild(head);
+        wrap.appendChild(body);
+        return { wrap: wrap, head: head, body: body };
+      }
+
+      function appendFieldGrid(container, fields) {
+        var grid = document.createElement('div');
+        grid.className = 'popup-subgrid';
+        fields.filter(Boolean).forEach(function(entry) {
+          grid.appendChild(entry.field || entry);
+        });
+        container.appendChild(grid);
+        return grid;
+      }
+
+
+      function normalizeValueKey(value) {
+        return String(value == null ? '' : value).trim().toLowerCase().replace(/\s+/g, ' ');
+      }
+
+      function findPairedValue(sourceHeader, targetHeader, sourceValue) {
+        if (!sourceHeader || !targetHeader) return '';
+        var needle = normalizeValueKey(sourceValue);
+        if (!needle) return '';
+        for (var i = 0; i < state.rows.length; i++) {
+          var row = state.rows[i] || {};
+          var left = normalizeValueKey(row[sourceHeader]);
+          if (left !== needle) continue;
+          var paired = String(row[targetHeader] == null ? '' : row[targetHeader]).trim();
+          return paired;
+        }
+        return '';
+      }
+
+      function wirePairedValueAutofill(primaryField, secondaryField, primaryHeader, secondaryHeader) {
+        if (!primaryField || !secondaryField || !primaryHeader || !secondaryHeader) return;
+        var syncing = false;
+        function sync(fromField, toField, fromHeader, toHeader) {
+          if (syncing) return;
+          syncing = true;
+          var paired = findPairedValue(fromHeader, toHeader, fromField.input.value);
+          if (paired || !toField.input.value.trim()) {
+            toField.input.value = paired;
+            if (toField.select) {
+              var hasMatch = Array.from(toField.select.options).some(function(opt){ return opt.value === paired; });
+              toField.select.value = hasMatch ? paired : '';
+            }
+            toField.input.dispatchEvent(new Event('input', { bubbles: true }));
+            toField.input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          syncing = false;
+        }
+        primaryField.input.addEventListener('change', function(){ sync(primaryField, secondaryField, primaryHeader, secondaryHeader); });
+        if (primaryField.select) primaryField.select.addEventListener('change', function(){ sync(primaryField, secondaryField, primaryHeader, secondaryHeader); });
+        secondaryField.input.addEventListener('change', function(){ sync(secondaryField, primaryField, secondaryHeader, primaryHeader); });
+        if (secondaryField.select) secondaryField.select.addEventListener('change', function(){ sync(secondaryField, primaryField, secondaryHeader, primaryHeader); });
       }
 
       // ════════════════════════════════
@@ -3383,92 +3730,82 @@
       var editPanel = document.createElement('div');
       editPanel.className = 'popup-panel active';
 
-      // ── Left column: Required + Card Fields ──
+      // ── Edit content ──
       var editLeft = document.createElement('div');
       editLeft.className = 'popup-col';
 
-      editLeft.appendChild(makeDivider('Required'));
-      var posField = makeField('Position ID', position, '', true, positionKey, { omitValue: position, selectLabel: 'Pick position…' });
-      editLeft.appendChild(posField.field);
+      var editRequiredGroup = makeGroup('Required', 'Only the core identifiers you must set.', false);
+      var editCardGroup = makeGroup('Card fields', 'Most-used visible fields on the org chart.', false);
+      var editExtraGroup = makeGroup('Additional data', 'Everything else from the CSV, collapsed by default.', true);
 
-      // Reports To (required)
-      var rtField = document.createElement('div'); rtField.className = 'popup-field';
-      var rtLbl   = document.createElement('label'); rtLbl.className = 'popup-field-label';
-      rtLbl.innerHTML = 'Reports To <span class="req">*</span>';
+      var posField = makeField('Position ID', position, '', true, positionKey, { omitValue: position, selectLabel: 'Pick position…', toggleLabel: 'CSV positions' });
+      var rtFieldObj = makeField('Reports To', currentReportsTo, 'Leave blank to make this a root', true, reportsToKey, {
+        values: [''].concat(getAllPositionNames().filter(function(name){ return name !== position; })),
+        selectLabel: '— none (root) —',
+        toggleLabel: 'CSV parents'
+      });
+      var rtField = rtFieldObj.field;
+      var rtInput = rtFieldObj.input;
+      var rtSel = rtFieldObj.select;
       var rtBadge = document.createElement('span'); rtBadge.className = 'popup-changed-badge'; rtBadge.textContent = 'will move'; rtBadge.style.display = 'none';
-      rtLbl.appendChild(rtBadge);
-
-      var rtInput = document.createElement('input');
-      rtInput.type = 'text';
-      rtInput.value = currentReportsTo;
-      rtInput.placeholder = 'Leave blank to make this a root';
-
-      var rtSel = document.createElement('select');
-      var blankOpt = document.createElement('option'); blankOpt.value = ''; blankOpt.textContent = '— none (root) —';
-      rtSel.appendChild(blankOpt);
-      getAllPositionNames().forEach(function (name) {
-        if (name === position) return;
-        var opt = document.createElement('option'); opt.value = name; opt.textContent = name;
-        if (name === currentReportsTo) opt.selected = true;
-        rtSel.appendChild(opt);
-      });
-      rtSel.addEventListener('change', function () {
-        rtInput.value = rtSel.value;
-        rtBadge.style.display = rtInput.value.trim() !== currentReportsTo ? '' : 'none';
-      });
+      rtField.querySelector('.popup-field-label').appendChild(rtBadge);
+      if (rtSel && currentReportsTo) rtSel.value = currentReportsTo;
       rtInput.addEventListener('input', function () {
         rtBadge.style.display = rtInput.value.trim() !== currentReportsTo ? '' : 'none';
       });
-
-      var rtCombo = document.createElement('div');
-      rtCombo.className = 'popup-combo';
-      rtCombo.appendChild(rtInput);
-      rtCombo.appendChild(rtSel);
-
-      rtField.appendChild(rtLbl);
-      rtField.appendChild(rtCombo);
-      var rtHint = document.createElement('span');
-      rtHint.className = 'popup-combo-hint';
-      rtHint.textContent = 'Type any position or choose one already in the CSV.';
-      rtField.appendChild(rtHint);
-      editLeft.appendChild(rtField);
-
-      var nameField    = nameKey    ? makeField('Name',    getField(nameKey),    'Full name',   false, nameKey, { selectLabel: 'Pick name…' }) : null;
-      var titleField   = titleKey   ? makeField('Title',   getField(titleKey),   'Job title',   false, titleKey, { selectLabel: 'Pick title…' }) : null;
-      var secField     = sectionKey ? makeField('Section', getField(sectionKey), 'Department',  false, sectionKey, { selectLabel: 'Pick section…' }) : null;
-      var rankField    = rankKey    ? makeField('Rank',    getField(rankKey),    'Grade/level', false, rankKey, { selectLabel: 'Pick rank…' }) : null;
-      var serviceField = serviceKey ? makeField('Service', getField(serviceKey), 'Service/component', false, serviceKey, { selectLabel: 'Pick service…' }) : null;
-
-      if (nameField || titleField || secField || rankField || serviceField) {
-        editLeft.appendChild(makeDivider('Card Fields'));
-        if (nameField)    editLeft.appendChild(nameField.field);
-        if (titleField)   editLeft.appendChild(titleField.field);
-        if (secField)     editLeft.appendChild(secField.field);
-        if (rankField)    editLeft.appendChild(rankField.field);
-        if (serviceField) editLeft.appendChild(serviceField.field);
+      if (rtSel) {
+        rtSel.addEventListener('change', function () {
+          rtBadge.style.display = rtInput.value.trim() !== currentReportsTo ? '' : 'none';
+        });
+      }
+      if (reportsToDescKey) {
+        // wired after rtDescField is created below
       }
 
-      editPanel.appendChild(editLeft);
+      var nameField      = nameKey        ? makeField('Name',                   getField(nameKey),            'Full name',               false, nameKey,            { selectLabel: 'Pick name…' }) : null;
+      var titleField     = titleKey       ? makeField('Title',                  getField(titleKey),           'Job title',               false, titleKey,           { selectLabel: 'Pick title…' }) : null;
+      var unitField      = unitKey        ? makeField('Unit',                   getField(unitKey),            'Unit',                    false, unitKey,            { selectLabel: 'Pick unit…' }) : null;
+      var unitDescField  = unitDescKey    ? makeField('Unit Description',       getField(unitDescKey),        'Unit description',        false, unitDescKey,        { selectLabel: 'Pick unit description…' }) : null;
+      var secField       = sectionKey     ? makeField('Section',                getField(sectionKey),         'Department',              false, sectionKey,         { selectLabel: 'Pick section…' }) : null;
+      var secDescField   = sectionDescKey ? makeField('Section Description',    getField(sectionDescKey),     'Section description',     false, sectionDescKey,     { selectLabel: 'Pick section description…' }) : null;
+      var rtDescField    = reportsToDescKey ? makeField('Reports To Description', getField(reportsToDescKey), 'Reports to description',  false, reportsToDescKey,   { selectLabel: 'Pick reports-to description…' }) : null;
+      var rankField      = rankKey        ? makeField('Rank',                   getField(rankKey),            'Grade/level',             false, rankKey,            { selectLabel: 'Pick rank…' }) : null;
+      var serviceField   = serviceKey     ? makeField('Service',                getField(serviceKey),         'Service/component',       false, serviceKey,         { selectLabel: 'Pick service…' }) : null;
 
-      // ── Right column: Additional Data ──
-      var editRight = document.createElement('div');
-      editRight.className = 'popup-col popup-col-right';
+      appendFieldGrid(editRequiredGroup.body, [posField, rtFieldObj, rtDescField]);
+
+      var primaryEditFields = [nameField, titleField, unitField, unitDescField, secField, secDescField, rankField, serviceField];
+      if (primaryEditFields.filter(Boolean).length) {
+        appendFieldGrid(editCardGroup.body, primaryEditFields);
+      } else {
+        editCardGroup.wrap.classList.add('collapsed');
+      }
+
 
       var editExtraInputs = {};
       if (extraHeaders.length > 0) {
-        editRight.appendChild(makeDivider('Additional Data'));
+        var extraFieldObjs = [];
         extraHeaders.forEach(function(h) {
-          var ef = makeField(h, getField(h), '', false, h, { selectLabel: 'Pick value…' });
+          var ef = makeField(h, getField(h), '', false, h, { selectLabel: 'Pick value…', toggleLabel: 'CSV values' });
           editExtraInputs[h] = ef.input;
-          editRight.appendChild(ef.field);
+          extraFieldObjs.push(ef);
         });
+        appendFieldGrid(editExtraGroup.body, extraFieldObjs);
       } else {
         var noExtra = document.createElement('div');
-        noExtra.style.cssText = 'color:#3d5280;font-size:12px;padding:8px 0;';
+        noExtra.style.cssText = 'color:#3d5280;font-size:12px;padding:2px 0;';
         noExtra.textContent = 'No additional columns in this CSV.';
-        editRight.appendChild(noExtra);
+        editExtraGroup.body.appendChild(noExtra);
       }
-      editPanel.appendChild(editRight);
+
+      editLeft.appendChild(editRequiredGroup.wrap);
+      editLeft.appendChild(editCardGroup.wrap);
+      editLeft.appendChild(editExtraGroup.wrap);
+
+      wirePairedValueAutofill(unitField, unitDescField, unitKey, unitDescKey);
+      wirePairedValueAutofill(secField, secDescField, sectionKey, sectionDescKey);
+
+      editPanel.appendChild(editLeft);
 
       // ── Footer: buttons ──
       var editFooter = document.createElement('div');
@@ -3488,54 +3825,66 @@
       var addPanel = document.createElement('div');
       addPanel.className = 'popup-panel';
 
-      // ── Left column: Required + Card Fields ──
+      // ── Add content ──
       var addLeft = document.createElement('div');
       addLeft.className = 'popup-col';
 
       var addHint = document.createElement('div'); addHint.className = 'popup-hint';
       addHint.style.marginBottom = '10px';
       addHint.textContent = 'New position will report directly to "' + position + '".';
+      var currentReportsToDesc = currentRow && reportsToDescKey ? String(currentRow[reportsToDescKey] || '').trim() : '';
       addLeft.appendChild(addHint);
 
-      addLeft.appendChild(makeDivider('Required'));
-      var addPosF = makeField('Position ID', '', 'Unique ID e.g. POS-042', true, positionKey, { selectLabel: 'Pick position…' });
-      addLeft.appendChild(addPosF.field);
+      var addRequiredGroup = makeGroup('Required', 'Set the new child identifier first.', false);
+      var addCardGroup = makeGroup('Card fields', 'Most-used visible fields on the org chart.', false);
+      var addExtraGroup = makeGroup('Additional data', 'Everything else from the CSV, collapsed by default.', true);
 
-      var addNameF    = nameKey    ? makeField('Name',    '', 'Full name',   false, nameKey, { selectLabel: 'Pick name…' }) : null;
-      var addTitleF   = titleKey   ? makeField('Title',   '', 'Job title',   false, titleKey, { selectLabel: 'Pick title…' }) : null;
-      var addSecF     = sectionKey ? makeField('Section', '', 'Department',  false, sectionKey, { selectLabel: 'Pick section…' }) : null;
-      var addRankF    = rankKey    ? makeField('Rank',    '', 'Grade/level', false, rankKey, { selectLabel: 'Pick rank…' }) : null;
-      var addServiceF = serviceKey ? makeField('Service', '', 'Service/component', false, serviceKey, { selectLabel: 'Pick service…' }) : null;
+      var addPosF = makeField('Position ID', '', 'Unique ID e.g. POS-042', true, positionKey, { selectLabel: 'Pick position…', toggleLabel: 'CSV positions' });
 
-      if (addNameF || addTitleF || addSecF || addRankF || addServiceF) {
-        addLeft.appendChild(makeDivider('Card Fields'));
-        if (addNameF)    addLeft.appendChild(addNameF.field);
-        if (addTitleF)   addLeft.appendChild(addTitleF.field);
-        if (addSecF)     addLeft.appendChild(addSecF.field);
-        if (addRankF)    addLeft.appendChild(addRankF.field);
-        if (addServiceF) addLeft.appendChild(addServiceF.field);
+      var addNameF      = nameKey        ? makeField('Name',                   '', 'Full name',              false, nameKey,          { selectLabel: 'Pick name…' }) : null;
+      var addTitleF     = titleKey       ? makeField('Title',                  '', 'Job title',              false, titleKey,         { selectLabel: 'Pick title…' }) : null;
+      var addUnitF      = unitKey        ? makeField('Unit',                   '', 'Unit',                   false, unitKey,          { selectLabel: 'Pick unit…' }) : null;
+      var addUnitDescF  = unitDescKey    ? makeField('Unit Description',       '', 'Unit description',       false, unitDescKey,      { selectLabel: 'Pick unit description…' }) : null;
+      var addSecF       = sectionKey     ? makeField('Section',                '', 'Department',             false, sectionKey,       { selectLabel: 'Pick section…' }) : null;
+      var addSecDescF   = sectionDescKey ? makeField('Section Description',    '', 'Section description',    false, sectionDescKey,   { selectLabel: 'Pick section description…' }) : null;
+      var addRtDescF    = reportsToDescKey ? makeField('Reports To Description', '', 'Reports to description', false, reportsToDescKey, { selectLabel: 'Pick reports-to description…' }) : null;
+      var addRankF      = rankKey        ? makeField('Rank',                   '', 'Grade/level',            false, rankKey,          { selectLabel: 'Pick rank…' }) : null;
+      var addServiceF   = serviceKey     ? makeField('Service',                '', 'Service/component',      false, serviceKey,       { selectLabel: 'Pick service…' }) : null;
+
+      appendFieldGrid(addRequiredGroup.body, [addPosF, addRtDescF]);
+
+      var primaryAddFields = [addNameF, addTitleF, addUnitF, addUnitDescF, addSecF, addSecDescF, addRankF, addServiceF];
+      if (primaryAddFields.filter(Boolean).length) {
+        appendFieldGrid(addCardGroup.body, primaryAddFields);
+      } else {
+        addCardGroup.wrap.classList.add('collapsed');
       }
-      addPanel.appendChild(addLeft);
 
-      // ── Right column: Additional Data ──
-      var addRight = document.createElement('div');
-      addRight.className = 'popup-col popup-col-right';
 
       var addExtraInputs = {};
       if (extraHeaders.length > 0) {
-        addRight.appendChild(makeDivider('Additional Data'));
+        var addExtraFieldObjs = [];
         extraHeaders.forEach(function(h) {
-          var ef = makeField(h, '', '', false, h, { selectLabel: 'Pick value…' });
+          var ef = makeField(h, '', '', false, h, { selectLabel: 'Pick value…', toggleLabel: 'CSV values' });
           addExtraInputs[h] = ef.input;
-          addRight.appendChild(ef.field);
+          addExtraFieldObjs.push(ef);
         });
+        appendFieldGrid(addExtraGroup.body, addExtraFieldObjs);
       } else {
         var noExtraAdd = document.createElement('div');
-        noExtraAdd.style.cssText = 'color:#3d5280;font-size:12px;padding:8px 0;';
+        noExtraAdd.style.cssText = 'color:#3d5280;font-size:12px;padding:2px 0;';
         noExtraAdd.textContent = 'No additional columns in this CSV.';
-        addRight.appendChild(noExtraAdd);
+        addExtraGroup.body.appendChild(noExtraAdd);
       }
-      addPanel.appendChild(addRight);
+
+      addLeft.appendChild(addRequiredGroup.wrap);
+      addLeft.appendChild(addCardGroup.wrap);
+      addLeft.appendChild(addExtraGroup.wrap);
+
+      wirePairedValueAutofill(addUnitF, addUnitDescF, unitKey, unitDescKey);
+      wirePairedValueAutofill(addSecF, addSecDescF, sectionKey, sectionDescKey);
+      if (addRtDescF && !addRtDescF.input.value) addRtDescF.input.value = currentReportsToDesc;
+      addPanel.appendChild(addLeft);
 
       // ── Footer ──
       var addFooter = document.createElement('div');
@@ -3562,6 +3911,8 @@
         aPanel.classList.add('active'); bPanel.classList.remove('active');
         if (focusEl) setTimeout(function(){ focusEl.focus(); }, 40);
       }
+      wirePairedValueAutofill({ input: rtInput, select: rtSel }, rtDescField, reportsToKey, reportsToDescKey);
+
       tabEdit.addEventListener('click', function(e){ e.stopPropagation(); switchTab(tabEdit,editPanel,tabAdd,addPanel,posField.input); });
       tabAdd.addEventListener('click',  function(e){ e.stopPropagation(); switchTab(tabAdd,addPanel,tabEdit,editPanel,addPosF.input); });
 
@@ -3594,11 +3945,15 @@
 
           var posChanged     = newName !== position;
           var reportsChanged = newReportsTo !== currentReportsTo;
-          var schemaChanged  = (nameKey    && nameField    && nameField.input.value.trim()    !== getField(nameKey))    ||
-                               (titleKey   && titleField   && titleField.input.value.trim()   !== getField(titleKey))   ||
-                               (sectionKey && secField     && secField.input.value.trim()     !== getField(sectionKey)) ||
-                               (rankKey    && rankField    && rankField.input.value.trim()    !== getField(rankKey))    ||
-                               (serviceKey && serviceField && serviceField.input.value.trim() !== getField(serviceKey));
+          var schemaChanged  = (nameKey          && nameField      && nameField.input.value.trim()       !== getField(nameKey))          ||
+                               (titleKey         && titleField     && titleField.input.value.trim()      !== getField(titleKey))         ||
+                               (unitKey          && unitField      && unitField.input.value.trim()       !== getField(unitKey))          ||
+                               (unitDescKey      && unitDescField  && unitDescField.input.value.trim()   !== getField(unitDescKey))      ||
+                               (sectionKey       && secField       && secField.input.value.trim()        !== getField(sectionKey))       ||
+                               (sectionDescKey   && secDescField   && secDescField.input.value.trim()    !== getField(sectionDescKey))   ||
+                               (reportsToDescKey && rtDescField    && rtDescField.input.value.trim()     !== getField(reportsToDescKey)) ||
+                               (rankKey          && rankField      && rankField.input.value.trim()       !== getField(rankKey))          ||
+                               (serviceKey       && serviceField   && serviceField.input.value.trim()    !== getField(serviceKey));
           var extraChanged   = extraHeaders.some(function(h){ return editExtraInputs[h].value.trim() !== getField(h); });
 
           if (!posChanged && !reportsChanged && !schemaChanged && !extraChanged) { closeAllPopups(); return; }
@@ -3607,11 +3962,15 @@
             var targetRow = state.rows[rowIndex];
             targetRow[positionKey]  = newName;
             targetRow[reportsToKey] = newReportsTo;
-            if (nameKey    && nameField)    targetRow[nameKey]    = nameField.input.value.trim();
-            if (titleKey   && titleField)   targetRow[titleKey]   = titleField.input.value.trim();
-            if (sectionKey && secField)     targetRow[sectionKey] = secField.input.value.trim();
-            if (rankKey    && rankField)    targetRow[rankKey]    = rankField.input.value.trim();
-            if (serviceKey && serviceField) targetRow[serviceKey] = serviceField.input.value.trim();
+            if (nameKey          && nameField)      targetRow[nameKey]          = nameField.input.value.trim();
+            if (titleKey         && titleField)     targetRow[titleKey]         = titleField.input.value.trim();
+            if (unitKey          && unitField)      targetRow[unitKey]          = unitField.input.value.trim();
+            if (unitDescKey      && unitDescField)  targetRow[unitDescKey]      = unitDescField.input.value.trim();
+            if (sectionKey       && secField)       targetRow[sectionKey]       = secField.input.value.trim();
+            if (sectionDescKey   && secDescField)   targetRow[sectionDescKey]   = secDescField.input.value.trim();
+            if (reportsToDescKey && rtDescField)    targetRow[reportsToDescKey] = rtDescField.input.value.trim();
+            if (rankKey          && rankField)      targetRow[rankKey]          = rankField.input.value.trim();
+            if (serviceKey       && serviceField)   targetRow[serviceKey]       = serviceField.input.value.trim();
             extraHeaders.forEach(function(h){ targetRow[h] = editExtraInputs[h].value.trim(); });
           }
           if (posChanged) {
@@ -3656,11 +4015,15 @@
           state.headers.forEach(function(h){ newRow[h]=''; });
           newRow[positionKey]  = newPos;
           newRow[reportsToKey] = position;
-          if (nameKey    && addNameF)    newRow[nameKey]    = addNameF.input.value.trim();
-          if (titleKey   && addTitleF)   newRow[titleKey]   = addTitleF.input.value.trim();
-          if (sectionKey && addSecF)     newRow[sectionKey] = addSecF.input.value.trim();
-          if (rankKey    && addRankF)    newRow[rankKey]    = addRankF.input.value.trim();
-          if (serviceKey && addServiceF) newRow[serviceKey] = addServiceF.input.value.trim();
+          if (nameKey          && addNameF)     newRow[nameKey]          = addNameF.input.value.trim();
+          if (titleKey         && addTitleF)    newRow[titleKey]         = addTitleF.input.value.trim();
+          if (unitKey          && addUnitF)     newRow[unitKey]          = addUnitF.input.value.trim();
+          if (unitDescKey      && addUnitDescF) newRow[unitDescKey]      = addUnitDescF.input.value.trim();
+          if (sectionKey       && addSecF)      newRow[sectionKey]       = addSecF.input.value.trim();
+          if (sectionDescKey   && addSecDescF)  newRow[sectionDescKey]   = addSecDescF.input.value.trim();
+          if (reportsToDescKey && addRtDescF)   newRow[reportsToDescKey] = addRtDescF.input.value.trim();
+          if (rankKey          && addRankF)     newRow[rankKey]          = addRankF.input.value.trim();
+          if (serviceKey       && addServiceF)  newRow[serviceKey]       = addServiceF.input.value.trim();
           extraHeaders.forEach(function(h){ newRow[h] = addExtraInputs[h].value.trim(); });
 
           state.rows.push(newRow);
@@ -3752,7 +4115,7 @@
       body.appendChild(compositeWrap);
 
       // ── Extra card fields ──
-      var extraKeys = node.extraData ? Object.keys(node.extraData).filter(function(k) { return node.extraData[k]; }) : [];
+      var extraKeys = node.extraData ? Object.keys(node.extraData) : [];
       if (extraKeys.length) {
         var exHr = document.createElement('hr');
         exHr.className = 'node-divider';
@@ -3770,7 +4133,7 @@
           key.title = k;
           var val = document.createElement('span');
           val.className = 'node-extra-val';
-          val.textContent = node.extraData[k];
+          val.textContent = displayOrBlank(node.extraData[k]);
           row.appendChild(key);
           row.appendChild(val);
           exFields.appendChild(row);
