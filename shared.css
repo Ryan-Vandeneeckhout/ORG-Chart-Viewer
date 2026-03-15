@@ -246,6 +246,7 @@ header::after {
   background: color-mix(in srgb, var(--theme-accent, var(--teal)) 8%, transparent);
   border: 1px solid color-mix(in srgb, var(--theme-accent, var(--teal)) 45%, #333);
   border-radius: 2px;
+   color: var(--theme-accent);
   cursor: pointer; color: var(--theme-accent, var(--teal)); margin-left: 8px;
   transition: color .2s, border-color .2s, box-shadow .2s, transform .3s ease, background .2s ease;
 }
