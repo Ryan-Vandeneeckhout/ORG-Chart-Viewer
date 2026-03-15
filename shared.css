@@ -230,7 +230,7 @@ header::after {
 }
 .status-dot {
   width: 6px; height: 6px; border-radius: 50%;
-  background: var(--teal); animation: pulse 2s ease infinite;
+  background: green; animation: pulse 2s ease infinite;
 }
 .divider {
   height: 1px;
