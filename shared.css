@@ -220,7 +220,7 @@ header::after {
   margin-left: auto;
   font-family: 'Share Tech Mono', monospace;
   font-size: 10px;
-  color: var(--teal);
+  color: green;
   letter-spacing: .15em;
   border: 1px solid color-mix(in srgb, var(--teal) 28%, transparent);
   background: color-mix(in srgb, var(--teal) 8%, transparent);
@@ -271,6 +271,7 @@ header::after {
   padding: 5px 14px; cursor: pointer;
   transition: color .2s, border-color .2s, box-shadow .2s;
   margin-left: auto;
+   color: var(--teal); border-color: var(--teal);
 }
 .back-btn:hover {
   color: var(--teal); border-color: var(--teal);
