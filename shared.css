@@ -209,7 +209,6 @@ header::after {
 .tagline {
   font-family: 'Share Tech Mono', monospace;
   font-size: 11px;
-  color: var(--muted, #888);
   letter-spacing: .2em;
   margin-top: 3px;
 }
@@ -220,7 +219,7 @@ header::after {
   margin-left: auto;
   font-family: 'Share Tech Mono', monospace;
   font-size: 10px;
-  color: green;
+  color: lightgreen;
   letter-spacing: .15em;
   border: 1px solid color-mix(in srgb, var(--teal) 28%, transparent);
   background: color-mix(in srgb, var(--teal) 8%, transparent);
@@ -459,17 +458,14 @@ footer .brand {
   text-transform: uppercase;
   color: color-mix(in srgb, var(--text, #999) 72%, #666);
 }
-footer .brand span { color: color-mix(in srgb, var(--theme-accent, var(--teal)) 70%, transparent); }
+footer .brand span { color: var(--theme-accent); }
 footer .fsep {
   font-family: 'Share Tech Mono', monospace;
-  font-size: .65rem;
-  color: color-mix(in srgb, var(--theme-accent, var(--teal)) 42%, #333);
   margin: 0 2px;
 }
 footer span:not(.brand):not(.fsep) {
   font-family: 'Share Tech Mono', monospace;
-  font-size: .65rem;
-  color: var(--muted, #666);
+  color: var(--theme-accent);
   letter-spacing: .1em;
 }
 

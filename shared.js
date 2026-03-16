@@ -172,19 +172,66 @@ window.CGP = (function(){
 })();
 
 
-/* ── Page fade ── */
+/* ── Page fade + lightweight navigation memory ── */
 document.addEventListener('DOMContentLoaded', () => {
   document.body.classList.add('fade-in');
   /* Re-apply theme after DOM ready so CGP tool picks it up */
   CGP.applyTheme(CGP.getSavedId());
   CGP.applyStyleMode(CGP.getSavedStyleMode());
+
+  try {
+    const current = window.location.pathname.split('/').pop() || 'index.html';
+    const last = sessionStorage.getItem('cgp:lastPage');
+    if (last && last !== current) sessionStorage.setItem('cgp:previousPage', last);
+    sessionStorage.setItem('cgp:lastPage', current);
+  } catch (e) {}
 });
 
 /* ── Navigation with fade ── */
 function navigateTo(url) {
+  if (!url) return;
   document.body.classList.remove('fade-in');
   document.body.classList.add('fade-out');
   setTimeout(() => { window.location.href = url; }, 320);
+}
+
+function goBack(fallbackUrl = 'index.html') {
+  let previousPage = '';
+  let referrerPage = '';
+  let currentPage = '';
+
+  try {
+    currentPage = window.location.pathname.split('/').pop() || '';
+    previousPage = sessionStorage.getItem('cgp:previousPage') || '';
+  } catch (e) {}
+
+  try {
+    if (document.referrer) {
+      referrerPage = new URL(document.referrer).pathname.split('/').pop() || '';
+    }
+  } catch (e) {}
+
+  const safePrevious = previousPage && previousPage !== currentPage ? previousPage : '';
+  const safeReferrer = referrerPage && referrerPage !== currentPage ? referrerPage : '';
+
+  if (safePrevious) {
+    navigateTo(safePrevious);
+    return;
+  }
+
+  if (safeReferrer) {
+    navigateTo(safeReferrer);
+    return;
+  }
+
+  if (window.history.length > 1) {
+    document.body.classList.remove('fade-in');
+    document.body.classList.add('fade-out');
+    setTimeout(() => { window.history.back(); }, 320);
+    return;
+  }
+
+  navigateTo(fallbackUrl);
 }
 
 /* ── Shared Header / Footer Loader ──────────────────────────────────────────
@@ -235,7 +282,7 @@ function navigateTo(url) {
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
     </button>
-    <button class="back-btn" id="cgp-back-btn" onclick="navigateTo('index.html')">
+    <button class="back-btn" id="cgp-back-btn" onclick="goBack('index.html')">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6"/>
       </svg>

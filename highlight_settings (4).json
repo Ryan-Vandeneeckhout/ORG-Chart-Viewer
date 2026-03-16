@@ -1,0 +1,806 @@
+{
+  "rules": [
+    {
+      "id": 102,
+      "column": "SURNAME",
+      "matchType": "blank",
+      "value": "",
+      "bg": "#ffffff",
+      "border": "#d9d9dc",
+      "textColor": "#000000",
+      "label": ""
+    }
+  ],
+  "presets": {
+    "Sections": [
+      {
+        "id": 1,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "1ST AIR FORCE MSN SP (USAF)",
+        "bg": "#512521",
+        "border": "#984d47",
+        "textColor": "#f5b6b0",
+        "label": ""
+      },
+      {
+        "id": 2,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "22 WING/BASE COMMAND",
+        "bg": "#5c3523",
+        "border": "#a46648",
+        "textColor": "#f5c6b0",
+        "label": ""
+      },
+      {
+        "id": 3,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "A FLIGHT AIRCREW",
+        "bg": "#5c3c20",
+        "border": "#a37043",
+        "textColor": "#f5d0b0",
+        "label": ""
+      },
+      {
+        "id": 4,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "ADMIN EXEC",
+        "bg": "#483c19",
+        "border": "#8f7b3c",
+        "textColor": "#f5e4b0",
+        "label": ""
+      },
+      {
+        "id": 5,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "AIR RESERVE FLIGHT",
+        "bg": "#5c541c",
+        "border": "#a3963d",
+        "textColor": "#f5ecb0",
+        "label": ""
+      },
+      {
+        "id": 6,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "AIR RESERVE SUPPORT",
+        "bg": "#5b4626",
+        "border": "#a2814d",
+        "textColor": "#f5dab0",
+        "label": ""
+      },
+      {
+        "id": 7,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "ALPHA FLIGHT",
+        "bg": "#4f4121",
+        "border": "#967e47",
+        "textColor": "#f5e0b0",
+        "label": ""
+      },
+      {
+        "id": 8,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "ATL TEMP POSITIONS",
+        "bg": "#4f4b1f",
+        "border": "#978f44",
+        "textColor": "#f5efb0",
+        "label": ""
+      },
+      {
+        "id": 9,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "BTL - CFB North Bay",
+        "bg": "#4b471d",
+        "border": "#928c41",
+        "textColor": "#f5f0b0",
+        "label": ""
+      },
+      {
+        "id": 10,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "CADS OPS",
+        "bg": "#344b1a",
+        "border": "#6a933d",
+        "textColor": "#d4f5b0",
+        "label": ""
+      },
+      {
+        "id": 11,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "CENTRAL MATERIAL TRAFFIC TERM",
+        "bg": "#364917",
+        "border": "#6e9038",
+        "textColor": "#daf5b0",
+        "label": ""
+      },
+      {
+        "id": 12,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "CHAPLAIN SERVICES",
+        "bg": "#3c571d",
+        "border": "#729e40",
+        "textColor": "#d5f5b0",
+        "label": ""
+      },
+      {
+        "id": 13,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "CHARLIE FLIGHT",
+        "bg": "#3b511d",
+        "border": "#739840",
+        "textColor": "#d8f5b0",
+        "label": ""
+      },
+      {
+        "id": 14,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "COMMAND",
+        "bg": "#3a5423",
+        "border": "#719b49",
+        "textColor": "#d1f5b0",
+        "label": ""
+      },
+      {
+        "id": 15,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "COMMS & INFO SYS",
+        "bg": "#315a25",
+        "border": "#60a24b",
+        "textColor": "#c0f5b0",
+        "label": ""
+      },
+      {
+        "id": 16,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "D/WG COM HQ",
+        "bg": "#2a5624",
+        "border": "#559d4a",
+        "textColor": "#b9f5b0",
+        "label": ""
+      },
+      {
+        "id": 17,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "ECHO FLIGHT",
+        "bg": "#285320",
+        "border": "#539b46",
+        "textColor": "#bbf5b0",
+        "label": ""
+      },
+      {
+        "id": 18,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "FALCON FLIGHT",
+        "bg": "#1f5b22",
+        "border": "#42a247",
+        "textColor": "#b0f5b4",
+        "label": ""
+      },
+      {
+        "id": 19,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "FIRE FIGHTING SERVICES",
+        "bg": "#255b3c",
+        "border": "#4ba271",
+        "textColor": "#b0f5ce",
+        "label": ""
+      },
+      {
+        "id": 20,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "FOXTROT FLIGHT (WPNS)",
+        "bg": "#285f44",
+        "border": "#4fa77b",
+        "textColor": "#b0f5d3",
+        "label": ""
+      },
+      {
+        "id": 21,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "HQ",
+        "bg": "#1b5738",
+        "border": "#3c9e6c",
+        "textColor": "#b0f5d2",
+        "label": ""
+      },
+      {
+        "id": 22,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "HUNTER FLIGHT",
+        "bg": "#205f4f",
+        "border": "#43a68d",
+        "textColor": "#b0f5e3",
+        "label": ""
+      },
+      {
+        "id": 23,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "INTELLIGENCE",
+        "bg": "#1d584e",
+        "border": "#3fa08f",
+        "textColor": "#b0f5e9",
+        "label": ""
+      },
+      {
+        "id": 24,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "KILO FLIGHT (ADMIN)",
+        "bg": "#194c3d",
+        "border": "#3a937a",
+        "textColor": "#b0f5e2",
+        "label": ""
+      },
+      {
+        "id": 25,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "LIMA FLIGHT (JOINT OPS)",
+        "bg": "#1e5b57",
+        "border": "#40a39b",
+        "textColor": "#b0f5f0",
+        "label": ""
+      },
+      {
+        "id": 26,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "MISSION SUPPORT SQUADRON",
+        "bg": "#1d414e",
+        "border": "#408095",
+        "textColor": "#b0e4f5",
+        "label": ""
+      },
+      {
+        "id": 27,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "MOBILE SUPPORT EQUIPMENT",
+        "bg": "#244f5e",
+        "border": "#498ea5",
+        "textColor": "#b0e3f5",
+        "label": ""
+      },
+      {
+        "id": 28,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "OPERATION TACTICS & TRAINING",
+        "bg": "#1c4250",
+        "border": "#3e8197",
+        "textColor": "#b0e3f5",
+        "label": ""
+      },
+      {
+        "id": 29,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "OPERATIONAL SUPPORT SQUADRON",
+        "bg": "#1b3858",
+        "border": "#3c6ba0",
+        "textColor": "#b0d1f5",
+        "label": ""
+      },
+      {
+        "id": 30,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "OPERATIONS",
+        "bg": "#234461",
+        "border": "#477ba8",
+        "textColor": "#b0d5f5",
+        "label": ""
+      },
+      {
+        "id": 31,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "OPERATIONS FLIGHT",
+        "bg": "#1d3459",
+        "border": "#3f64a1",
+        "textColor": "#b0caf5",
+        "label": ""
+      },
+      {
+        "id": 32,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "ORDERLY ROOM",
+        "bg": "#243658",
+        "border": "#4b689f",
+        "textColor": "#b0c7f5",
+        "label": ""
+      },
+      {
+        "id": 33,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "READINESS TRAINING FLIGHT",
+        "bg": "#1f334f",
+        "border": "#456797",
+        "textColor": "#b0cdf5",
+        "label": ""
+      },
+      {
+        "id": 34,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "SMC",
+        "bg": "#1e284a",
+        "border": "#435591",
+        "textColor": "#b0c0f5",
+        "label": ""
+      },
+      {
+        "id": 35,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "SOR",
+        "bg": "#1f2260",
+        "border": "#4247a7",
+        "textColor": "#b0b3f5",
+        "label": ""
+      },
+      {
+        "id": 36,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "SPACE SURVEILLANCE",
+        "bg": "#1a1d54",
+        "border": "#3c419b",
+        "textColor": "#b0b4f5",
+        "label": ""
+      },
+      {
+        "id": 37,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "STANDARDS & VALIDATION",
+        "bg": "#252152",
+        "border": "#4e4699",
+        "textColor": "#b7b0f5",
+        "label": ""
+      },
+      {
+        "id": 38,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "SUPPLY",
+        "bg": "#322050",
+        "border": "#644597",
+        "textColor": "#cab0f5",
+        "label": ""
+      },
+      {
+        "id": 39,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "SUPPLY CONTROL",
+        "bg": "#271a4b",
+        "border": "#543c92",
+        "textColor": "#c3b0f5",
+        "label": ""
+      },
+      {
+        "id": 40,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "SYSTEM EVALUATION",
+        "bg": "#451f4f",
+        "border": "#864596",
+        "textColor": "#e7b0f5",
+        "label": ""
+      },
+      {
+        "id": 41,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "SYSTEMS CONTROL",
+        "bg": "#481d4f",
+        "border": "#8a4296",
+        "textColor": "#ebb0f5",
+        "label": ""
+      },
+      {
+        "id": 42,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "SYSTEMS MAINTENANCE SUPPORT",
+        "bg": "#3b1a4b",
+        "border": "#763c93",
+        "textColor": "#deb0f5",
+        "label": ""
+      },
+      {
+        "id": 43,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "VEHICLE MAINTENANCE CONTROL",
+        "bg": "#531e51",
+        "border": "#9a4198",
+        "textColor": "#f5b0f3",
+        "label": ""
+      },
+      {
+        "id": 44,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "W COMPTROLLER",
+        "bg": "#4b1950",
+        "border": "#903997",
+        "textColor": "#efb0f5",
+        "label": ""
+      },
+      {
+        "id": 45,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "WING CONSTRUCTION ENGINEERING",
+        "bg": "#4f1f4b",
+        "border": "#96448f",
+        "textColor": "#f5b0ef",
+        "label": ""
+      },
+      {
+        "id": 46,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "WING EXERCISE",
+        "bg": "#56234e",
+        "border": "#9e4a8f",
+        "textColor": "#f5b0e9",
+        "label": ""
+      },
+      {
+        "id": 47,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "WING FOOD SERVICES",
+        "bg": "#581c48",
+        "border": "#a03d86",
+        "textColor": "#f5b0e3",
+        "label": ""
+      },
+      {
+        "id": 48,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "WING LOGISTICS",
+        "bg": "#491737",
+        "border": "#903770",
+        "textColor": "#f5b0dc",
+        "label": ""
+      },
+      {
+        "id": 49,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "WING OPERATIONS SUPPORT",
+        "bg": "#481a35",
+        "border": "#8f3c6e",
+        "textColor": "#f5b0d9",
+        "label": ""
+      },
+      {
+        "id": 50,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "WING PERSONNEL ADMINISTRATION",
+        "bg": "#61232c",
+        "border": "#a84756",
+        "textColor": "#f5b0bb",
+        "label": ""
+      },
+      {
+        "id": 51,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "WING PLANS",
+        "bg": "#532024",
+        "border": "#9b454b",
+        "textColor": "#f5b0b5",
+        "label": ""
+      },
+      {
+        "id": 52,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "WING PUBLIC AFFAIRS & IMAGERY",
+        "bg": "#511f2b",
+        "border": "#984459",
+        "textColor": "#f5b0c1",
+        "label": ""
+      },
+      {
+        "id": 53,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "WING STANDARDS & EVALUATION",
+        "bg": "#56261a",
+        "border": "#9d4e3b",
+        "textColor": "#f5beb0",
+        "label": ""
+      },
+      {
+        "id": 54,
+        "column": "SECTION DESCRIPTION",
+        "matchType": "exact",
+        "value": "WING SUPPLY",
+        "bg": "#5f3925",
+        "border": "#a76b4b",
+        "textColor": "#f5c8b0",
+        "label": ""
+      }
+    ],
+    "Ranks": [
+      {
+        "id": 60,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "Col",
+        "bg": "#632121",
+        "border": "#ab3636",
+        "textColor": "#f1b1b1",
+        "label": ""
+      },
+      {
+        "id": 61,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "LCol",
+        "bg": "#633921",
+        "border": "#ab5f36",
+        "textColor": "#f1c8b1",
+        "label": ""
+      },
+      {
+        "id": 62,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "Maj",
+        "bg": "#635021",
+        "border": "#ab8836",
+        "textColor": "#f1deb1",
+        "label": ""
+      },
+      {
+        "id": 63,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "Capt",
+        "bg": "#606321",
+        "border": "#a4ab36",
+        "textColor": "#edf1b1",
+        "label": ""
+      },
+      {
+        "id": 64,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "Lt/Capt",
+        "bg": "#486321",
+        "border": "#7aab36",
+        "textColor": "#d7f1b1",
+        "label": ""
+      },
+      {
+        "id": 65,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "Lt(N)",
+        "bg": "#316321",
+        "border": "#51ab36",
+        "textColor": "#c0f1b1",
+        "label": ""
+      },
+      {
+        "id": 66,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "CWO",
+        "bg": "#216329",
+        "border": "#36ab44",
+        "textColor": "#b1f1b9",
+        "label": ""
+      },
+      {
+        "id": 67,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "MWO",
+        "bg": "#216340",
+        "border": "#36ab6d",
+        "textColor": "#b1f1cf",
+        "label": ""
+      },
+      {
+        "id": 68,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "WO",
+        "bg": "#216358",
+        "border": "#36ab96",
+        "textColor": "#b1f1e6",
+        "label": ""
+      },
+      {
+        "id": 69,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "Sgt",
+        "bg": "#215863",
+        "border": "#3696ab",
+        "textColor": "#b1e6f1",
+        "label": ""
+      },
+      {
+        "id": 70,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "MCpl",
+        "bg": "#214063",
+        "border": "#366dab",
+        "textColor": "#b1cff1",
+        "label": ""
+      },
+      {
+        "id": 71,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "Cpl",
+        "bg": "#212963",
+        "border": "#3644ab",
+        "textColor": "#b1b9f1",
+        "label": ""
+      },
+      {
+        "id": 72,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "Cpl/Pte",
+        "bg": "#312163",
+        "border": "#5136ab",
+        "textColor": "#c0b1f1",
+        "label": ""
+      },
+      {
+        "id": 73,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "Avr(T)/Cpl",
+        "bg": "#482163",
+        "border": "#7a36ab",
+        "textColor": "#d7b1f1",
+        "label": ""
+      },
+      {
+        "id": 74,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "Pte(T)",
+        "bg": "#602163",
+        "border": "#a436ab",
+        "textColor": "#edb1f1",
+        "label": ""
+      },
+      {
+        "id": 75,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "PO2",
+        "bg": "#632150",
+        "border": "#ab3688",
+        "textColor": "#f1b1de",
+        "label": ""
+      },
+      {
+        "id": 76,
+        "column": "RANK",
+        "matchType": "exact",
+        "value": "Unsp",
+        "bg": "#632139",
+        "border": "#ab365f",
+        "textColor": "#f1b1c8",
+        "label": ""
+      }
+    ],
+    "Vacancies": [
+      {
+        "id": 102,
+        "column": "SURNAME",
+        "matchType": "blank",
+        "value": "",
+        "bg": "#ffffff",
+        "border": "#d9d9dc",
+        "textColor": "#000000",
+        "label": ""
+      }
+    ],
+    "Service": [
+      {
+        "id": 77,
+        "column": "SERVICE\nCOMPONENT",
+        "matchType": "exact",
+        "value": "Civ",
+        "bg": "#1e2167",
+        "border": "#2d32b4",
+        "textColor": "#bcbee6",
+        "label": ""
+      },
+      {
+        "id": 78,
+        "column": "SERVICE\nCOMPONENT",
+        "matchType": "exact",
+        "value": "Reg F",
+        "bg": "#671e21",
+        "border": "#b42d32",
+        "textColor": "#e6bcbe",
+        "label": ""
+      },
+      {
+        "id": 79,
+        "column": "SERVICE\nCOMPONENT",
+        "matchType": "exact",
+        "value": "Res F",
+        "bg": "#21671e",
+        "border": "#32b42d",
+        "textColor": "#bee6bc",
+        "label": ""
+      }
+    ],
+    "UIC": [
+      {
+        "id": 99,
+        "column": "UNIT",
+        "matchType": "exact",
+        "value": "00135",
+        "bg": "#632121",
+        "border": "#b63535",
+        "textColor": "#f1b1b1",
+        "label": ""
+      },
+      {
+        "id": 100,
+        "column": "UNIT",
+        "matchType": "exact",
+        "value": "02437",
+        "bg": "#216321",
+        "border": "#35b635",
+        "textColor": "#b1f1b1",
+        "label": ""
+      },
+      {
+        "id": 101,
+        "column": "UNIT",
+        "matchType": "exact",
+        "value": "02438",
+        "bg": "#212163",
+        "border": "#3535b6",
+        "textColor": "#b1b1f1",
+        "label": ""
+      }
+    ]
+  }
+}
