@@ -22,6 +22,21 @@
       --teal-dim:  var(--theme-accent-2, #00b89c);
       --orange:    #ff7b2c;
       --grid-line: rgba(0,255,209,.05);
+      --tree-line: rgba(255,255,255,.45);
+    }
+
+    /* Lock the org chart to dark mode regardless of the global style mode.
+       shared.js sets light-mode vars on :root; re-assert dark values on body
+       so this self-contained tool is never affected. */
+    body {
+      --bg:         #080808 !important;
+      --background: #080808 !important;
+      --panel:      #0e0e0e !important;
+      --panel-soft: #161616 !important;
+      --text:       #f0f4ff !important;
+      --muted:      #8aa0c0 !important;
+      --border:     #333    !important;
+      --tree-line:  rgba(255,255,255,.45) !important;
     }
 
     * { box-sizing: border-box; }
@@ -1097,7 +1112,7 @@
       position: absolute;
       top: 0;
       right: 50%;
-      border-top: 1px solid rgba(13,217,196,.3);
+      border-top: 1px solid var(--tree-line);
       width: 50%;
       height: 24px;
     }
@@ -1105,7 +1120,7 @@
     .tree li::after {
       right: auto;
       left: 50%;
-      border-left: 1px solid rgba(13,217,196,.3);
+      border-left: 1px solid var(--tree-line);
     }
 
     .tree li:only-child::before,
@@ -1123,7 +1138,7 @@
     }
 
     .tree li:last-child::before {
-      border-right: 1px solid rgba(13,217,196,.3);
+      border-right: 1px solid var(--tree-line);
       border-radius: 0;
     }
 
@@ -1136,7 +1151,7 @@
       position: absolute;
       top: 0;
       left: 50%;
-      border-left: 1px solid rgba(13,217,196,.3);
+      border-left: 1px solid var(--tree-line);
       width: 0;
       height: 24px;
     }
@@ -1348,7 +1363,8 @@
     }
 
     .node-edit-btn,
-    .node-focus-btn {
+    .node-focus-btn,
+    .node-branch-btn {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1386,10 +1402,36 @@
       color: #7defa0;
     }
 
-    /* Selected card — both buttons brighten */
+    .node-branch-btn {
+      color: #7d67b8;
+      flex-shrink: 0;
+      min-width: 78px;
+      border-left: 1px solid rgba(255,255,255,.05);
+    }
+    .node-branch-btn:hover:not(:disabled) {
+      background: rgba(145,110,255,.08);
+      color: #b59aff;
+    }
+
+    .node-branch-state {
+      margin: 4px 10px 0;
+      padding: 4px 8px;
+      border: 1px dashed rgba(145,110,255,.25);
+      border-radius: 999px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #b59aff;
+      background: rgba(145,110,255,.06);
+      text-align: center;
+    }
+
+    /* Selected card — all buttons brighten */
     .node.selected .node-edit-bar { border-top-color: rgba(0,255,209,.15); }
     .node.selected .node-edit-btn { color: rgba(0,255,209,.45); }
     .node.selected .node-focus-btn { color: rgba(80,220,100,.5); }
+    .node.selected .node-branch-btn { color: rgba(181,154,255,.75); }
 
     /* Search-highlight (gold) */
     .node.search-highlight .node-edit-bar { border-top-color: rgba(255,215,0,.15); }
@@ -1397,6 +1439,13 @@
     .node.search-highlight .node-edit-btn:hover:not(:disabled) { background: rgba(255,215,0,.08); color: #ffd700; }
     .node.search-highlight .node-focus-btn { color: rgba(255,215,0,.35); }
     .node.search-highlight .node-focus-btn:hover:not(:disabled) { background: rgba(255,215,0,.08); color: #ffd700; }
+    .node.search-highlight .node-branch-btn { color: rgba(255,215,0,.35); }
+    .node.search-highlight .node-branch-btn:hover:not(:disabled) { background: rgba(255,215,0,.08); color: #ffd700; }
+    .node.search-highlight .node-branch-state {
+      border-color: rgba(255,215,0,.28);
+      background: rgba(255,215,0,.08);
+      color: #8a6d00;
+    }
 
     .btn-export {
       background: rgba(13,217,196,.1);
@@ -2146,6 +2195,526 @@
       .chart-wrap { cursor: default; }
       .chart-wrap.dragging { cursor: default; }
     }
+
+    /* ══════════════════════════════════════════════════════════════
+       LIGHT MODE  —  body[data-cgp-style-mode="light"]
+       Overrides every hard-coded dark colour in the tool.
+       Accent colours (--teal / --teal-dim) stay as-is so the
+       chosen theme colour carries through.
+    ══════════════════════════════════════════════════════════════ */
+    body[data-cgp-style-mode="light"] {
+      background: var(--bg, #f0f2f5);
+      background-image:
+        linear-gradient(rgba(0,0,0,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+      color: #111827;
+      scrollbar-color: var(--teal-dim) rgba(0,0,0,.1);
+    }
+
+    /* ── Header ── */
+    body[data-cgp-style-mode="light"] .cgp-tool-header {
+      background: rgba(255,255,255,.96);
+      border-bottom-color: rgba(0,0,0,.10);
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    }
+    body[data-cgp-style-mode="light"] .cgp-tool-header::after {
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--teal) 8%, transparent), transparent);
+    }
+    body[data-cgp-style-mode="light"] .cgp-hdr-logo { color: #111827; }
+    body[data-cgp-style-mode="light"] .cgp-hdr-sep  { background: rgba(0,0,0,.15); }
+    body[data-cgp-style-mode="light"] .cgp-hdr-sub  { color: #6b7280; }
+    body[data-cgp-style-mode="light"] .cgp-back-btn {
+      color: #374151;
+      border-color: rgba(0,0,0,.18);
+      background: rgba(255,255,255,.6);
+    }
+    body[data-cgp-style-mode="light"] .cgp-back-btn:hover {
+      color: var(--teal);
+      border-color: var(--teal);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--teal) 20%, transparent);
+    }
+    body[data-cgp-style-mode="light"] .cgp-settings-hdr-btn {
+      background: rgba(255,255,255,.6);
+      border-color: rgba(0,0,0,.15);
+      color: #6b7280;
+    }
+    body[data-cgp-style-mode="light"] .cgp-settings-hdr-btn:hover {
+      background: color-mix(in srgb, var(--teal) 8%, white);
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    /* ── Footer ── */
+    body[data-cgp-style-mode="light"] .cgp-tool-footer {
+      background: rgba(255,255,255,.88);
+      border-top-color: rgba(0,0,0,.10);
+      color: #9ca3af;
+    }
+
+    /* ── Selects ── */
+    body[data-cgp-style-mode="light"] select {
+      background-color: rgba(255,255,255,.9);
+      border-color: rgba(0,0,0,.18);
+      border-bottom-color: rgba(0,0,0,.22);
+      color: #111827;
+    }
+    body[data-cgp-style-mode="light"] select:focus {
+      background-color: #ffffff;
+      border-color: var(--teal-dim);
+      border-bottom-color: var(--teal);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 15%, transparent);
+    }
+    body[data-cgp-style-mode="light"] select option {
+      background-color: #ffffff;
+      color: #111827;
+    }
+    body[data-cgp-style-mode="light"] select option:disabled,
+    body[data-cgp-style-mode="light"] select option[value=""] { color: #9ca3af; }
+    body[data-cgp-style-mode="light"] select optgroup { background-color: #f9fafb; color: #374151; }
+
+    /* ── Clear button ── */
+    body[data-cgp-style-mode="light"] .cgp-clear-btn {
+      background: rgba(0,0,0,.06);
+      border-color: rgba(0,0,0,.15);
+      color: #6b7280;
+    }
+
+    /* ── Main panel ── */
+    body[data-cgp-style-mode="light"] .panel {
+      background: rgba(248,249,251,.96);
+      border-color: rgba(0,0,0,.10);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 06%, transparent), 0 4px 12px rgba(0,0,0,.07);
+    }
+
+    /* ── Toolbar buttons ── */
+    body[data-cgp-style-mode="light"] button {
+      background: color-mix(in srgb, var(--teal) 08%, rgba(255,255,255,.8));
+      border-color: color-mix(in srgb, var(--teal) 30%, rgba(0,0,0,.12));
+      color: color-mix(in srgb, var(--teal) 80%, #111);
+    }
+    body[data-cgp-style-mode="light"] button:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--teal) 14%, white);
+      border-color: var(--teal);
+    }
+    body[data-cgp-style-mode="light"] button.secondary {
+      background: rgba(255,255,255,.7);
+      color: #6b7280;
+      border-color: rgba(0,0,0,.14);
+    }
+    body[data-cgp-style-mode="light"] button.secondary:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--teal) 07%, white);
+      color: color-mix(in srgb, var(--teal) 80%, #111);
+      border-color: var(--teal-dim);
+    }
+    body[data-cgp-style-mode="light"] .btn-settings {
+      background: rgba(255,255,255,.7);
+      border-color: rgba(0,0,0,.14);
+      color: #6b7280;
+    }
+    body[data-cgp-style-mode="light"] .btn-settings:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--teal) 07%, white);
+      border-color: var(--teal-dim);
+      color: var(--teal);
+    }
+    body[data-cgp-style-mode="light"] .btn-export {
+      background: color-mix(in srgb, var(--teal) 10%, rgba(255,255,255,.8));
+      border-color: var(--teal-dim);
+    }
+    body[data-cgp-style-mode="light"] .btn-export:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--teal) 16%, white);
+      border-color: var(--teal);
+    }
+    body[data-cgp-style-mode="light"] .btn-export-changed {
+      background: rgba(255,123,44,.10);
+      border-color: rgba(255,123,44,.45);
+      color: #c05000;
+    }
+    body[data-cgp-style-mode="light"] .btn-highlight {
+      background: rgba(255,123,44,.08);
+      border-color: rgba(255,123,44,.35);
+      color: #c05000;
+    }
+    body[data-cgp-style-mode="light"] .btn-highlight.active {
+      background: rgba(255,123,44,.16);
+      border-color: rgba(255,123,44,.6);
+    }
+
+    /* ── Render tracker ── */
+    body[data-cgp-style-mode="light"] .render-tracker {
+      background: rgba(255,255,255,.7);
+      border-color: rgba(0,0,0,.12);
+      color: #6b7280;
+    }
+    body[data-cgp-style-mode="light"] .render-tracker strong { color: #111827; }
+    body[data-cgp-style-mode="light"] .render-tracker.ok {
+      border-color: color-mix(in srgb, var(--teal) 35%, transparent);
+    }
+
+    /* ── Status bar ── */
+    body[data-cgp-style-mode="light"] .status {
+      background: rgba(255,255,255,.75);
+      border-color: rgba(0,0,0,.10);
+      border-left-color: var(--teal-dim);
+      color: #374151;
+    }
+    body[data-cgp-style-mode="light"] .status.error  { border-left-color: #dc2626; color: #b91c1c; background: rgba(254,242,242,.8); }
+    body[data-cgp-style-mode="light"] .status.success { border-left-color: var(--teal); color: color-mix(in srgb, var(--teal) 70%, #111); }
+
+    /* ── Search input ── */
+    body[data-cgp-style-mode="light"] #posSearchInput {
+      background: rgba(255,255,255,.85);
+      border-color: rgba(0,0,0,.16);
+      color: #111827;
+    }
+    body[data-cgp-style-mode="light"] #posSearchInput:focus {
+      border-color: var(--teal-dim);
+    }
+    body[data-cgp-style-mode="light"] #posSearchInput.is-focused-mode {
+      border-color: var(--teal);
+      background: color-mix(in srgb, var(--teal) 05%, white);
+      color: color-mix(in srgb, var(--teal) 80%, #111);
+    }
+    body[data-cgp-style-mode="light"] .search-action-btn {
+      background: color-mix(in srgb, var(--teal) 07%, rgba(255,255,255,.8));
+      border-color: color-mix(in srgb, var(--teal) 30%, rgba(0,0,0,.10));
+      color: color-mix(in srgb, var(--teal) 75%, #111);
+    }
+    body[data-cgp-style-mode="light"] .search-action-btn.focus-action {
+      background: rgba(255,123,44,.08);
+      border-color: rgba(255,123,44,.35);
+      color: #c05000;
+    }
+
+    /* ── Settings drawer ── */
+    body[data-cgp-style-mode="light"] .drawer-overlay { background: rgba(0,0,0,.25); }
+    body[data-cgp-style-mode="light"] .drawer {
+      background: #ffffff;
+      border-right-color: rgba(0,0,0,.10);
+      box-shadow: 6px 0 30px rgba(0,0,0,.12);
+    }
+    body[data-cgp-style-mode="light"] .drawer-header {
+      background: #f9fafb;
+      border-bottom-color: rgba(0,0,0,.08);
+    }
+    body[data-cgp-style-mode="light"] .drawer-header h2 { color: #111827; }
+    body[data-cgp-style-mode="light"] .drawer-close {
+      color: #6b7280;
+      border-color: rgba(0,0,0,.12);
+      background: transparent;
+    }
+    body[data-cgp-style-mode="light"] .drawer-close:hover { color: #111827; border-color: rgba(0,0,0,.22); background: rgba(0,0,0,.04); }
+    body[data-cgp-style-mode="light"] .drawer-section {
+      border-bottom-color: rgba(0,0,0,.07);
+    }
+    body[data-cgp-style-mode="light"] .drawer-section-title { color: color-mix(in srgb, var(--teal-dim) 90%, #111); }
+    body[data-cgp-style-mode="light"] .map-label { color: #6b7280; }
+    body[data-cgp-style-mode="light"] .map-subgroup {
+      background: rgba(0,0,0,.02);
+      border-color: rgba(0,0,0,.08);
+    }
+    body[data-cgp-style-mode="light"] .map-subgroup-title { color: color-mix(in srgb, var(--teal-dim) 80%, #111); }
+    body[data-cgp-style-mode="light"] .map-subgroup-note { color: #9ca3af; }
+    body[data-cgp-style-mode="light"] .helper { color: #6b7280; }
+
+    /* Drawer inputs */
+    body[data-cgp-style-mode="light"] .field input,
+    body[data-cgp-style-mode="light"] .field select {
+      background: rgba(255,255,255,.9);
+      border-color: rgba(0,0,0,.18);
+      border-bottom-color: rgba(0,0,0,.22);
+      color: #111827;
+    }
+    body[data-cgp-style-mode="light"] .field input:focus,
+    body[data-cgp-style-mode="light"] .field select:focus {
+      background: #ffffff;
+      border-color: var(--teal-dim);
+      border-bottom-color: var(--teal);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 12%, transparent), inset 0 -1px 0 var(--teal);
+    }
+    body[data-cgp-style-mode="light"] .field label { color: #6b7280; }
+    body[data-cgp-style-mode="light"] .field input[type="file"] { color: #374151; }
+    body[data-cgp-style-mode="light"] .field input[type="file"]::file-selector-button {
+      background: color-mix(in srgb, var(--teal) 09%, rgba(255,255,255,.9));
+      border-color: var(--teal-dim);
+      color: color-mix(in srgb, var(--teal) 75%, #111);
+    }
+
+    /* Root chips */
+    body[data-cgp-style-mode="light"] .roots-list { border-top-color: rgba(0,0,0,.08); }
+    body[data-cgp-style-mode="light"] .root-chip {
+      background: rgba(255,255,255,.7);
+      border-color: rgba(0,0,0,.14);
+      color: #374151;
+    }
+    body[data-cgp-style-mode="light"] .root-chip:hover {
+      background: color-mix(in srgb, var(--teal) 06%, white);
+      color: color-mix(in srgb, var(--teal) 80%, #111);
+      border-color: var(--teal-dim);
+    }
+    body[data-cgp-style-mode="light"] .root-chip.active {
+      background: color-mix(in srgb, var(--teal) 12%, white);
+      border-color: var(--teal-dim);
+      color: color-mix(in srgb, var(--teal) 80%, #111);
+    }
+    body[data-cgp-style-mode="light"] .root-chip.focus-active {
+      background: color-mix(in srgb, var(--teal) 07%, white);
+      border-color: var(--teal);
+    }
+
+    /* Extra card field checkboxes */
+    body[data-cgp-style-mode="light"] .extra-field-item { border-bottom-color: rgba(0,0,0,.06); }
+    body[data-cgp-style-mode="light"] .extra-field-item input[type="checkbox"] {
+      background: rgba(255,255,255,.9);
+      border-color: rgba(0,0,0,.22);
+    }
+    body[data-cgp-style-mode="light"] .extra-field-item input[type="checkbox"]:checked {
+      background: color-mix(in srgb, var(--teal) 15%, white);
+      border-color: var(--teal-dim);
+    }
+    body[data-cgp-style-mode="light"] .extra-field-label { color: #374151; }
+    body[data-cgp-style-mode="light"] .extra-field-item:has(input:checked) .extra-field-label {
+      color: color-mix(in srgb, var(--teal) 75%, #111);
+    }
+
+    /* ── Highlight panel ── */
+    body[data-cgp-style-mode="light"] .hl-panel {
+      background: #ffffff;
+      border-left-color: var(--teal-dim);
+      box-shadow: -6px 0 30px rgba(0,0,0,.10);
+    }
+    body[data-cgp-style-mode="light"] .hl-header {
+      background: #f9fafb;
+      border-bottom-color: rgba(0,0,0,.08);
+    }
+    body[data-cgp-style-mode="light"] .hl-header h2 { color: var(--teal); }
+    body[data-cgp-style-mode="light"] .hl-section { border-bottom-color: rgba(0,0,0,.07); }
+    body[data-cgp-style-mode="light"] .hl-section-title { color: color-mix(in srgb, var(--teal-dim) 80%, #111); }
+    body[data-cgp-style-mode="light"] .hl-rule {
+      background: rgba(0,0,0,.02);
+      border-color: rgba(0,0,0,.10);
+    }
+    body[data-cgp-style-mode="light"] .hl-rule select,
+    body[data-cgp-style-mode="light"] .hl-rule input[type="text"] {
+      background-color: rgba(255,255,255,.9);
+      border-color: rgba(0,0,0,.16);
+      border-bottom-color: rgba(0,0,0,.20);
+      color: #111827;
+    }
+    body[data-cgp-style-mode="light"] .hl-rule input[type="text"]::placeholder { color: #9ca3af; }
+    body[data-cgp-style-mode="light"] .hl-rule input[type="color"] {
+      background: #f9fafb;
+      border-color: rgba(0,0,0,.14);
+    }
+    body[data-cgp-style-mode="light"] .hl-color-label { color: #6b7280; }
+    body[data-cgp-style-mode="light"] .hl-add-rule-btn {
+      border-color: color-mix(in srgb, var(--teal) 25%, rgba(0,0,0,.10));
+      color: color-mix(in srgb, var(--teal) 75%, #111);
+    }
+    body[data-cgp-style-mode="light"] .hl-add-rule-btn:hover {
+      background: color-mix(in srgb, var(--teal) 05%, white);
+      border-color: color-mix(in srgb, var(--teal) 45%, transparent);
+    }
+    body[data-cgp-style-mode="light"] .hl-preset-name {
+      background: rgba(255,255,255,.9);
+      border-color: rgba(0,0,0,.16);
+      border-bottom-color: rgba(0,0,0,.20);
+      color: #111827;
+    }
+    body[data-cgp-style-mode="light"] .hl-btn {
+      background: rgba(255,255,255,.7);
+      border-color: rgba(0,0,0,.14);
+      color: #374151;
+    }
+    body[data-cgp-style-mode="light"] .hl-btn:hover { background: #f3f4f6; }
+    body[data-cgp-style-mode="light"] .hl-btn.accent {
+      background: color-mix(in srgb, var(--teal) 09%, white);
+      border-color: var(--teal-dim);
+      color: color-mix(in srgb, var(--teal) 80%, #111);
+    }
+
+    /* ── Chart canvas ── */
+    body[data-cgp-style-mode="light"] .chart-wrap {
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--teal) 04%, transparent), transparent 280px),
+        rgba(255,255,255,.55);
+      border-color: rgba(0,0,0,.10);
+      scrollbar-color: var(--teal-dim) rgba(0,0,0,.08);
+    }
+    body[data-cgp-style-mode="light"] .chart-wrap::-webkit-scrollbar-track { background: rgba(0,0,0,.04); }
+    body[data-cgp-style-mode="light"] .chart-wrap::-webkit-scrollbar-corner { background: rgba(0,0,0,.04); }
+
+    /* ── Connector lines ── */
+    body[data-cgp-style-mode="light"] {
+      --org-line-color: rgba(0,0,0,.25);
+    }
+    body[data-cgp-style-mode="light"] .tree li::before,
+    body[data-cgp-style-mode="light"] .tree li::after {
+      border-top-color: var(--org-line-color);
+      border-left-color: var(--org-line-color);
+    }
+    body[data-cgp-style-mode="light"] .tree li:last-child::before { border-right-color: var(--org-line-color); }
+    body[data-cgp-style-mode="light"] .tree ul ul::before { border-left-color: var(--org-line-color); }
+
+    /* ── Org cards ── */
+    body[data-cgp-style-mode="light"] .node {
+      background: rgba(255,255,255,.97);
+      border-color: rgba(0,0,0,.10);
+      border-top-color: var(--teal-dim);
+      box-shadow: 0 2px 8px rgba(0,0,0,.08), 0 1px 0 rgba(255,255,255,.9) inset;
+    }
+    body[data-cgp-style-mode="light"] .node:hover {
+      border-color: var(--teal-dim);
+      border-top-color: var(--teal);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 18%, transparent), 0 6px 20px rgba(0,0,0,.10);
+    }
+    body[data-cgp-style-mode="light"] .node.selected {
+      border-color: var(--teal);
+      border-top-color: var(--teal);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--teal) 25%, transparent), 0 6px 20px rgba(0,0,0,.10);
+    }
+    body[data-cgp-style-mode="light"] .node.search-highlight {
+      background: rgba(255,252,230,.98) !important;
+    }
+    body[data-cgp-style-mode="light"] .node-pos-banner {
+      background: color-mix(in srgb, var(--teal) 10%, rgba(255,255,255,.9));
+      border-bottom-color: color-mix(in srgb, var(--teal) 14%, rgba(0,0,0,.06));
+    }
+    body[data-cgp-style-mode="light"] .node-title { color: #111827; }
+    body[data-cgp-style-mode="light"] .node-subtitle { color: color-mix(in srgb, var(--teal) 70%, #111); }
+    body[data-cgp-style-mode="light"] .node-reports-to { color: #9ca3af; }
+    body[data-cgp-style-mode="light"] .node-reports-to span { color: #6b7280; }
+    body[data-cgp-style-mode="light"] .node-divider { border-top-color: rgba(0,0,0,.07); }
+    body[data-cgp-style-mode="light"] .node-field-key { color: color-mix(in srgb, var(--teal-dim) 75%, #374151); }
+    body[data-cgp-style-mode="light"] .node-field-val { color: #1f2937; }
+    body[data-cgp-style-mode="light"] .node-composite {
+      background: rgba(0,0,0,.025);
+      border-color: rgba(0,0,0,.07);
+    }
+    body[data-cgp-style-mode="light"] .node-composite-label { color: color-mix(in srgb, var(--teal-dim) 75%, #374151); }
+    body[data-cgp-style-mode="light"] .node-composite-value { color: #111827; }
+    body[data-cgp-style-mode="light"] .node-extra-key { color: #9ca3af; }
+    body[data-cgp-style-mode="light"] .node-extra-val { color: #374151; }
+    body[data-cgp-style-mode="light"] .node-edit-bar { border-top-color: rgba(0,0,0,.07); }
+    body[data-cgp-style-mode="light"] .node-edit-btn {
+      background: rgba(0,0,0,.02);
+      color: #9ca3af;
+      border-right-color: rgba(0,0,0,.06);
+    }
+    body[data-cgp-style-mode="light"] .node-edit-btn:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--teal) 06%, white);
+      color: var(--teal);
+    }
+    body[data-cgp-style-mode="light"] .node-focus-btn {
+      background: rgba(0,0,0,.02);
+      color: #a3b8a6;
+    }
+    body[data-cgp-style-mode="light"] .node-focus-btn:hover:not(:disabled) {
+      background: rgba(80,180,100,.08);
+      color: #2d8a4e;
+    }
+    body[data-cgp-style-mode="light"] .node.selected .node-edit-btn { color: color-mix(in srgb, var(--teal) 50%, #9ca3af); }
+    body[data-cgp-style-mode="light"] .node.selected .node-edit-bar { border-top-color: color-mix(in srgb, var(--teal) 15%, rgba(0,0,0,.07)); }
+
+    /* ── Focus bar ── */
+    body[data-cgp-style-mode="light"] .focus-bar {
+      background: color-mix(in srgb, var(--teal) 07%, rgba(255,255,255,.9));
+      border-color: color-mix(in srgb, var(--teal) 25%, rgba(0,0,0,.08));
+      border-left-color: var(--teal);
+    }
+    body[data-cgp-style-mode="light"] .focus-bar-label { color: #111827; }
+    body[data-cgp-style-mode="light"] .focus-bar-sub   { color: #6b7280; }
+    body[data-cgp-style-mode="light"] .focus-bar-back {
+      background: color-mix(in srgb, var(--teal) 09%, white);
+      border-color: color-mix(in srgb, var(--teal) 35%, rgba(0,0,0,.10));
+      color: color-mix(in srgb, var(--teal) 80%, #111);
+    }
+    body[data-cgp-style-mode="light"] .focus-bar-back:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--teal) 16%, white);
+    }
+    body[data-cgp-style-mode="light"] .focus-bar-clear {
+      background: rgba(255,255,255,.6);
+      border-color: rgba(0,0,0,.14);
+      color: #374151;
+    }
+
+    /* ── Empty state ── */
+    body[data-cgp-style-mode="light"] .empty { color: #9ca3af; }
+    body[data-cgp-style-mode="light"] .empty h3 { color: var(--teal); }
+
+    /* ── Card popup ── */
+    body[data-cgp-style-mode="light"] .card-popup-backdrop { background: rgba(0,0,0,.35); }
+    body[data-cgp-style-mode="light"] .card-popup {
+      background: #ffffff;
+      border-color: var(--teal-dim);
+      border-top-color: var(--teal);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 10%, transparent), 0 24px 60px rgba(0,0,0,.18);
+    }
+    body[data-cgp-style-mode="light"] .popup-tabs { border-bottom-color: rgba(0,0,0,.09); }
+    body[data-cgp-style-mode="light"] .popup-tab { color: #6b7280; }
+    body[data-cgp-style-mode="light"] .popup-tab:hover { color: #111827; }
+    body[data-cgp-style-mode="light"] .popup-col-right {
+      border-top-color: rgba(0,0,0,.07);
+      background: #f9fafb;
+    }
+    body[data-cgp-style-mode="light"] .popup-col-footer {
+      border-top-color: rgba(0,0,0,.07);
+      background: #f3f4f6;
+    }
+    body[data-cgp-style-mode="light"] .popup-section-divider::before,
+    body[data-cgp-style-mode="light"] .popup-section-divider::after { border-top-color: rgba(0,0,0,.09); }
+    body[data-cgp-style-mode="light"] .popup-section-divider span { color: #9ca3af; }
+    body[data-cgp-style-mode="light"] .popup-group {
+      background: rgba(0,0,0,.01);
+      border-color: rgba(0,0,0,.09);
+    }
+    body[data-cgp-style-mode="light"] .popup-group-head {
+      background: rgba(0,0,0,.02);
+      border-bottom-color: rgba(0,0,0,.06);
+      color: #111827;
+    }
+    body[data-cgp-style-mode="light"] .popup-group-title { color: #111827; }
+    body[data-cgp-style-mode="light"] .popup-group-meta  { color: #6b7280; }
+    body[data-cgp-style-mode="light"] .popup-group-chevron { color: #9ca3af; }
+    body[data-cgp-style-mode="light"] .popup-field-label { color: #374151; }
+    body[data-cgp-style-mode="light"] .popup-hint { color: #6b7280; }
+    body[data-cgp-style-mode="light"] .popup-changed-badge {
+      background: color-mix(in srgb, var(--teal) 12%, white);
+      color: color-mix(in srgb, var(--teal) 80%, #111);
+    }
+    body[data-cgp-style-mode="light"] .card-popup input,
+    body[data-cgp-style-mode="light"] .card-popup select {
+      background-color: rgba(255,255,255,.95);
+      border-color: rgba(0,0,0,.16);
+      border-bottom-color: rgba(0,0,0,.20);
+      color: #111827;
+    }
+    body[data-cgp-style-mode="light"] .card-popup input:focus,
+    body[data-cgp-style-mode="light"] .card-popup select:focus {
+      background-color: #ffffff;
+      border-color: var(--teal-dim);
+      border-bottom-color: var(--teal);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 12%, transparent);
+    }
+    body[data-cgp-style-mode="light"] .card-popup select option,
+    body[data-cgp-style-mode="light"] .card-popup select optgroup {
+      background-color: #ffffff;
+      color: #111827;
+    }
+    body[data-cgp-style-mode="light"] .popup-picker-toggle {
+      background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+      border-color: rgba(0,0,0,.14);
+      color: #374151;
+    }
+    body[data-cgp-style-mode="light"] .popup-picker-toggle:hover {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 18%, transparent);
+    }
+    body[data-cgp-style-mode="light"] .card-popup-btns .btn-cancel {
+      background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
+      color: #374151;
+      border-color: rgba(0,0,0,.14);
+    }
   </style>
 </head>
 <body>
@@ -2349,6 +2918,8 @@
             <button id="zoomResetBtn" class="secondary" disabled>Reset Zoom</button>
             <button id="zoomInBtn" class="secondary" disabled>+ Zoom</button>
             <button id="goRootBtn" class="secondary" disabled title="Clear focus and jump to root">⌂ Root</button>
+            <button id="collapseAllBtn" class="secondary" disabled title="Collapse all branches in the current chart">⇱ Collapse All</button>
+            <button id="expandAllBtn" class="secondary" disabled title="Expand all branches in the current chart">⇲ Expand All</button>
             <button id="hlBtn" class="btn-highlight" disabled>🎨 Highlight</button>
           </div>
           <div class="toolbar-right">
@@ -2366,6 +2937,7 @@
               </div>
             </div>
             <button id="exportChangedBtn" class="btn-export-changed" disabled>⬇ Export Changed <span class="changed-count" id="changedCount">0</span></button>
+            <button id="exportViewBtn" class="btn-export" disabled>⬇ Export Current View</button>
             <button id="exportBtn" class="btn-export" disabled>⬇ Export All CSV</button>
             <div id="chartMeta" style="font-size:12px; color:var(--muted);">No chart rendered.</div>
             <div id="renderTracker" class="render-tracker" aria-live="polite" title="Compares rendered node count to the expected count for the current chart root.">
@@ -2425,6 +2997,7 @@
       selectedRoot: null,
       focusRoot: null,
       focusHistory: [],      // stack of previous focusRoot values
+      collapsedNodes: new Set(),
       selectedCard: null,
       searchHighlight: null, // position currently highlighted via search/jump
       zoom: 1,
@@ -2436,6 +3009,63 @@
       extraCardFields: [],  // [headerName, ...] — extra CSV columns shown on card
       lastExpectedRenderedCount: 0
     };
+
+    // ── Persistence (localStorage) ──────────────────────────────────────────
+    const PERSIST_KEY = 'cgp_orgchart_v1';
+
+    function saveState() {
+      try {
+        var snapshot = {
+          positionHeader:   document.getElementById('positionHeader') ? document.getElementById('positionHeader').value : '',
+          reportsToHeader:  document.getElementById('reportsToHeader') ? document.getElementById('reportsToHeader').value : '',
+          mapName:          document.getElementById('mapName') ? document.getElementById('mapName').value : '',
+          mapTitle:         document.getElementById('mapTitle') ? document.getElementById('mapTitle').value : '',
+          mapUnit:          document.getElementById('mapUnit') ? document.getElementById('mapUnit').value : '',
+          mapUnitDesc:      document.getElementById('mapUnitDesc') ? document.getElementById('mapUnitDesc').value : '',
+          mapSection:       document.getElementById('mapSection') ? document.getElementById('mapSection').value : '',
+          mapSectionDesc:   document.getElementById('mapSectionDesc') ? document.getElementById('mapSectionDesc').value : '',
+          mapReportsToDesc: document.getElementById('mapReportsToDesc') ? document.getElementById('mapReportsToDesc').value : '',
+          mapRank:          document.getElementById('mapRank') ? document.getElementById('mapRank').value : '',
+          mapService:       document.getElementById('mapService') ? document.getElementById('mapService').value : '',
+          extraCardFields:  state.extraCardFields,
+          highlightRules:   state.highlightRules,
+          hlPresets:        state.hlPresets,
+          zoom:             state.zoom,
+          selectedRoot:     state.selectedRoot,
+          collapsedNodes:   Array.from(state.collapsedNodes || []),
+          headers:          state.headers,
+          rows:             state.rows,
+          originalRows:     state.originalRows,
+          changedIndices:   Array.from(state.changedIndices)
+        };
+        localStorage.setItem(PERSIST_KEY, JSON.stringify(snapshot));
+      } catch(e) {
+        console.warn('[OrgChart] saveState error:', e);
+      }
+    }
+
+    function loadState() {
+      try {
+        var raw = localStorage.getItem(PERSIST_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch(e) {
+        console.warn('[OrgChart] loadState error:', e);
+        return null;
+      }
+    }
+
+    function clearPersistedState() {
+      try { localStorage.removeItem(PERSIST_KEY); } catch(e) {}
+    }
+
+    // Debounced auto-save — fires 800ms after last change
+    var _saveTimer = null;
+    function scheduleSave() {
+      if (_saveTimer) clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(saveState, 800);
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     // DOM refs
     const csvFile             = document.getElementById('csvFile');
@@ -2469,9 +3099,12 @@
     const zoomOutBtn          = document.getElementById('zoomOutBtn');
     const zoomResetBtn        = document.getElementById('zoomResetBtn');
     const goRootBtn           = document.getElementById('goRootBtn');
+    const collapseAllBtn      = document.getElementById('collapseAllBtn');
+    const expandAllBtn        = document.getElementById('expandAllBtn');
     const hlBtn               = document.getElementById('hlBtn');
     const chartWrap           = document.getElementById('chartWrap');
     const exportBtn           = document.getElementById('exportBtn');
+    const exportViewBtn       = document.getElementById('exportViewBtn');
     const exportChangedBtn    = document.getElementById('exportChangedBtn');
     const changedCountEl      = document.getElementById('changedCount');
     const posSearchInput      = document.getElementById('posSearchInput');
@@ -2563,6 +3196,42 @@
     function openDrawer()  { settingsDrawer.classList.add('open');  drawerOverlay.classList.add('open');  }
     function closeDrawer() { settingsDrawer.classList.remove('open'); drawerOverlay.classList.remove('open'); }
 
+
+    function forEachTreeNode(node, visitor) {
+      if (!node || typeof visitor !== 'function') return;
+      visitor(node);
+      (node.children || []).forEach(function(child) { forEachTreeNode(child, visitor); });
+    }
+
+    function collapseAllBranches() {
+      if (!state.treeData) return;
+      if (!state.collapsedNodes) state.collapsedNodes = new Set();
+      var collapsedCount = 0;
+      forEachTreeNode(state.treeData, function(node) {
+        if (node && !node.cycle && node.children && node.children.length) {
+          if (!state.collapsedNodes.has(node.position)) collapsedCount++;
+          state.collapsedNodes.add(node.position);
+        }
+      });
+      state.selectedCard = state.focusRoot || state.selectedRoot || (state.treeData && state.treeData.position) || null;
+      safeRerender();
+      setStatus('Collapsed ' + collapsedCount + ' branch' + (collapsedCount === 1 ? '' : 'es') + ' in the current chart.', 'success');
+    }
+
+    function expandAllBranches() {
+      if (!state.treeData || !state.collapsedNodes) return;
+      var openedCount = 0;
+      forEachTreeNode(state.treeData, function(node) {
+        if (node && state.collapsedNodes.has(node.position)) {
+          state.collapsedNodes.delete(node.position);
+          openedCount++;
+        }
+      });
+      state.selectedCard = state.focusRoot || state.selectedRoot || (state.treeData && state.treeData.position) || null;
+      safeRerender();
+      setStatus('Expanded ' + openedCount + ' branch' + (openedCount === 1 ? '' : 'es') + ' in the current chart.', 'success');
+    }
+
     settingsBtn.addEventListener('click', function(e) { e.stopPropagation(); openDrawer(); });
     drawerCloseBtn.addEventListener('click', closeDrawer);
     drawerOverlay.addEventListener('click', closeDrawer);
@@ -2590,7 +3259,10 @@
       }
     });
     exportBtn.addEventListener('click', exportCSV);
+    exportViewBtn.addEventListener('click', exportCurrentViewCSV);
     exportChangedBtn.addEventListener('click', exportChangedCSV);
+    collapseAllBtn.addEventListener('click', collapseAllBranches);
+    expandAllBtn.addEventListener('click', expandAllBranches);
 
     // ── Position search — inline action buttons ──
     var pendingSearchMatch = null;
@@ -2628,6 +3300,32 @@
       var count = 0;
       treeNode.children.forEach(function(c) { count += 1 + countDescendants(c); });
       return count;
+    }
+
+    function getPositionParentMap() {
+      var positionKey = positionHeader.value;
+      var reportsToKey = reportsToHeader.value;
+      var map = new Map();
+      state.rows.forEach(function(row) {
+        var pos = String(row[positionKey] || '').trim();
+        if (!pos) return;
+        map.set(pos, String(row[reportsToKey] || '').trim());
+      });
+      return map;
+    }
+
+    function expandPathToPosition(positionName) {
+      if (!positionName || !state.collapsedNodes) return;
+      var parentMap = getPositionParentMap();
+      var current = String(positionName || '').trim();
+      var visited = new Set();
+      while (current && !visited.has(current)) {
+        visited.add(current);
+        state.collapsedNodes.delete(current);
+        var parent = parentMap.get(current);
+        if (!parent || parent === current) break;
+        current = parent;
+      }
     }
 
     function updateFocusBar() {
@@ -2815,6 +3513,9 @@
     }
 
     function resetAll() {
+      // Wipe persisted session so it doesn't restore on next load
+      clearPersistedState();
+
       // Close any open overlays first
       closeAllPopups();
       if (typeof closeHlPanel === 'function' && hlPanelOpen) closeHlPanel();
@@ -2827,6 +3528,7 @@
       state.roots = [];
       state.focusRoot = null;
       state.focusHistory = [];
+      state.collapsedNodes = new Set();
       state.selectedRoot = null;
       state.selectedCard = null;
       state.searchHighlight = null;
@@ -2849,8 +3551,11 @@
       zoomOutBtn.disabled = true;
       zoomResetBtn.disabled = true;
       goRootBtn.disabled = true;
+      collapseAllBtn.disabled = true;
+      expandAllBtn.disabled = true;
       hlBtn.disabled = true;
       exportBtn.disabled = true;
+      exportViewBtn.disabled = true;
       exportChangedBtn.disabled = true;
       if (changedCountEl) changedCountEl.textContent = '0';
       posSearchInput.disabled = true;
@@ -3230,6 +3935,55 @@
       return { headers: headers, rows: rows };
     }
 
+    function getCurrentStripZerosEnabled() {
+      return !!(stripLeadingZerosChk && stripLeadingZerosChk.checked);
+    }
+
+    function normalizePositionValue(val) {
+      var s = String(val == null ? '' : val).trim();
+      if (!getCurrentStripZerosEnabled()) return s;
+      return s.replace(/^0+(\d)/, '$1');
+    }
+
+    function findRootForPositionInRows(targetPosition) {
+      var positionKey = positionHeader && positionHeader.value;
+      var reportsToKey = reportsToHeader && reportsToHeader.value;
+      if (!positionKey || !reportsToKey || !targetPosition || !state.rows || !state.rows.length) return null;
+
+      var targetNorm = normalizePositionValue(targetPosition).toLowerCase();
+      if (!targetNorm) return null;
+
+      var parentByPos = new Map();
+      var canonicalByPos = new Map();
+      state.rows.forEach(function(row) {
+        if (!row) return;
+        var pos = normalizePositionValue(row[positionKey]);
+        if (!pos) return;
+        var posKey = pos.toLowerCase();
+        if (!canonicalByPos.has(posKey)) canonicalByPos.set(posKey, pos);
+        var reportsTo = normalizePositionValue(row[reportsToKey]);
+        parentByPos.set(posKey, reportsTo ? reportsTo.toLowerCase() : '');
+      });
+
+      if (!canonicalByPos.has(targetNorm)) return null;
+      var current = targetNorm;
+      var seen = new Set();
+      while (current && !seen.has(current)) {
+        seen.add(current);
+        var parent = parentByPos.get(current);
+        if (!parent || !canonicalByPos.has(parent) || parent === current) {
+          return canonicalByPos.get(current) || canonicalByPos.get(targetNorm) || null;
+        }
+        current = parent;
+      }
+      return canonicalByPos.get(targetNorm) || null;
+    }
+
+    function refreshRootsUI() {
+      renderRootChips();
+      updateFocusBar();
+    }
+
     function renderChart() {
       try {
         _renderChart();
@@ -3326,7 +4080,7 @@
       // Only update selectedRoot when we are NOT in focus mode — focusRoot overrides rendering
       // and selectedRoot should stay stable so returning to full chart works correctly
       if (!state.focusRoot) {
-        state.selectedRoot = (state.selectedRoot && nodeMap.has(state.selectedRoot))
+        state.selectedRoot = (state.selectedRoot && state.roots.indexOf(state.selectedRoot) !== -1)
           ? state.selectedRoot : (state.roots[0] || null);
       }
 
@@ -3414,8 +4168,11 @@
       zoomOutBtn.disabled = false;
       zoomResetBtn.disabled = false;
       goRootBtn.disabled = false;
+      collapseAllBtn.disabled = false;
+      expandAllBtn.disabled = false;
       hlBtn.disabled = false;
       exportBtn.disabled = false;
+      exportViewBtn.disabled = false;
       populatePosSearch();
       chartRoot.style.transform = 'scale(' + state.zoom + ')';
       applyHighlights();
@@ -3633,6 +4390,7 @@
 
       // Set search highlight on the matched card
       state.searchHighlight = match;
+      expandPathToPosition(match);
 
       // If the target position isn't in the currently rendered tree, we may need to
       // switch the root first
@@ -3695,9 +4453,15 @@
       // Extra columns from CSV not covered by schema
       var extraHeaders = state.headers.filter(function(h) { return !schemaKeys.has(h); });
 
-      var rowIndex = state.rows.findIndex(function (r) {
-        return String(r[positionKey] || '').trim() === position;
+      var normalizedPopupPosition = normalizePositionValue(position).toLowerCase();
+      var matchingRowIndices = [];
+      state.rows.forEach(function (r, idx) {
+        var rowPos = normalizePositionValue(r && positionKey ? r[positionKey] : '').toLowerCase();
+        if (rowPos && rowPos === normalizedPopupPosition) matchingRowIndices.push(idx);
       });
+      // Use the last matching row because renderChart collapses duplicate positions by letting
+      // the final occurrence win. Editing only the first duplicate can look like nothing changed.
+      var rowIndex = matchingRowIndices.length ? matchingRowIndices[matchingRowIndices.length - 1] : -1;
       var currentRow       = rowIndex >= 0 ? state.rows[rowIndex] : null;
       var currentReportsTo = currentRow ? String(currentRow[reportsToKey] || '').trim() : '';
 
@@ -4040,15 +4804,27 @@
 
       var addPosF = makeField('Position ID', '', 'Unique ID e.g. POS-042', true, positionKey, { selectLabel: 'Pick position…', toggleLabel: 'CSV positions' });
 
-      var addNameF      = nameKey        ? makeField('Name',                   '', 'Full name',              false, nameKey,          { selectLabel: 'Pick name…' }) : null;
-      var addTitleF     = titleKey       ? makeField('Title',                  '', 'Job title',              false, titleKey,         { selectLabel: 'Pick title…' }) : null;
-      var addUnitF      = unitKey        ? makeField('Unit',                   '', 'Unit',                   false, unitKey,          { selectLabel: 'Pick unit…' }) : null;
-      var addUnitDescF  = unitDescKey    ? makeField('Unit Description',       '', 'Unit description',       false, unitDescKey,      { selectLabel: 'Pick unit description…' }) : null;
-      var addSecF       = sectionKey     ? makeField('Section',                '', 'Department',             false, sectionKey,       { selectLabel: 'Pick section…' }) : null;
-      var addSecDescF   = sectionDescKey ? makeField('Section Description',    '', 'Section description',    false, sectionDescKey,   { selectLabel: 'Pick section description…' }) : null;
-      var addRtDescF    = reportsToDescKey ? makeField('Reports To Description', '', 'Reports to description', false, reportsToDescKey, { selectLabel: 'Pick reports-to description…' }) : null;
-      var addRankF      = rankKey        ? makeField('Rank',                   '', 'Grade/level',            false, rankKey,          { selectLabel: 'Pick rank…' }) : null;
-      var addServiceF   = serviceKey     ? makeField('Service',                '', 'Service/component',      false, serviceKey,       { selectLabel: 'Pick service…' }) : null;
+      function getParentSeedValue(key) {
+        if (!currentRow || !key) return '';
+        return String(currentRow[key] || '').trim();
+      }
+      function getParentReportsToDescSeed() {
+        if (!currentRow) return '';
+        if (titleKey && currentRow[titleKey]) return String(currentRow[titleKey]).trim();
+        if (nameKey && currentRow[nameKey]) return String(currentRow[nameKey]).trim();
+        if (reportsToDescKey && currentRow[reportsToDescKey]) return String(currentRow[reportsToDescKey]).trim();
+        return position;
+      }
+
+      var addNameF      = nameKey        ? makeField('Name',                   '',                          'Full name',              false, nameKey,          { selectLabel: 'Pick name…' }) : null;
+      var addTitleF     = titleKey       ? makeField('Title',                  '',                          'Job title',              false, titleKey,         { selectLabel: 'Pick title…' }) : null;
+      var addUnitF      = unitKey        ? makeField('Unit',                   getParentSeedValue(unitKey), 'Unit',                   false, unitKey,          { selectLabel: 'Pick unit…' }) : null;
+      var addUnitDescF  = unitDescKey    ? makeField('Unit Description',       getParentSeedValue(unitDescKey), 'Unit description',    false, unitDescKey,      { selectLabel: 'Pick unit description…' }) : null;
+      var addSecF       = sectionKey     ? makeField('Section',                getParentSeedValue(sectionKey), 'Department',          false, sectionKey,       { selectLabel: 'Pick section…' }) : null;
+      var addSecDescF   = sectionDescKey ? makeField('Section Description',    getParentSeedValue(sectionDescKey), 'Section description', false, sectionDescKey,   { selectLabel: 'Pick section description…' }) : null;
+      var addRtDescF    = reportsToDescKey ? makeField('Reports To Description', getParentReportsToDescSeed(), 'Reports to description', false, reportsToDescKey, { selectLabel: 'Pick reports-to description…' }) : null;
+      var addRankF      = rankKey        ? makeField('Rank',                   getParentSeedValue(rankKey), 'Grade/level',            false, rankKey,          { selectLabel: 'Pick rank…' }) : null;
+      var addServiceF   = serviceKey     ? makeField('Service',                getParentSeedValue(serviceKey), 'Service/component',   false, serviceKey,       { selectLabel: 'Pick service…' }) : null;
 
       appendFieldGrid(addRequiredGroup.body, [addPosF, addRtDescF]);
 
@@ -4064,7 +4840,8 @@
       if (extraHeaders.length > 0) {
         var addExtraFieldObjs = [];
         extraHeaders.forEach(function(h) {
-          var ef = makeField(h, '', '', false, h, { selectLabel: 'Pick value…', toggleLabel: 'CSV values' });
+          var seedValue = getParentSeedValue(h);
+          var ef = makeField(h, seedValue, '', false, h, { selectLabel: 'Pick value…', toggleLabel: 'CSV values' });
           addExtraInputs[h] = ef.input;
           addExtraFieldObjs.push(ef);
         });
@@ -4082,7 +4859,7 @@
 
       wirePairedValueAutofill(addUnitF, addUnitDescF, unitKey, unitDescKey);
       wirePairedValueAutofill(addSecF, addSecDescF, sectionKey, sectionDescKey);
-      if (addRtDescF && !addRtDescF.input.value) addRtDescF.input.value = currentReportsToDesc;
+      if (addRtDescF && !addRtDescF.input.value) addRtDescF.input.value = getParentReportsToDescSeed() || currentReportsToDesc;
       addPanel.appendChild(addLeft);
 
       // ── Footer ──
@@ -4157,20 +4934,23 @@
 
           if (!posChanged && !reportsChanged && !schemaChanged && !extraChanged) { closeAllPopups(); return; }
 
-          if (rowIndex >= 0) {
-            var targetRow = state.rows[rowIndex];
-            targetRow[positionKey]  = newName;
-            targetRow[reportsToKey] = newReportsTo;
-            if (nameKey          && nameField)      targetRow[nameKey]          = nameField.input.value.trim();
-            if (titleKey         && titleField)     targetRow[titleKey]         = titleField.input.value.trim();
-            if (unitKey          && unitField)      targetRow[unitKey]          = unitField.input.value.trim();
-            if (unitDescKey      && unitDescField)  targetRow[unitDescKey]      = unitDescField.input.value.trim();
-            if (sectionKey       && secField)       targetRow[sectionKey]       = secField.input.value.trim();
-            if (sectionDescKey   && secDescField)   targetRow[sectionDescKey]   = secDescField.input.value.trim();
-            if (reportsToDescKey && rtDescField)    targetRow[reportsToDescKey] = rtDescField.input.value.trim();
-            if (rankKey          && rankField)      targetRow[rankKey]          = rankField.input.value.trim();
-            if (serviceKey       && serviceField)   targetRow[serviceKey]       = serviceField.input.value.trim();
-            extraHeaders.forEach(function(h){ targetRow[h] = editExtraInputs[h].value.trim(); });
+          if (matchingRowIndices.length) {
+            matchingRowIndices.forEach(function(idx) {
+              var targetRow = state.rows[idx];
+              if (!targetRow) return;
+              targetRow[positionKey]  = newName;
+              targetRow[reportsToKey] = newReportsTo;
+              if (nameKey          && nameField)      targetRow[nameKey]          = nameField.input.value.trim();
+              if (titleKey         && titleField)     targetRow[titleKey]         = titleField.input.value.trim();
+              if (unitKey          && unitField)      targetRow[unitKey]          = unitField.input.value.trim();
+              if (unitDescKey      && unitDescField)  targetRow[unitDescKey]      = unitDescField.input.value.trim();
+              if (sectionKey       && secField)       targetRow[sectionKey]       = secField.input.value.trim();
+              if (sectionDescKey   && secDescField)   targetRow[sectionDescKey]   = secDescField.input.value.trim();
+              if (reportsToDescKey && rtDescField)    targetRow[reportsToDescKey] = rtDescField.input.value.trim();
+              if (rankKey          && rankField)      targetRow[rankKey]          = rankField.input.value.trim();
+              if (serviceKey       && serviceField)   targetRow[serviceKey]       = serviceField.input.value.trim();
+              extraHeaders.forEach(function(h){ targetRow[h] = editExtraInputs[h].value.trim(); });
+            });
           }
           if (posChanged) {
             // Update all rows that report to the old position name
@@ -4180,6 +4960,15 @@
             if (state.focusRoot === position) state.focusRoot = newName;
             state.focusHistory = state.focusHistory.map(function(h){ return h === position ? newName : h; });
             if (state.searchHighlight === position) state.searchHighlight = newName;
+            state.collapsedNodes = new Set(Array.from(state.collapsedNodes || []).map(function(name) {
+              return name === position ? newName : name;
+            }));
+          }
+
+          if (reportsChanged || posChanged) {
+            var nextRoot = findRootForPositionInRows(newName);
+            if (nextRoot) state.selectedRoot = nextRoot;
+            expandPathToPosition(newName);
           }
 
           closeAllPopups();
@@ -4188,8 +4977,14 @@
           if (posChanged)     msgs.push('renamed to "'+newName+'"');
           if (reportsChanged) msgs.push('moved under "'+(newReportsTo||'root')+'"');
           if (schemaChanged || extraChanged) msgs.push('details updated');
-          recomputeChanged(rowIndex);
+          if (matchingRowIndices.length) {
+            matchingRowIndices.forEach(function(idx) { recomputeChanged(idx); });
+          } else {
+            recomputeChanged(rowIndex);
+          }
           renderChart();
+          refreshRootsUI();
+          requestAnimationFrame(function () { scrollToCard(newName); });
           setStatus('"'+position+'" '+msgs.join(', ')+'.','success');
         } catch (err) {
           console.error('[OrgChart] doSave error for "' + position + '":', err);
@@ -4228,8 +5023,13 @@
           state.rows.push(newRow);
           recomputeChanged(state.rows.length - 1);
           closeAllPopups();
+          var addRoot = findRootForPositionInRows(newPos);
+          if (addRoot) state.selectedRoot = addRoot;
+          expandPathToPosition(newPos);
           state.selectedCard = newPos;
           renderChart();
+          refreshRootsUI();
+          requestAnimationFrame(function () { scrollToCard(newPos); });
           setStatus('Added "'+newPos+'" under "'+position+'".','success');
         } catch (err) {
           console.error('[OrgChart] doAdd error under "' + position + '":', err);
@@ -4249,6 +5049,8 @@
       var card = document.createElement('div');
       var isSelected = state.selectedCard === node.position;
       var isSearchHit = state.searchHighlight === node.position;
+      var hasChildren = !!(node.children && node.children.length);
+      var isCollapsed = hasChildren && state.collapsedNodes && state.collapsedNodes.has(node.position);
       card.className = 'node' + (isSelected ? ' selected' : '') + (isSearchHit ? ' search-highlight' : '');
       card.setAttribute('data-position', node.position);
 
@@ -4351,6 +5153,14 @@
         card.appendChild(meta);
       }
 
+      if (isCollapsed) {
+        var branchState = document.createElement('div');
+        branchState.className = 'node-branch-state';
+        var hiddenCount = countDescendants(node);
+        branchState.textContent = hiddenCount + ' hidden ' + (hiddenCount === 1 ? 'position' : 'positions');
+        card.appendChild(branchState);
+      }
+
       // ── Edit button bar at card bottom ──
       if (!node.cycle) {
         var editBar = document.createElement('div');
@@ -4391,13 +5201,33 @@
 
         editBar.appendChild(editBtn);
         editBar.appendChild(focusCardBtn);
+
+        if (hasChildren) {
+          var branchBtn = document.createElement('button');
+          branchBtn.className = 'node-branch-btn';
+          branchBtn.innerHTML = isCollapsed ? '▸ Open' : '▾ Close';
+          branchBtn.title = isCollapsed ? 'Open this branch' : 'Close this branch';
+          branchBtn.addEventListener('click', function (evt) {
+            evt.stopPropagation();
+            if (!state.collapsedNodes) state.collapsedNodes = new Set();
+            if (state.collapsedNodes.has(node.position)) {
+              state.collapsedNodes.delete(node.position);
+            } else {
+              state.collapsedNodes.add(node.position);
+            }
+            state.selectedCard = node.position;
+            safeRerender();
+          });
+          editBar.appendChild(branchBtn);
+        }
+
         card.appendChild(editBar);
       }
 
       nodeWrap.appendChild(card);
       li.appendChild(nodeWrap);
 
-      if (node.children && node.children.length) {
+      if (hasChildren && !isCollapsed) {
         var ul = document.createElement('ul');
         node.children.forEach(function (child) { ul.appendChild(renderNode(child)); });
         li.appendChild(ul);
@@ -4405,10 +5235,49 @@
       return li;
     }
 
+    function getCurrentViewRows() {
+      var positionKey = positionHeader && positionHeader.value;
+      if (!state.treeData || !state.headers.length || !positionKey) return [];
+
+      function normalizePosition(val) {
+        return normalizePositionValue(val);
+      }
+
+      var visiblePositions = [];
+      function walk(node) {
+        if (!node || !node.position || node.cycle) return;
+        visiblePositions.push(normalizePosition(node.position));
+        var isCollapsed = !!(state.collapsedNodes && state.collapsedNodes.has(node.position));
+        if (isCollapsed) return;
+        (node.children || []).forEach(walk);
+      }
+      walk(state.treeData);
+
+      var visibleSet = new Set(visiblePositions.filter(Boolean));
+      var rows = [];
+      state.rows.forEach(function(row) {
+        if (!row) return;
+        var normalizedPos = normalizePosition(row[positionKey]);
+        if (!normalizedPos || !visibleSet.has(normalizedPos)) return;
+        rows.push(row);
+      });
+      return rows;
+    }
+
     function exportCSV() {
       if (!state.headers.length || !state.rows.length) return;
       downloadCSV(state.rows, 'org_chart_export.csv');
       setStatus('Exported ' + state.rows.length + ' rows to org_chart_export.csv', 'success');
+    }
+
+    function exportCurrentViewCSV() {
+      var rows = getCurrentViewRows();
+      if (!rows.length) return;
+      var baseName = state.focusRoot || state.selectedRoot || 'current_view';
+      var safeName = String(baseName).trim().replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '') || 'current_view';
+      var fileName = 'org_chart_' + safeName + '_view.csv';
+      downloadCSV(rows, fileName);
+      setStatus('Exported ' + rows.length + ' visible row' + (rows.length === 1 ? '' : 's') + ' to ' + fileName, 'success');
     }
 
     function exportChangedCSV() {
@@ -4981,7 +5850,152 @@
     });
     // ─────────────────────────────────────────────────────────────────────
 
-    resetAll();
+    // ── Restore persisted state on load ─────────────────────────────────────
+    (function restorePersistedState() {
+      var snap = loadState();
+      if (!snap || !snap.headers || !snap.headers.length) {
+        resetAll();
+        return;
+      }
+
+      // Restore data
+      state.headers        = snap.headers || [];
+      state.rows           = snap.rows || [];
+      state.originalRows   = snap.originalRows || [];
+      state.changedIndices = new Set(snap.changedIndices || []);
+      state.extraCardFields = snap.extraCardFields || [];
+      state.highlightRules  = snap.highlightRules || [];
+      state.hlPresets       = snap.hlPresets || {};
+      state.zoom            = snap.zoom || 1;
+      state.selectedRoot    = snap.selectedRoot || null;
+      state.collapsedNodes  = new Set(snap.collapsedNodes || []);
+
+      // Re-populate field selects
+      var headers = state.headers;
+      if (headers.length) {
+        [positionHeader, reportsToHeader].forEach(function(sel) {
+          sel.innerHTML = '';
+          var blank = document.createElement('option');
+          blank.value = ''; blank.textContent = 'Choose column';
+          sel.appendChild(blank);
+          headers.forEach(function(h) {
+            var o = document.createElement('option'); o.value = h; o.textContent = h;
+            sel.appendChild(o);
+          });
+          sel.disabled = false;
+        });
+
+        [mapName, mapTitle, mapUnit, mapUnitDesc, mapSection, mapSectionDesc,
+         mapReportsToDesc, mapRank, mapService].forEach(function(sel) {
+          sel.innerHTML = '';
+          var blank = document.createElement('option');
+          blank.value = ''; blank.textContent = '— none —';
+          sel.appendChild(blank);
+          headers.forEach(function(h) {
+            var o = document.createElement('option'); o.value = h; o.textContent = h;
+            sel.appendChild(o);
+          });
+          sel.disabled = false;
+        });
+
+        // Restore selected values
+        if (snap.positionHeader)   positionHeader.value   = snap.positionHeader;
+        if (snap.reportsToHeader)  reportsToHeader.value  = snap.reportsToHeader;
+        if (snap.mapName)          mapName.value          = snap.mapName;
+        if (snap.mapTitle)         mapTitle.value         = snap.mapTitle;
+        if (snap.mapUnit)          mapUnit.value          = snap.mapUnit;
+        if (snap.mapUnitDesc)      mapUnitDesc.value      = snap.mapUnitDesc;
+        if (snap.mapSection)       mapSection.value       = snap.mapSection;
+        if (snap.mapSectionDesc)   mapSectionDesc.value   = snap.mapSectionDesc;
+        if (snap.mapReportsToDesc) mapReportsToDesc.value = snap.mapReportsToDesc;
+        if (snap.mapRank)          mapRank.value          = snap.mapRank;
+        if (snap.mapService)       mapService.value       = snap.mapService;
+
+        searchInput.disabled = false;
+        renderBtn.disabled   = false;
+        populateExtraFields();
+
+        // Restore highlight presets UI
+        if (typeof renderPresetSelect === 'function') renderPresetSelect();
+
+        // Re-render chart if we have a selected root
+        if (state.selectedRoot && positionHeader.value && reportsToHeader.value) {
+          try {
+            renderChart();
+          } catch(e) {
+            console.warn('[OrgChart] auto-render on restore failed:', e);
+          }
+        } else {
+          chartMeta.textContent = 'Loaded ' + state.rows.length + ' rows (from session). Map columns then render.';
+          setStatus('Session restored. ' + state.rows.length + ' rows loaded.', 'success');
+        }
+      } else {
+        resetAll();
+      }
+    })();
+
+    // ── Wire auto-save to key user actions ──────────────────────────────────
+    // Save after render, highlight changes, zoom, and column mapping changes
+    var _origRenderChart = renderChart;
+    renderChart = function() { _origRenderChart.apply(this, arguments); scheduleSave(); };
+
+    chartWrap.addEventListener('wheel', scheduleSave, { passive: true });
+
+    [positionHeader, reportsToHeader, mapName, mapTitle, mapUnit, mapUnitDesc,
+     mapSection, mapSectionDesc, mapReportsToDesc, mapRank, mapService].forEach(function(sel) {
+      sel.addEventListener('change', scheduleSave);
+    });
+
+    // Save when highlight rules change (MutationObserver on the rules list)
+    var hlRulesEl = document.getElementById('hlRulesList');
+    if (hlRulesEl) {
+      new MutationObserver(scheduleSave).observe(hlRulesEl, { childList: true, subtree: true, characterData: true });
+    }
+
+    // Save on export-changed (data edit) and after file upload
+    csvFile.addEventListener('change', function() { setTimeout(scheduleSave, 500); });
+    // ────────────────────────────────────────────────────────────────────────
+
+    // Add a "Clear Session" button near the CSV upload area
+    (function addClearSessionBtn() {
+      var csvRow = document.querySelector('.map-row label[for="csvFile"]');
+      if (!csvRow) csvRow = csvFile && csvFile.closest('.map-row');
+      if (!csvRow) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = '↺ Clear Session';
+      btn.title = 'Wipe saved session data and reset the tool';
+      btn.style.cssText = 'margin-top:8px;width:100%;padding:6px 10px;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.3);color:#ff9090;font-family:"Share Tech Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:2px;';
+      btn.addEventListener('click', function() {
+        clearPersistedState();
+        resetAll();
+        setStatus('Session cleared.', 'success');
+      });
+      var parent = csvRow.parentNode;
+      parent.insertBefore(btn, csvRow.nextSibling);
+    })();
+
+    // ── Apply saved style mode + theme on load ───────────────────────────────
+    // shared.js runs before DOM is ready so body may not have the attribute yet.
+    // Re-apply here now that body exists, and also respond to changes made in
+    // the Settings page (stored in localStorage) while this tab is open.
+    (function applyModeAndTheme() {
+      if (window.CGP) {
+        CGP.applyStyleMode(CGP.getSavedStyleMode());
+        CGP.applyTheme(CGP.getSavedId());
+      }
+    })();
+
+    window.addEventListener('storage', function(e) {
+      if (!window.CGP) return;
+      if (e.key === 'cgp-style-mode') {
+        CGP.applyStyleMode(e.newValue || 'classic');
+      }
+      if (e.key === 'cgp-app-theme') {
+        CGP.applyTheme(e.newValue || 'commander');
+      }
+    });
+    // ────────────────────────────────────────────────────────────────────────
   </script>
 </body>
 </html>

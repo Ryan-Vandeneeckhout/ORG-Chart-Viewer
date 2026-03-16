@@ -10,7 +10,6 @@
   <meta property="og:type" content="website"/>
   <link rel="icon" href="favicon.svg" type="image/svg+xml"/>
   <link rel="apple-touch-icon" href="apple-touch-icon.svg"/>
-  <link rel="manifest" href="site.webmanifest"/>
 
   <title>CFB North Bay CSV Comparison Tool</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,6 +17,8 @@
   <link rel="stylesheet" href="shared.css"/>
   <script src="shared.js"></script>
   <style>
+
+    .search-hidden{display:none !important;}
     :root {
       --bg:            #080808;
       --panel:         #0e0e0e;
@@ -57,13 +58,18 @@
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html { scrollbar-gutter: stable both-edges; overflow-y: scroll; }
     body {
       font-family: var(--mono);
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      overflow-y: scroll;
+      transition: opacity 0.24s ease;
+    }
+    body.modal-open {
+      overflow-y: scroll;
     }
     body.fade-in  { opacity: 1; }
     body.fade-out { opacity: 0; }
@@ -117,17 +123,23 @@
     .ucopy .fname { font-family:var(--mono); font-size:clamp(.84rem,.67rem + .4vw,.97rem); color:var(--theme-accent, #00ffd1); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .ucopy .fhint { font-size:clamp(.84rem,.67rem + .4vw,.97rem); color:#aaa; font-family:var(--mono); }
 
-    /* selects */
+    /* editable dropdowns */
     .flbl { display:block; font-size:clamp(.8rem,.62rem + .4vw,.92rem); font-weight:400; letter-spacing:.14em; text-transform:uppercase; color:#aaa; margin-bottom:6px; font-family:var(--mono); }
-    select {
-      width:100%; padding:7px 28px 7px 10px; border-radius:var(--r); border:1px solid #666;
-      background: #161616 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
-      color:var(--text); font-family: var(--mono); font-size:clamp(.93rem,.75rem + .4vw,1.05rem); font-weight:400;
-      -webkit-appearance:none; appearance:none; outline:none; transition:border-color .15s, box-shadow .15s;
+    .combo-wrap{display:flex;align-items:stretch;gap:6px;width:100%;}
+    .combo-input{
+      width:100%; min-width:0; padding:7px 10px; border-radius:var(--r); border:1px solid #666;
+      background:#161616; color:var(--text); font-family:var(--mono); font-size:clamp(.93rem,.75rem + .4vw,1.05rem); font-weight:400;
+      outline:none; transition:border-color .15s, box-shadow .15s, opacity .15s;
     }
-    select:focus { border-color:var(--theme-accent, #00ffd1); box-shadow: 0 0 0 1px #00FFD130; }
-    select:disabled { opacity:.3; cursor:not-allowed; }
-    select option { background:#161616; color:var(--text); }
+    .combo-input:focus{border-color:var(--theme-accent, #00ffd1); box-shadow:0 0 0 1px #00FFD130;}
+    .combo-input:disabled{opacity:.3; cursor:not-allowed;}
+    .combo-clear{
+      flex:0 0 auto; min-width:38px; padding:0 10px; border-radius:var(--r); border:1px solid #666; background:#121212; color:#aaa;
+      font-family:var(--mono); font-size:1rem; line-height:1; cursor:pointer; transition:border-color .15s, box-shadow .15s, color .15s, opacity .15s;
+    }
+    .combo-clear:hover:not(:disabled), .combo-clear:focus-visible:not(:disabled){border-color:var(--theme-accent, #00ffd1); color:var(--theme-accent, #00ffd1); box-shadow:0 0 0 1px #00FFD120;}
+    .combo-clear:disabled{opacity:.3; cursor:not-allowed;}
+    datalist{display:none;}
 
     .key-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
     @media(max-width:560px){ .key-grid { grid-template-columns:1fr; } }
@@ -304,9 +316,12 @@
       border:1px solid #888; border-radius:var(--r);
       background:#0e0e0e;
       overflow:hidden;
-      transition:border-color .15s, box-shadow .15s;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      transition:border-color .18s ease, box-shadow .22s ease, transform .22s ease;
+      will-change: transform;
     }
-    .pcard:hover { border-color:#888; }
+    .pcard:hover { border-color:#888; transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0,0,0,.22); }
     .pcard.type-changed { border-left:2px solid #facc15; }
     .pcard.type-only-a  { border-left:2px solid #ff6b35; }
     .pcard.type-only-b  { border-left:2px solid #a78bfa; }
@@ -317,7 +332,7 @@
       padding: 9px 13px 9px 14px;
       background: #080808;
       border-bottom: 1px solid #444;
-      cursor: pointer; user-select: none;
+      cursor: default; user-select: none;
     }
     .pchead-top {
       display: flex; align-items: center; gap: 9px; min-width: 0;
@@ -398,6 +413,19 @@
     td { padding:7px 12px; border-bottom:1px solid #3a3a3a; vertical-align:top; }
     tr:last-child td { border-bottom:none; }
     tr:hover td { background:#161616; }
+
+    .diag-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0 8px;}
+    .diag-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px 16px;box-shadow:0 10px 28px rgba(0,0,0,.22);}
+    .diag-title{font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:700;}
+    .diag-row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed rgba(255,255,255,.07);}
+    .diag-row:last-child{border-bottom:0;padding-bottom:0;}
+    .diag-k{color:var(--muted);}
+    .diag-v{font-weight:700;}
+    .diag-v.warn{color:#ffd166;}
+    .diag-v.bad{color:#ff7b7b;}
+    .intel-wrap{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 14px;}
+    .intel-pill{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);font-size:.86rem;}
+    .intel-pill strong{font-size:.95rem;}
     .tdkey { font-family:var(--mono); font-size:clamp(.84rem,.66rem + .4vw,.96rem); color:var(--theme-accent, #00ffd1); white-space:nowrap; }
     .tdcol { font-family:var(--mono); font-size:clamp(.82rem,.64rem + .4vw,.94rem); color:#aaa; }
     .tdval { max-width:230px; word-break:break-word; }
@@ -416,7 +444,8 @@
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       opacity: 0; pointer-events: none;
-      transition: opacity .32s ease;
+      transition: opacity .32s cubic-bezier(.22,1,.36,1);
+      overscroll-behavior: contain;
     }
     .card-overlay.open { opacity: 1; pointer-events: all; }
 
@@ -430,9 +459,11 @@
       display: flex; flex-direction: column;
       /* start hidden — JS sets initial rect then transitions to final */
       opacity: 0; pointer-events: none;
-      transition: opacity .32s ease, transform .38s cubic-bezier(.22,1,.36,1), width .38s cubic-bezier(.22,1,.36,1), height .38s cubic-bezier(.22,1,.36,1), top .38s cubic-bezier(.22,1,.36,1), left .38s cubic-bezier(.22,1,.36,1);
+      transition: opacity .28s cubic-bezier(.22,1,.36,1), transform .38s cubic-bezier(.22,1,.36,1), width .38s cubic-bezier(.22,1,.36,1), height .38s cubic-bezier(.22,1,.36,1), top .38s cubic-bezier(.22,1,.36,1), left .38s cubic-bezier(.22,1,.36,1);
       /* we animate via top/left/width/height so don't use transform for position */
-      will-change: transform, opacity;
+      will-change: transform, opacity, top, left, width, height;
+      contain: layout paint style;
+      transform: translateZ(0);
     }
     .card-modal.open { opacity: 1; pointer-events: all; }
 
@@ -524,12 +555,15 @@
     .sri-info { display:flex; flex-direction:column; gap:2px; min-width:0; }
     .sri-num { font-size:clamp(.8rem,.62rem + .4vw,.92rem); color:var(--theme-accent, #00ffd1); }
     .sri-name { color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px; }
-    .sri-go {
+    .sri-actions { display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+    .sri-go,
+    .sri-add {
       flex-shrink:0; padding:3px 9px; border-radius:2px; border:1px solid #666;
       background:#080808; color:#888; font-family:var(--mono); font-size:clamp(.8rem,.62rem + .4vw,.92rem);
       cursor:pointer; transition:all .15s; white-space:nowrap; letter-spacing:.08em;
     }
-    .sri-go:hover { border-color:var(--theme-accent, #00ffd1); color:var(--theme-accent, #00ffd1); background:#001a14; }
+    .sri-go:hover,
+    .sri-add:hover { border-color:var(--theme-accent, #00ffd1); color:var(--theme-accent, #00ffd1); background:#001a14; }
     .search-no-results { padding:10px; font-family:var(--mono); font-size:clamp(.85rem,.68rem + .4vw,.98rem); color:#888; text-align:center; }
 
     /* return to search button */
@@ -671,6 +705,7 @@
       cursor: pointer; user-select: none;
       transition: border-color .2s, background .2s, box-shadow .2s;
     }
+
     .thb-step:hover {
       border-color: #00FFD160;
       background: #0e0e0e;
@@ -722,12 +757,14 @@
       box-shadow: 0 32px 90px rgba(0,0,0,.96), 0 0 0 1px #00FFD110;
       display: flex; flex-direction: column;
       opacity: 0; pointer-events: none;
-      transition: opacity .32s ease,
+      transition: opacity .28s cubic-bezier(.22,1,.36,1),
                   top    .38s cubic-bezier(.22,1,.36,1),
                   left   .38s cubic-bezier(.22,1,.36,1),
                   width  .38s cubic-bezier(.22,1,.36,1),
                   height .38s cubic-bezier(.22,1,.36,1);
       will-change: opacity, top, left, width, height;
+      contain: layout paint style;
+      transform: translateZ(0);
     }
     .step-modal.visible { opacity: 1; pointer-events: all; }
 
@@ -930,6 +967,30 @@
       .exprow button { flex: 1 1 100%; }
     }
 
+  
+    .preset-row { margin-top: 14px; padding: 12px; border: 1px solid var(--border); border-radius: calc(var(--r) - 2px); background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)); }
+    .preset-title { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+    .preset-title strong { font-size:clamp(.92rem,.72rem + .35vw,1rem); letter-spacing:.04em; text-transform:uppercase; color:#ddd; }
+    .preset-title span { font-size:clamp(.78rem,.62rem + .3vw,.88rem); color:#888; }
+    .preset-grid { display:grid; grid-template-columns:minmax(180px,1.25fr) minmax(180px,1fr) auto auto auto; gap:10px; align-items:end; }
+    .preset-grid .combo-wrap, .preset-grid select, .preset-grid input { width:100%; }
+    .preset-grid select {
+      background:#0b0b0b; color:#f2f2f2; border:1px solid var(--border); border-radius:12px;
+      padding:10px 12px; min-height:42px; font-size:clamp(.92rem,.76rem + .25vw,.98rem);
+    }
+    .preset-grid select:focus { outline:none; border-color:var(--theme-accent,#00FFD1); box-shadow:0 0 0 1px #00FFD130; }
+    .summary-strip {
+      display:grid; grid-template-columns:repeat(6,minmax(110px,1fr)); gap:10px; margin-top:12px; margin-bottom:12px;
+    }
+    .sum-card {
+      border:1px solid var(--border); border-radius:14px; background:#0a0a0a; padding:10px 12px;
+      box-shadow:0 6px 18px rgba(0,0,0,.18);
+    }
+    .sum-k { font-size:clamp(.75rem,.58rem + .25vw,.84rem); text-transform:uppercase; letter-spacing:.13em; color:#8f8f8f; font-family:var(--mono); }
+    .sum-v { margin-top:4px; font-size:clamp(1rem,.8rem + .55vw,1.28rem); font-weight:700; color:#fff; }
+    .sum-card.accent .sum-v { color:var(--theme-accent,#00FFD1); }
+    .render-note { margin-top:10px; font-size:clamp(.78rem,.6rem + .25vw,.88rem); color:#8f8f8f; }
+
   </style>
 </head>
 <body>
@@ -967,22 +1028,22 @@
           <div class="thb-step-text">Pick the <strong>key column</strong> that uniquely identifies each row in each file (e.g. Position #, Employee ID). Then choose which columns to compare and set your match options — case sensitivity, whitespace trimming, and empty-field handling.</div>
         </div>
       </div>
-      <div class="thb-step" data-step="02b">
-        <div class="thb-step-num">02b</div>
-        <div class="thb-step-body">
-          <div class="thb-step-title">Map Card Display Fields <span class="thb-opt">optional</span></div>
-          <div class="thb-step-text">Tell the tool which columns hold the <strong>position number</strong>, <strong>name</strong>, and <strong>description</strong> so result cards show meaningful labels instead of raw key values.</div>
-        </div>
-      </div>
       <div class="thb-step" data-step="03">
         <div class="thb-step-num">03</div>
         <div class="thb-step-body">
-          <div class="thb-step-title">Filter by Value <span class="thb-opt">optional</span></div>
-          <div class="thb-step-text">Narrow results to specific rows by picking a column and adding one or more values as filter pills. Matching uses <strong>OR logic</strong> — any row whose value matches at least one pill is shown.</div>
+          <div class="thb-step-title">Card Display Mapping <span class="thb-opt">optional</span></div>
+          <div class="thb-step-text">Tell the tool which columns hold the <strong>position number</strong>, <strong>name</strong>, and <strong>description</strong> so result cards show meaningful labels instead of raw key values.</div>
         </div>
       </div>
       <div class="thb-step" data-step="04">
         <div class="thb-step-num">04</div>
+        <div class="thb-step-body">
+          <div class="thb-step-title">Value Filter <span class="thb-opt">optional</span></div>
+          <div class="thb-step-text">Narrow results to specific rows by picking a column and adding one or more values as filter pills. Matching uses <strong>OR logic</strong> — any row whose value matches at least one pill is shown.</div>
+        </div>
+      </div>
+      <div class="thb-step" data-step="05">
+        <div class="thb-step-num">05</div>
         <div class="thb-step-body">
           <div class="thb-step-title">Run &amp; Review Results</div>
           <div class="thb-step-text">Hit <strong>Run Comparison</strong>. Results appear as colour-coded cards (Changed · Only in A · Only in B · Matched) or a flat table. Use the search bar and type filters to zero in on what matters, then export any subset as CSV.</div>
@@ -1010,15 +1071,15 @@
 
   <!-- Step 2: Configure -->
   <div class="panel">
-    <div class="phead">Step 2 — Configure</div>
+    <div class="phead">Step 2 — Configure Comparison</div>
     <div class="key-grid">
       <div>
         <label class="flbl" for="keyA">Key Column — CSV A</label>
-        <select id="keyA" disabled><option>— upload CSV A first —</option></select>
+        <div class="combo-wrap"><input id="keyA" class="combo-input" list="keyAList" disabled placeholder="— upload CSV A first —" autocomplete="off" /><datalist id="keyAList"></datalist><button type="button" class="combo-clear" data-clear-for="keyA" disabled aria-label="Clear Key Column CSV A">✕</button></div>
       </div>
       <div>
         <label class="flbl" for="keyB">Key Column — CSV B</label>
-        <select id="keyB" disabled><option>— upload CSV B first —</option></select>
+        <div class="combo-wrap"><input id="keyB" class="combo-input" list="keyBList" disabled placeholder="— upload CSV B first —" autocomplete="off" /><datalist id="keyBList"></datalist><button type="button" class="combo-clear" data-clear-for="keyB" disabled aria-label="Clear Key Column CSV B">✕</button></div>
       </div>
     </div>
 
@@ -1045,6 +1106,11 @@
         <span class="otoggle"></span>
         <span class="ochip-lbl">Trim whitespace</span>
       </label>
+      <label class="ochip on" id="ocD">
+        <input type="checkbox" id="optD" checked />
+        <span class="otoggle"></span>
+        <span class="ochip-lbl">Normalize dates + numeric zeros</span>
+      </label>
       <label class="ochip on" id="ocC">
         <input type="checkbox" id="optC" checked />
         <span class="otoggle"></span>
@@ -1056,25 +1122,47 @@
       <button class="primary" id="runBtn" disabled>⚡ Run Comparison</button>
       <button id="clearBtn">Clear All</button>
     </div>
+
+    <div class="preset-row">
+      <div class="preset-title">
+        <strong>Saved presets</strong>
+        <span>Save your key fields, selected columns, mappings, options, and value filter setup.</span>
+      </div>
+      <div class="preset-grid">
+        <div>
+          <label class="flbl" for="presetName">Preset Name</label>
+          <div class="combo-wrap"><input id="presetName" class="combo-input" type="text" placeholder="e.g. UMR Compare" autocomplete="off" /></div>
+        </div>
+        <div>
+          <label class="flbl" for="presetSelect">Load Preset</label>
+          <select id="presetSelect">
+            <option value="">— no saved presets —</option>
+          </select>
+        </div>
+        <button class="sm" id="presetSaveBtn" type="button">💾 Save / Update</button>
+        <button class="sm" id="presetLoadBtn" type="button">↺ Load</button>
+        <button class="sm" id="presetDeleteBtn" type="button">🗑 Delete</button>
+      </div>
+    </div>
   </div>
 
   <!-- Step 2b: Field Mapping -->
   <div class="panel">
-    <div class="phead">Card Display Mapping <span style="font-size:clamp(.83rem,.65rem + .4vw,.95rem);font-weight:400;color:var(--muted);letter-spacing:.03em;text-transform:none;margin-left:4px;">— point each header slot to your actual column name</span></div>
+    <div class="phead">Step 3 — Card Display Mapping <span style="font-size:clamp(.83rem,.65rem + .4vw,.95rem);font-weight:400;color:var(--muted);letter-spacing:.03em;text-transform:none;margin-left:4px;">— point each header slot to your actual column name</span></div>
     <div class="map-grid">
       <div class="map-field">
         <label class="map-field-lbl" for="mapPosition"><span class="map-icon">🔢</span>Position / Key ID</label>
-        <select id="mapPosition" disabled><option value="">— auto (uses key column) —</option></select>
+        <div class="combo-wrap"><input id="mapPosition" class="combo-input" list="mapPositionList" disabled placeholder="— auto (uses key column) —" autocomplete="off" /><datalist id="mapPositionList"></datalist><button type="button" class="combo-clear" data-clear-for="mapPosition" disabled aria-label="Clear Position Mapping">✕</button></div>
         <span class="map-hint">Shown as the # badge on each card</span>
       </div>
       <div class="map-field">
         <label class="map-field-lbl" for="mapSurname"><span class="map-icon">👤</span>Surname / Name</label>
-        <select id="mapSurname" disabled><option value="">— not mapped —</option></select>
+        <div class="combo-wrap"><input id="mapSurname" class="combo-input" list="mapSurnameList" disabled placeholder="— not mapped —" autocomplete="off" /><datalist id="mapSurnameList"></datalist><button type="button" class="combo-clear" data-clear-for="mapSurname" disabled aria-label="Clear Surname Mapping">✕</button></div>
         <span class="map-hint">Large text on the card header</span>
       </div>
       <div class="map-field">
         <label class="map-field-lbl" for="mapDesc"><span class="map-icon">📋</span>Position Description</label>
-        <select id="mapDesc" disabled><option value="">— not mapped —</option></select>
+        <div class="combo-wrap"><input id="mapDesc" class="combo-input" list="mapDescList" disabled placeholder="— not mapped —" autocomplete="off" /><datalist id="mapDescList"></datalist><button type="button" class="combo-clear" data-clear-for="mapDesc" disabled aria-label="Clear Position Description Mapping">✕</button></div>
         <span class="map-hint">Sub-line shown below name</span>
       </div>
     </div>
@@ -1091,9 +1179,7 @@
     <div class="vf-row">
       <div class="vf-col-wrap">
         <label class="flbl" for="vfCol">Filter Column</label>
-        <select id="vfCol" disabled>
-          <option value="">— upload files first —</option>
-        </select>
+        <div class="combo-wrap"><input id="vfCol" class="combo-input" list="vfColList" disabled placeholder="— upload files first —" autocomplete="off" /><datalist id="vfColList"></datalist><button type="button" class="combo-clear" data-clear-for="vfCol" disabled aria-label="Clear Filter Column">✕</button></div>
       </div>
       <div class="vf-input-wrap">
         <label class="flbl" for="vfInput">Add Value</label>
@@ -1123,7 +1209,7 @@
     <div class="phead" style="justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center;">
       <span style="display:flex;align-items:center;gap:8px;">
         <span style="display:block;width:2px;height:13px;border-radius:2px;background:var(--theme-accent,#00FFD1);flex-shrink:0"></span>
-        Step 3 — Results
+        Step 5 — Results
       </span>
       <div class="vtog">
         <button class="vtbtn active" id="vtCards">▦ Cards</button>
@@ -1132,6 +1218,9 @@
     </div>
 
     <div class="stats" id="statsEl"></div>
+    <div class="summary-strip" id="summaryStrip"></div>
+    <div class="diag-grid" id="diagGrid"></div>
+    <div class="intel-wrap" id="intelWrap"></div>
 
     <!-- filter bar (card view) -->
     <div class="fbar hidden" id="fbar">
@@ -1143,7 +1232,7 @@
         <span class="fc fg active" data-f="same">Matched</span>
       </div>
       <div class="fbar-search-wrap">
-        <input type="text" id="cardSearch" class="fbar-search" placeholder="🔍 Search position or name…" autocomplete="off" />
+        <input type="text" id="cardSearch" class="fbar-search" placeholder="🔍 Search position or name… use commas for multiple" autocomplete="off" />
         <span class="fbar-search-hint" id="searchHint"></span>
         <div class="search-dropdown" id="searchDropdown"></div>
       </div>
@@ -1153,7 +1242,7 @@
     <div class="rbody" id="rbody"></div>
   </div>
   <!-- Footer -->
-  <footer data-cgp-footer data-page="CSV Comparison Tool" data-version="v1.0.0"></footer>
+  <footer data-cgp-footer data-page="CSV Comparison Tool" data-version="v1.1.0"></footer>
 
 </div>
 
@@ -1167,7 +1256,9 @@ const S={
   diffs:[], onlyA:[], onlyB:[], matched:0,
   allKeys:[], mA:null, mB:null,
   ka:'', kb:'', cols:[],
-  view:'cards', filter:new Set(['changed','only-a','only-b','same'])
+  view:'cards', filter:new Set(['changed','only-a','only-b','same']),
+  integrity:null, intelligence:null,
+  resultRows:[], lastVisibleCount:0, searchDebounce:null, renderToken:null
 };
 
 const $=id=>document.getElementById(id);
@@ -1179,14 +1270,55 @@ const el={
   keyA:$('keyA'),keyB:$('keyB'),
   colGrid:$('colGrid'),
   selAll:$('selAll'),selNone:$('selNone'),
-  optA:$('optA'),optB:$('optB'),optC:$('optC'),
+  optA:$('optA'),optB:$('optB'),optC:$('optC'),optD:$('optD'),
   mapPosition:$('mapPosition'),mapSurname:$('mapSurname'),mapDesc:$('mapDesc'),
   runBtn:$('runBtn'),clearBtn:$('clearBtn'),
   rPanel:$('resultsPanel'),
-  statsEl:$('statsEl'),
+  statsEl:$('statsEl'),summaryStrip:$('summaryStrip'),diagGrid:$('diagGrid'),intelWrap:$('intelWrap'),
   fbar:$('fbar'),rbody:$('rbody'),exprow:$('exprow'),
-  vtCards:$('vtCards'),vtTable:$('vtTable')
+  vtCards:$('vtCards'),vtTable:$('vtTable'),
+  presetName:$('presetName'),presetSelect:$('presetSelect'),
+  presetSaveBtn:$('presetSaveBtn'),presetLoadBtn:$('presetLoadBtn'),presetDeleteBtn:$('presetDeleteBtn')
 };
+
+
+function comboListFor(input){ return document.getElementById(input.id+'List'); }
+function escAttr(s){ return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function setComboOptions(input, options, placeholder=''){
+  const list = comboListFor(input);
+  if(!list) return;
+  const cur = input.value;
+  const uniq = [...new Set((options||[]).map(v=>String(v??'').trim()).filter(Boolean))];
+  list.innerHTML = uniq.map(v=>`<option value="${escAttr(v)}"></option>`).join('');
+  if(placeholder) input.placeholder = placeholder;
+  input.dataset.options = JSON.stringify(uniq);
+  if(cur && uniq.includes(cur)) input.value = cur;
+}
+function comboOptions(input){
+  try { return JSON.parse(input.dataset.options || '[]'); } catch(e){ return []; }
+}
+function comboValue(input){
+  const v = String(input.value||'').trim();
+  if(!v) return '';
+  const opts = comboOptions(input);
+  const exact = opts.find(o=>o.toLowerCase()===v.toLowerCase());
+  return exact || v;
+}
+function setComboDisabled(input, disabled){
+  input.disabled = !!disabled;
+  const clearBtn = document.querySelector(`.combo-clear[data-clear-for="${input.id}"]`);
+  if(clearBtn) clearBtn.disabled = !!disabled;
+}
+document.addEventListener('click', e=>{
+  const btn = e.target.closest('.combo-clear');
+  if(!btn) return;
+  const input = $(btn.dataset.clearFor);
+  if(!input || input.disabled) return;
+  input.value='';
+  input.dispatchEvent(new Event('input', {bubbles:true}));
+  input.dispatchEvent(new Event('change', {bubbles:true}));
+  input.focus();
+});
 
 /* CSV */
 function csvParse(text){
@@ -1225,8 +1357,8 @@ function loadFile(w,f){
     zone.classList.add('loaded');
     nameEl.className='fname';nameEl.textContent=f.name;
     iconEl.textContent='📋';
-    keyEl.disabled=false;
-    keyEl.innerHTML=p.headers.map(h=>`<option value="${esc(h)}">${esc(h)}</option>`).join('');
+    setComboDisabled(keyEl,false);
+    setComboOptions(keyEl,p.headers,w==='A'?'— upload CSV A first —':'— upload CSV B first —');
     keyEl.value=inferKey(p.headers)||p.headers[0];
     updateColGrid();updateRunBtn();
   });
@@ -1246,9 +1378,9 @@ function updateMappingSelects(){
   const allH=[...new Set([...S.csvA.headers,...S.csvB.headers])];
 
   function populate(sel, hintPatterns, blankLabel){
-    const cur=sel.value;
-    sel.disabled=false;
-    sel.innerHTML=`<option value="">${blankLabel}</option>`+allH.map(h=>`<option value="${esc(h)}">${esc(h)}</option>`).join('');
+    const cur=comboValue(sel);
+    setComboDisabled(sel,false);
+    setComboOptions(sel,allH,blankLabel);
     // try to restore previous selection
     if(cur&&allH.includes(cur)){ sel.value=cur; return; }
     // auto-detect
@@ -1266,7 +1398,7 @@ function updateMappingSelects(){
 
 function updateColGrid(){
   if(!S.csvA.headers.length||!S.csvB.headers.length)return;
-  const ka=el.keyA.value,kb=el.keyB.value;
+  const ka=comboValue(el.keyA),kb=comboValue(el.keyB);
   const setA=new Set(S.csvA.headers.filter(h=>h!==ka));
   const setB=new Set(S.csvB.headers.filter(h=>h!==kb));
   const union=[...new Set([...setA,...setB])].filter(h=>h!==ka&&h!==kb);
@@ -1322,12 +1454,330 @@ function updateRunBtn(){
 }
 
 /* compare */
-function norm(v){let s=String(v??'');if(el.optB.checked)s=s.trim();if(el.optA.checked)s=s.toLowerCase();return s;}
-function byKey(rows,key){const m=new Map();rows.forEach(r=>{const k=String(r[key]??'').trim();if(k)m.set(k,r);});return m;}
+function pad2(n){return String(n).padStart(2,'0');}
+function normalizeDateToken(s){
+  const raw=String(s??'');
+  if(!raw)return raw;
+  const t=raw.trim();
+  if(!t)return t;
+
+  let m=t.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if(m){
+    const y=+m[1], mo=+m[2], d=+m[3];
+    if(mo>=1&&mo<=12&&d>=1&&d<=31)return `${y}-${pad2(mo)}-${pad2(d)}`;
+  }
+
+  m=t.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+  if(m){
+    const mo=+m[1], d=+m[2], y=+m[3];
+    if(mo>=1&&mo<=12&&d>=1&&d<=31)return `${y}-${pad2(mo)}-${pad2(d)}`;
+  }
+
+  m=t.match(/^([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})$/);
+  if(m){
+    const months={jan:1,january:1,feb:2,february:2,mar:3,march:3,apr:4,april:4,may:5,jun:6,june:6,jul:7,july:7,aug:8,august:8,sep:9,september:9,oct:10,october:10,nov:11,november:11,dec:12,december:12};
+    const mo=months[m[1].toLowerCase()];
+    const d=+m[2], y=+m[3];
+    if(mo&&d>=1&&d<=31)return `${y}-${pad2(mo)}-${pad2(d)}`;
+  }
+
+  return raw;
+}
+function normalizeKey(val){
+  if(val===undefined || val===null) return "";
+  let v=String(val).trim();
+  v=v.replace(/^0+/, "");
+  return v.toUpperCase();
+}
+function normalizeNumericToken(s){
+  const raw=String(s??'');
+  if(!raw)return raw;
+  const t=raw.trim();
+  if(!t)return t;
+  if(!/^[+-]?\d+(?:\.\d+)?$/.test(t))return raw;
+
+  let sign='';
+  let body=t;
+  if(body[0]==='+' || body[0]==='-'){
+    sign=body[0]==='-'?'-':'';
+    body=body.slice(1);
+  }
+
+  let out='';
+  if(body.includes('.')){
+    let [intPart, fracPart]=body.split('.');
+    intPart=intPart.replace(/^0+(?=\d)/,'');
+    if(!intPart) intPart='0';
+    fracPart=(fracPart||'').replace(/0+$/,'');
+    out=fracPart ? `${intPart}.${fracPart}` : intPart;
+  }else{
+    out=body.replace(/^0+(?=\d)/,'') || '0';
+  }
+
+  return (sign + out) === '-0' ? '0' : sign + out;
+}
+function canonicalHeader(h){
+  return String(h??'').replace(/\s+/g,' ').trim().toUpperCase();
+}
+function findActualHeader(row,col){
+  if(!row || !col) return '';
+  if(Object.prototype.hasOwnProperty.call(row,col)) return col;
+  const target=canonicalHeader(col);
+  return Object.keys(row).find(k=>canonicalHeader(k)===target) || '';
+}
+function getRowVal(row,col){
+  const actual=findActualHeader(row,col);
+  return actual ? row[actual] : undefined;
+}
+function norm(v){
+  let s=String(v??'');
+  if(el.optB.checked)s=s.trim();
+  if(el.optD.checked){
+    const maybeDate=normalizeDateToken(s);
+    s=maybeDate!==String(s??'')?maybeDate:normalizeNumericToken(s);
+  }
+  if(el.optA.checked)s=s.toLowerCase();
+  return s;
+}
+function byKey(rows,key){const m=new Map();rows.forEach(r=>{const k=normalizeKey(getRowVal(r,key));if(k)m.set(k,r);});return m;}
 function selCols(){return[...el.colGrid.querySelectorAll('input[data-col]:checked')].map(cb=>cb.getAttribute('data-col'));}
 
+function findHeader(headers, patterns){
+  const list=headers||[];
+  const lower=list.map(h=>String(h).toLowerCase());
+  for(const pat of patterns){
+    const idx=lower.findIndex(h=>h.includes(pat));
+    if(idx>=0) return list[idx];
+  }
+  return '';
+}
+function computeIntegrity(rows, keyName){
+  const seen=new Map(), sampleDuplicates=[];
+  let blanks=0, duplicates=0, normalizedChanged=0;
+  rows.forEach((r,i)=>{
+    const raw=String(getRowVal(r,keyName)??'');
+    const trimmed=raw.trim();
+    const normKey=normalizeKey(raw);
+    if(trimmed && normKey !== trimmed.toUpperCase()) normalizedChanged++;
+    if(!normKey){ blanks++; return; }
+    if(seen.has(normKey)){ duplicates++; if(sampleDuplicates.length<5) sampleDuplicates.push(normKey); }
+    else seen.set(normKey,i);
+  });
+  return {rows:rows.length, blanks, duplicates, normalizedChanged, uniqueKeys:seen.size, sampleDuplicates};
+}
+function computeChangeIntelligence(){
+  const allHeaders=[...new Set([...S.csvA.headers,...S.csvB.headers])];
+  const nameCol=findHeader(allHeaders,['surname','name','member','employee']);
+  const reportsCol=findHeader(allHeaders,['reports to']);
+  const sectionCol=findHeader(allHeaders,['section']);
+  let memberChange=0, vacated=0, filled=0, reportsChange=0, sectionChange=0;
+  const kA=new Set(S.mA.keys()), kB=new Set(S.mB.keys());
+  const inter=[...kA].filter(k=>kB.has(k));
+  inter.forEach(k=>{
+    const a=S.mA.get(k)||{}, b=S.mB.get(k)||{};
+    if(nameCol){
+      const av=norm(a[nameCol]??''), bv=norm(b[nameCol]??'');
+      if(av!==bv){
+        const aEmpty=!String(a[nameCol]??'').trim(), bEmpty=!String(b[nameCol]??'').trim();
+        if(!aEmpty && bEmpty) vacated++;
+        else if(aEmpty && !bEmpty) filled++;
+        else memberChange++;
+      }
+    }
+    if(reportsCol && norm(a[reportsCol]??'') !== norm(b[reportsCol]??'')) reportsChange++;
+    if(sectionCol && norm(a[sectionCol]??'') !== norm(b[sectionCol]??'')) sectionChange++;
+  });
+  return {memberChange, vacated, filled, reportsChange, sectionChange, nameCol, reportsCol, sectionCol};
+}
+function renderDiagnostics(){
+  const d=S.integrity;
+  if(!d){ el.diagGrid.innerHTML=''; return; }
+  function card(title,obj){
+    const warn=(n)=>n>0?'warn':'';
+    const bad=(n)=>n>0?'bad':'';
+    return `<div class="diag-card">
+      <div class="diag-title">${title}</div>
+      <div class="diag-row"><span class="diag-k">Rows</span><span class="diag-v">${obj.rows}</span></div>
+      <div class="diag-row"><span class="diag-k">Unique keys</span><span class="diag-v">${obj.uniqueKeys}</span></div>
+      <div class="diag-row"><span class="diag-k">Blank keys</span><span class="diag-v ${bad(obj.blanks)}">${obj.blanks}</span></div>
+      <div class="diag-row"><span class="diag-k">Duplicate keys</span><span class="diag-v ${bad(obj.duplicates)}">${obj.duplicates}</span></div>
+      <div class="diag-row"><span class="diag-k">Keys normalized</span><span class="diag-v ${warn(obj.normalizedChanged)}">${obj.normalizedChanged}</span></div>
+    </div>`;
+  }
+  el.diagGrid.innerHTML = card('CSV A integrity', d.a) + card('CSV B integrity', d.b);
+}
+function renderIntelligence(){
+  const x=S.intelligence;
+  if(!x){ el.intelWrap.innerHTML=''; return; }
+  const pills=[];
+  if(x.vacated) pills.push(`<span class="intel-pill">Vacated positions <strong>${x.vacated}</strong></span>`);
+  if(x.filled) pills.push(`<span class="intel-pill">Filled positions <strong>${x.filled}</strong></span>`);
+  if(x.memberChange) pills.push(`<span class="intel-pill">Member/name changes <strong>${x.memberChange}</strong></span>`);
+  if(x.reportsChange) pills.push(`<span class="intel-pill">Reports-to changes <strong>${x.reportsChange}</strong></span>`);
+  if(x.sectionChange) pills.push(`<span class="intel-pill">Section changes <strong>${x.sectionChange}</strong></span>`);
+  if(!pills.length) pills.push('<span class="intel-pill">No detected structural/member change patterns in matched rows.</span>');
+  el.intelWrap.innerHTML=pills.join('');
+}
+
+
+function searchNorm(v){
+  return String(v??'')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function buildRowSearchBase(key, rowA, rowB){
+  const bits = [key];
+  if(rowA) bits.push(...Object.values(rowA));
+  if(rowB) bits.push(...Object.values(rowB));
+  return searchNorm(bits.filter(v=>v!==undefined && v!==null).join(' '));
+}
+function getDisplayValue(rowA, rowB, col, fallback=''){
+  if(!col) return fallback;
+  const a = getRowVal(rowA, col);
+  const b = getRowVal(rowB, col);
+  return a || b || fallback;
+}
+function buildResultRows(allKeys, dm, kA, kB){
+  return allKeys.map(k=>{
+    const diffs = dm.get(k) || [];
+    const inA = kA.has(k), inB = kB.has(k);
+    const rowA = S.mA.get(k) || null;
+    const rowB = S.mB.get(k) || null;
+    const type = !inA ? 'only-b' : !inB ? 'only-a' : diffs.length > 0 ? 'changed' : 'same';
+    return {
+      key:k, diffs, rowA, rowB, type,
+      searchBase: buildRowSearchBase(k, rowA, rowB)
+    };
+  });
+}
+function getDisplayRows(){
+  const colPos = comboValue(el.mapPosition) || null;
+  const colSname = comboValue(el.mapSurname) || null;
+  const colDesc = comboValue(el.mapDesc) || null;
+  return S.resultRows
+    .filter(rec => S.filter.has(rec.type))
+    .filter(rec => vfRowPass(rec.rowA, rec.rowB))
+    .map(rec=>{
+      const posNum = colPos ? getDisplayValue(rec.rowA, rec.rowB, colPos, rec.key) : rec.key;
+      const surname = colSname ? getDisplayValue(rec.rowA, rec.rowB, colSname, '') : '';
+      const desc = colDesc ? getDisplayValue(rec.rowA, rec.rowB, colDesc, '') : '';
+      return {
+        ...rec,
+        posNum, surname, desc,
+        searchIndex: searchNorm([rec.searchBase, posNum, surname, desc].join(' '))
+      };
+    });
+}
+function renderSummary(totalVisible){
+  const counts = {
+    total: S.resultRows.length,
+    visible: Number(totalVisible ?? S.lastVisibleCount ?? 0),
+    changed: S.resultRows.filter(r=>r.type==='changed').length,
+    onlyA: S.resultRows.filter(r=>r.type==='only-a').length,
+    onlyB: S.resultRows.filter(r=>r.type==='only-b').length,
+    same: S.resultRows.filter(r=>r.type==='same').length
+  };
+  el.summaryStrip.innerHTML = `
+    <div class="sum-card accent"><div class="sum-k">Records</div><div class="sum-v">${counts.total}</div></div>
+    <div class="sum-card accent"><div class="sum-k">Visible</div><div class="sum-v">${counts.visible}</div></div>
+    <div class="sum-card"><div class="sum-k">Changed</div><div class="sum-v">${counts.changed}</div></div>
+    <div class="sum-card"><div class="sum-k">Only A</div><div class="sum-v">${counts.onlyA}</div></div>
+    <div class="sum-card"><div class="sum-k">Only B</div><div class="sum-v">${counts.onlyB}</div></div>
+    <div class="sum-card"><div class="sum-k">Matched</div><div class="sum-v">${counts.same}</div></div>`;
+}
+function currentPresetPayload(name){
+  return {
+    name,
+    keyA: comboValue(el.keyA),
+    keyB: comboValue(el.keyB),
+    selectedCols: selCols(),
+    options: { ignoreCase: el.optA.checked, trimWhitespace: el.optB.checked, treatMissingAsEmpty: el.optC.checked, normalizeDatesAndZeros: el.optD.checked },
+    mappings: { position: comboValue(el.mapPosition), surname: comboValue(el.mapSurname), desc: comboValue(el.mapDesc) },
+    valueFilter: { col: comboValue(vfEl.col), values: [...S.vf.values] },
+    view: S.view
+  };
+}
+function readPresets(){
+  try { return JSON.parse(localStorage.getItem('cgp_csv_compare_presets') || '[]'); } catch(e){ return []; }
+}
+function writePresets(presets){
+  localStorage.setItem('cgp_csv_compare_presets', JSON.stringify(presets));
+}
+function refreshPresetSelect(selected=''){
+  const presets = readPresets().sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  el.presetSelect.innerHTML = presets.length
+    ? `<option value="">— choose a preset —</option>` + presets.map(p=>`<option value="${escAttr(p.name)}"${p.name===selected?' selected':''}>${esc(p.name)}</option>`).join('')
+    : '<option value="">— no saved presets —</option>';
+}
+function setChipState(chipId, checked){
+  const chip = $(chipId);
+  if(chip) chip.classList.toggle('on', !!checked);
+}
+function applyPresetState(preset){
+  if(!preset) return;
+  if(preset.keyA) el.keyA.value = preset.keyA;
+  if(preset.keyB) el.keyB.value = preset.keyB;
+  updateColGrid();
+  const selected = new Set(preset.selectedCols || []);
+  el.colGrid.querySelectorAll('input[data-col]').forEach(cb=>{
+    cb.checked = selected.has(cb.getAttribute('data-col'));
+    cb.closest('.cchip')?.classList.toggle('on', cb.checked);
+  });
+  el.optA.checked = !!preset.options?.ignoreCase; setChipState('ocA', el.optA.checked);
+  el.optB.checked = !!preset.options?.trimWhitespace; setChipState('ocB', el.optB.checked);
+  el.optC.checked = !!preset.options?.treatMissingAsEmpty; setChipState('ocC', el.optC.checked);
+  el.optD.checked = !!preset.options?.normalizeDatesAndZeros; setChipState('ocD', el.optD.checked);
+  el.mapPosition.value = preset.mappings?.position || '';
+  el.mapSurname.value = preset.mappings?.surname || '';
+  el.mapDesc.value = preset.mappings?.desc || '';
+  vfEl.col.value = preset.valueFilter?.col || '';
+  const hasCol = !!comboValue(vfEl.col);
+  vfEl.input.disabled = !hasCol;
+  vfEl.addBtn.disabled = !hasCol;
+  S.vf.col = comboValue(vfEl.col) || '';
+  S.vf.values = new Set((preset.valueFilter?.values || []).filter(Boolean));
+  vfRenderPills();
+  if((preset.view || 'cards') === 'table'){
+    S.view='table'; el.vtTable.classList.add('active'); el.vtCards.classList.remove('active');
+  } else {
+    S.view='cards'; el.vtCards.classList.add('active'); el.vtTable.classList.remove('active');
+  }
+  updateRunBtn();
+}
+function savePreset(){
+  const name = String(el.presetName.value || el.presetSelect.value || '').trim();
+  if(!name) return;
+  const presets = readPresets();
+  const payload = currentPresetPayload(name);
+  const idx = presets.findIndex(p=>p.name.toLowerCase()===name.toLowerCase());
+  if(idx >= 0) presets[idx] = payload; else presets.push(payload);
+  writePresets(presets);
+  el.presetName.value = name;
+  refreshPresetSelect(name);
+}
+function loadSelectedPreset(){
+  const name = String(el.presetSelect.value || el.presetName.value || '').trim();
+  if(!name) return;
+  const preset = readPresets().find(p=>p.name.toLowerCase()===name.toLowerCase());
+  if(!preset) return;
+  el.presetName.value = preset.name;
+  applyPresetState(preset);
+  if(!el.rPanel.classList.contains('hidden')) renderView();
+}
+function deleteSelectedPreset(){
+  const name = String(el.presetSelect.value || el.presetName.value || '').trim();
+  if(!name) return;
+  const presets = readPresets().filter(p=>p.name.toLowerCase()!==name.toLowerCase());
+  writePresets(presets);
+  el.presetName.value = '';
+  refreshPresetSelect('');
+}
+
 el.runBtn.addEventListener('click',()=>{
-  const ka=el.keyA.value,kb=el.keyB.value,cols=selCols();
+  const ka=comboValue(el.keyA), kb=comboValue(el.keyB), cols=selCols();
   const mA=byKey(S.csvA.rows,ka),mB=byKey(S.csvB.rows,kb);
   const kA=new Set(mA.keys()),kB=new Set(mB.keys());
   const inter=[...kA].filter(k=>kB.has(k));
@@ -1337,24 +1787,34 @@ el.runBtn.addEventListener('click',()=>{
   S.onlyB=onlyB.map(k=>mB.get(k));
   S.matched=inter.length;
   S.mA=mA;S.mB=mB;S.ka=ka;S.kb=kb;S.cols=cols;
+  S.integrity={a:computeIntegrity(S.csvA.rows,ka), b:computeIntegrity(S.csvB.rows,kb)};
+  S.intelligence=computeChangeIntelligence();
   const allKeys=[...new Set([...inter,...onlyA,...onlyB])];
   S.allKeys=allKeys;
   const diffs=[];
+  const dm=new Map();
   for(const k of allKeys){
     const a=mA.get(k)||{},b=mB.get(k)||{};
     for(const col of cols){
-      const hA=Object.prototype.hasOwnProperty.call(a,col);
-      const hB=Object.prototype.hasOwnProperty.call(b,col);
-      const vA=hA?a[col]:(el.optC.checked?'':undefined);
-      const vB=hB?b[col]:(el.optC.checked?'':undefined);
+      const actualA=findActualHeader(a,col);
+      const actualB=findActualHeader(b,col);
+      const hA=!!actualA;
+      const hB=!!actualB;
+      const vA=hA?a[actualA]:(el.optC.checked?'':undefined);
+      const vB=hB?b[actualB]:(el.optC.checked?'':undefined);
       if(vA===undefined&&vB===undefined)continue;
       if(norm(vA)!==norm(vB)){
         const type=!kA.has(k)?'only-b':!kB.has(k)?'only-a':'changed';
-        diffs.push({key:k,column:col,a:vA??'',b:vB??'',type});
+        const diff={key:k,column:col,a:vA??'',b:vB??'',type};
+        diffs.push(diff);
+        if(!dm.has(k)) dm.set(k, []);
+        dm.get(k).push(diff);
       }
     }
   }
   S.diffs=diffs;
+  S.resultRows = buildResultRows(allKeys, dm, kA, kB);
+  S.lastVisibleCount = S.resultRows.length;
   renderResults(inter.length,onlyA.length,onlyB.length,diffs.length);
 });
 
@@ -1366,6 +1826,9 @@ function renderResults(mc,ac,bc,dc){
     <div class="sbox"><div class="snum${ac>0?' w':''}">${ac}</div><div class="slbl">Only A</div></div>
     <div class="sbox"><div class="snum${bc>0?' w':''}">${bc}</div><div class="slbl">Only B</div></div>
     <div class="sbox"><div class="snum${dc>0?' d':' s'}">${dc}</div><div class="slbl">Differences</div></div>`;
+  renderDiagnostics();
+  renderIntelligence();
+  renderSummary(S.resultRows.length);
   renderView();
   buildExport();
   setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'start'}),80);
@@ -1392,38 +1855,13 @@ el.fbar.querySelectorAll('.fc').forEach(fc=>{
 
 /* ── CARD VIEW ── */
 function renderCards(){
-  if(!S.allKeys.length){el.rbody.innerHTML='<div class="smsg empty">No records to display.</div>';return;}
+  if(!S.resultRows.length){el.rbody.innerHTML='<div class="smsg empty">No records to display.</div>'; renderSummary(0); return;}
 
-  const dm=new Map();
-  S.diffs.forEach(d=>{if(!dm.has(d.key))dm.set(d.key,[]);dm.get(d.key).push(d);});
+  const rows = getDisplayRows();
+  if(!rows.length){el.rbody.innerHTML='<div class="smsg empty">No cards match the current filter.</div>'; renderSummary(0); return;}
 
-  const kA=new Set(S.mA.keys()),kB=new Set(S.mB.keys());
-
-  // read field mapping from control panel
-  const colPos   = el.mapPosition.value || null; // null = use key itself
-  const colSname = el.mapSurname.value  || null;
-  const colDesc  = el.mapDesc.value     || null;
-
-  let shown=0;
-  const parts=[];
-
-  for(const k of S.allKeys){
-    const diffs=dm.get(k)||[];
-    const inA=kA.has(k),inB=kB.has(k);
-    const type=!inA?'only-b':!inB?'only-a':diffs.length>0?'changed':'same';
-    if(!S.filter.has(type))continue;
-
-    const rowA=S.mA.get(k)||null;
-    const rowB=S.mB.get(k)||null;
-
-    // Step 4 value filter
-    if(!vfRowPass(rowA, rowB))continue;
-    shown++;
-
-    // resolve display values — prefer A, fall back to B
-    const posNum  = colPos   ? (rowA?.[colPos]  ||rowB?.[colPos]  ||k) : k;
-    const surname = colSname ? (rowA?.[colSname]||rowB?.[colSname]||'') : '';
-    const desc    = colDesc  ? (rowA?.[colDesc] ||rowB?.[colDesc] ||'') : '';
+  const parts = rows.map(rec=>{
+    const {key:k, diffs, rowA, rowB, type, posNum, surname, desc, searchIndex} = rec;
 
     let pillHtml='';
     if(type==='changed') pillHtml=`<span class="pc-pill pp-changed">CHANGED · ${diffs.length} field${diffs.length!==1?'s':''}</span>`;
@@ -1446,7 +1884,6 @@ function renderCards(){
       </div>`;
 
     let bodyHtml='';
-
     if(type==='only-a'||type==='only-b'){
       const row=type==='only-a'?rowA:rowB;
       const dot=type==='only-a'?'dot-a':'dot-b';
@@ -1454,130 +1891,243 @@ function renderCards(){
       bodyHtml=`<div class="only-body">
         <div class="pside-lbl"><span class="${dot}"></span>${lbl}</div>
         ${S.cols.map(col=>{
-          const v=row?.[col]??'';
+          const v=getRowVal(row,col)??'';
           return `<div class="frow"><span class="fk" title="${esc(col)}">${esc(col)}</span><span class="fv ${v===''?'empty':''}">${v===''?'<i>empty</i>':esc(v)}</span></div>`;
         }).join('')}
       </div>`;
-
     } else {
       const diffCols=new Set(diffs.map(d=>d.column));
       const showCols=type==='changed'?S.cols.filter(c=>diffCols.has(c)):S.cols;
-
       const sideHtml=(row,which)=>`
         <div class="pside">
           <div class="pside-lbl"><span class="${which==='a'?'dot-a':'dot-b'}"></span>CSV ${which.toUpperCase()}</div>
           ${showCols.map(col=>{
             const isDiff=diffCols.has(col);
-            const v=row?.[col]??'';
+            const v=getRowVal(row,col)??'';
             const cls=isDiff?'diff':v===''?'empty':'';
             return `<div class="frow"><span class="fk" title="${esc(col)}">${esc(col)}</span><span class="fv ${cls}">${v===''?'<i>empty</i>':esc(v)}</span></div>`;
           }).join('')}
         </div>`;
-
       bodyHtml=`<div class="split" style="--split-col:1fr;--split-col-px:50%">${sideHtml(rowA,'a')}<div class="split-drag" data-drag="split"></div>${sideHtml(rowB,'b')}</div>`;
     }
 
     const isOpen=type!=='same';
     const rttBtn=`<button class="rts-btn" onclick="var s=document.getElementById('cardSearch');s.scrollIntoView({behavior:'smooth',block:'center'});s.focus();">↑ return to search</button>`;
-    parts.push(`
-      <div class="pcard type-${type}${isOpen?' open':''}" data-posnum="${esc(String(posNum).toLowerCase())}" data-surname="${esc(String(surname).toLowerCase())}">
+    return `
+      <div class="pcard type-${type}${isOpen?' open':''}" data-key="${escAttr(k)}" data-posnum="${escAttr(String(posNum).toLowerCase())}" data-surname="${escAttr(String(surname).toLowerCase())}" data-search="${escAttr(searchIndex)}">
         ${headerHtml}
         <div class="pcbody">${bodyHtml}${rttBtn}</div>
-      </div>`);
+      </div>`;
+  });
+
+  el.rbody.innerHTML=`<div class="cards-grid"></div><div class="render-note" id="renderNote"></div>`;
+  const grid = el.rbody.querySelector('.cards-grid');
+  const note = $('renderNote');
+  const renderToken = Symbol('card-render');
+  S.renderToken = renderToken;
+  const chunkSize = 160;
+  let idx = 0;
+
+  function wireRenderedBits(scope){
+    scope.querySelectorAll('.split-drag').forEach(handle=>{
+      if(handle.dataset.wired === '1') return;
+      handle.dataset.wired = '1';
+      handle.addEventListener('mousedown', e=>{
+        e.preventDefault();
+        const split = handle.closest('.split');
+        const startX = e.clientX;
+        const startW = split.getBoundingClientRect().width;
+        const startLeft = handle.offsetLeft + 3;
+        handle.classList.add('dragging');
+
+        function onMove(ev){
+          const delta = ev.clientX - startX;
+          const newLeft = Math.max(80, Math.min(startW - 80, startLeft + delta));
+          const pct = (newLeft / startW * 100).toFixed(1);
+          split.style.gridTemplateColumns = `${pct}% 1fr`;
+          split.style.setProperty('--split-col-px', newLeft+'px');
+        }
+        function onUp(){
+          handle.classList.remove('dragging');
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    });
   }
 
-  if(!shown){el.rbody.innerHTML='<div class="smsg empty">No cards match the current filter.</div>';return;}
-  el.rbody.innerHTML=`<div class="cards-grid">${parts.join('')}</div>`;
-
-  el.rbody.querySelectorAll('.pchead').forEach(h=>{
-    h.addEventListener('click', e => {
-      // Don't expand if user was interacting with a button inside the header
-      if(e.target.closest('button')) return;
-      openCardModal(h.closest('.pcard'));
-    });
-  });
-
-  // Draggable column divider for split cards
-  el.rbody.querySelectorAll('.split-drag').forEach(handle=>{
-    handle.addEventListener('mousedown', e=>{
-      e.preventDefault();
-      const split = handle.closest('.split');
-      const startX = e.clientX;
-      const startW = split.getBoundingClientRect().width;
-      const startLeft = handle.offsetLeft + 3; // center of handle
-      handle.classList.add('dragging');
-
-      function onMove(ev){
-        const delta = ev.clientX - startX;
-        const newLeft = Math.max(80, Math.min(startW - 80, startLeft + delta));
-        const pct = (newLeft / startW * 100).toFixed(1);
-        split.style.gridTemplateColumns = `${pct}% 1fr`;
-        split.style.setProperty('--split-col-px', newLeft+'px');
+  function appendChunk(){
+    if(S.renderToken !== renderToken) return;
+    const slice = parts.slice(idx, idx + chunkSize).join('');
+    grid.insertAdjacentHTML('beforeend', slice);
+    wireRenderedBits(grid);
+    idx += chunkSize;
+    if(note){
+      const shown = Math.min(idx, parts.length);
+      note.textContent = parts.length > chunkSize ? `Rendering ${shown.toLocaleString()} of ${parts.length.toLocaleString()} cards…` : '';
+    }
+    if(idx < parts.length){
+      requestAnimationFrame(appendChunk);
+    } else {
+      if(note) note.textContent = parts.length > chunkSize ? `Rendered ${parts.length.toLocaleString()} cards.` : '';
+      const currentSearch = ($('cardSearch')?.value || '').trim();
+      if(currentSearch) doSearch(currentSearch);
+      else {
+        S.lastVisibleCount = parts.length;
+        renderSummary(parts.length);
       }
-      function onUp(){
-        handle.classList.remove('dragging');
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      }
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
-  });
+    }
+  }
+  appendChunk();
 }
 
 /* ── CARD SEARCH ── */
 (function wireSearch(){
-  let searchTimer=null;
   const inp=$('cardSearch');
   const dropdown=$('searchDropdown');
 
-  document.addEventListener('input',function(e){
-    if(e.target.id!=='cardSearch')return;
-    clearTimeout(searchTimer);
-    searchTimer=setTimeout(()=>doSearch(e.target.value.trim()),200);
-  });
+  function queueSearch(target){
+    if(!target || target.id!=='cardSearch') return;
+    clearTimeout(S.searchDebounce);
+    S.searchDebounce = setTimeout(()=>doSearch(target.value.trim()), 100);
+  }
 
-  // close dropdown when clicking outside
+  document.addEventListener('input',function(e){ queueSearch(e.target); });
+  document.addEventListener('change',function(e){ queueSearch(e.target); });
+
   document.addEventListener('click',function(e){
     if(!e.target.closest('.fbar-search-wrap')){
       dropdown.classList.remove('open');
     }
   });
 
-  // reopen dropdown on refocus if there's a query
   if(inp) inp.addEventListener('focus',function(){
     if(this.value.trim()) doSearch(this.value.trim());
   });
 })();
 
+function parseSearchTerms(q){
+  return [...new Set(
+    String(q??'')
+      .split(',')
+      .map(x=>x.trim().toLowerCase())
+      .filter(Boolean)
+  )];
+}
+
+function appendSearchTerm(rawTerm){
+  const inp=$('cardSearch');
+  if(!inp) return;
+  const term=String(rawTerm??'').trim();
+  if(!term) return;
+
+  const value=String(inp.value||'');
+  const selStart=typeof inp.selectionStart==='number' ? inp.selectionStart : value.length;
+  const selEnd=typeof inp.selectionEnd==='number' ? inp.selectionEnd : selStart;
+
+  let segStart=value.lastIndexOf(',', Math.max(0, selStart - 1));
+  segStart = segStart === -1 ? 0 : segStart + 1;
+  let segEnd=value.indexOf(',', selEnd);
+  segEnd = segEnd === -1 ? value.length : segEnd;
+
+  const before=value.slice(0, segStart);
+  const after=value.slice(segEnd);
+  const beforeGap=(before && !/\s$/.test(before)) ? ' ' : '';
+  const afterGap=(after && !/^\s|^,/.test(after)) ? ' ' : '';
+
+  inp.value=`${before}${beforeGap}${term}${afterGap}${after}`
+    .replace(/\s+,/g, ',')
+    .replace(/,{2,}/g, ',')
+    .replace(/^\s+|\s+$/g, '');
+
+  inp.focus();
+  try{
+    const caret=(before + beforeGap + term).length;
+    inp.setSelectionRange(caret, caret);
+  }catch(_e){}
+}
+
 function doSearch(q){
   const hint=$('searchHint');
   const dropdown=$('searchDropdown');
-  const cards=el.rbody.querySelectorAll('.pcard');
-  cards.forEach(c=>c.classList.remove('search-match'));
+  const cards=[...el.rbody.querySelectorAll('.pcard')];
+  const grid=el.rbody.querySelector('.cards-grid');
+  let emptyBox=el.rbody.querySelector('.search-empty-state');
+
+  cards.forEach(c=>{
+    c.classList.remove('search-match');
+    c.classList.remove('search-hidden');
+    c.style.display='';
+    c.removeAttribute('aria-hidden');
+  });
+  if(emptyBox) emptyBox.remove();
 
   if(!q){
+    cards.forEach(c=>{
+      c.classList.remove('search-hidden');
+      c.style.display='';
+      c.removeAttribute('aria-hidden');
+    });
+    S.lastVisibleCount = cards.length;
+    renderSummary(cards.length);
     if(hint) hint.textContent='';
     dropdown.classList.remove('open');
     return;
   }
 
-  const lq=q.toLowerCase();
-  const matches=[...cards].filter(c=>{
-    return (c.dataset.posnum||'').includes(lq)||(c.dataset.surname||'').includes(lq);
-  });
-
-  if(!matches.length){
+  const terms=parseSearchTerms(q);
+  if(!terms.length){
     if(hint) hint.textContent='';
-    dropdown.innerHTML='<div class="search-no-results">No matches found</div>';
-    dropdown.classList.add('open');
+    dropdown.classList.remove('open');
     return;
   }
 
-  matches.forEach(c=>c.classList.add('search-match'));
-  if(hint) hint.textContent=matches.length===1?'1 match':`${matches.length} matches`;
+  const matches=cards.filter(c=>{
+    const haystack=(c.dataset.search||'');
+    return terms.some(term=>haystack.includes(searchNorm(term)));
+  });
+  const matchSet=new Set(matches);
 
-  dropdown.innerHTML=matches.map((c,i)=>{
+  cards.forEach(c=>{
+    if(matchSet.has(c)){
+      c.classList.add('search-match');
+      c.style.display='';
+      c.removeAttribute('aria-hidden');
+    }else{
+      c.classList.add('search-hidden');
+      c.style.display='none';
+      c.setAttribute('aria-hidden','true');
+    }
+  });
+
+  S.lastVisibleCount = matches.length;
+  renderSummary(matches.length);
+
+  if(!matches.length){
+    if(hint) hint.textContent='0 matches';
+    const termLabel=terms.length===1 ? 'Search term' : 'Search terms';
+    dropdown.innerHTML=`<div class="search-no-results">No matches found for ${termLabel.toLowerCase()}: ${esc(terms.join(', '))}</div>`;
+    dropdown.classList.add('open');
+    if(grid){
+      emptyBox=document.createElement('div');
+      emptyBox.className='smsg empty search-empty-state';
+      emptyBox.textContent='No displayed cards match the current search.';
+      grid.insertAdjacentElement('afterend', emptyBox);
+    }
+    return;
+  }
+
+  if(hint){
+    const termText=terms.length===1 ? '1 term' : `${terms.length} terms`;
+    const matchText=matches.length===1 ? '1 match' : `${matches.length} matches`;
+    const helperText = matches.length > 60 ? ' · top 60 shown below' : '';
+    hint.textContent=`${matchText} · ${termText}${helperText}`;
+  }
+
+  const helperMatches = matches.slice(0, 60);
+  dropdown.innerHTML=helperMatches.map((c,i)=>{
     const num=c.dataset.posnum||'';
     const name=c.dataset.surname||'(no name)';
     return `<div class="search-result-item">
@@ -1585,16 +2135,24 @@ function doSearch(q){
         <span class="sri-num">#${esc(num)}</span>
         <span class="sri-name">${esc(name)}</span>
       </div>
-      <button class="sri-go" data-idx="${i}">Go to card →</button>
+      <div class="sri-actions">
+        <button class="sri-add" type="button" data-term="${escAttr(num)}">Use #</button>
+        <button class="sri-go" type="button" data-idx="${i}">Go to card →</button>
+      </div>
     </div>`;
   }).join('');
 
   dropdown.classList.add('open');
 
+  dropdown.querySelectorAll('.sri-add').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      appendSearchTerm(btn.dataset.term||'');
+    });
+  });
+
   dropdown.querySelectorAll('.sri-go').forEach(btn=>{
     btn.addEventListener('click',()=>{
-      const card=matches[+btn.dataset.idx];
-      card.classList.add('open');
+      const card=helperMatches[+btn.dataset.idx];
       dropdown.classList.remove('open');
       card.scrollIntoView({behavior:'smooth',block:'center'});
     });
@@ -1603,12 +2161,14 @@ function doSearch(q){
 function renderTable(){
   // apply value filter to diffs
   let diffs = S.diffs;
+  let visibleKeys = new Set(S.resultRows.map(r=>r.key));
   if(S.vf.col && S.vf.values.size > 0){
-    const filteredKeys = new Set(
+    visibleKeys = new Set(
       S.allKeys.filter(k => vfRowPass(S.mA?S.mA.get(k)||null:null, S.mB?S.mB.get(k)||null:null))
     );
-    diffs = diffs.filter(d => filteredKeys.has(d.key));
+    diffs = diffs.filter(d => visibleKeys.has(d.key));
   }
+  renderSummary(visibleKeys.size);
   if(!diffs.length){el.rbody.innerHTML='<div class="smsg info">✅ No differences found for the selected columns and options.</div>';return;}
   const lim=diffs.slice(0,2000);
   const rows=lim.map(d=>`<tr>
@@ -1654,9 +2214,9 @@ function dlCsv(name,headers,rows){
 
 /* re-render cards when mapping changes */
 [el.mapPosition, el.mapSurname, el.mapDesc].forEach(sel=>{
-  sel.addEventListener('change',()=>{
+  ['change','input'].forEach(evt=>sel.addEventListener(evt,()=>{
     if(!el.rPanel.classList.contains('hidden')&&S.view==='cards') renderCards();
-  });
+  }));
 });
 
 
@@ -1684,11 +2244,9 @@ const vfEl = {
 function vfUpdateColSelect(){
   if(!S.csvA.headers.length && !S.csvB.headers.length) return;
   const all = [...new Set([...S.csvA.headers, ...S.csvB.headers])];
-  const cur = vfEl.col.value;
-  vfEl.col.innerHTML =
-    '<option value="">— choose a column —</option>' +
-    all.map(h=>`<option value="${esc(h)}">${esc(h)}</option>`).join('');
-  vfEl.col.disabled = false;
+  const cur = comboValue(vfEl.col);
+  setComboOptions(vfEl.col, all, '— choose a column —');
+  setComboDisabled(vfEl.col, false);
   if(cur && all.includes(cur)) vfEl.col.value = cur;
   // reset values if col no longer valid
   if(S.vf.col && !all.includes(S.vf.col)) vfClearAllPills();
@@ -1707,7 +2265,7 @@ function vfValuesForCol(col){
 
 /* Render the dropdown list filtered by current input */
 function vfRenderDropdown(){
-  const col = vfEl.col.value;
+  const col = comboValue(vfEl.col);
   if(!col){ vfEl.dropdown.classList.remove('open'); return; }
   const q = vfEl.input.value.trim().toLowerCase();
   const all = vfValuesForCol(col);
@@ -1732,10 +2290,11 @@ function vfRenderDropdown(){
 /* Add a value pill */
 function vfAddValue(val){
   val = val.trim();
-  if(!val || !vfEl.col.value) return;
+  const selectedCol = comboValue(vfEl.col);
+  if(!val || !selectedCol) return;
   // If col changed, clear old pills
-  if(S.vf.col && S.vf.col !== vfEl.col.value) vfClearAllPills(false);
-  S.vf.col = vfEl.col.value;
+  if(S.vf.col && S.vf.col !== selectedCol) vfClearAllPills(false);
+  S.vf.col = selectedCol;
   if(S.vf.values.has(val)){ vfEl.input.value=''; vfEl.dropdown.classList.remove('open'); return; }
   S.vf.values.add(val);
   vfEl.input.value = '';
@@ -1785,15 +2344,16 @@ function vfMaybeRerender(){
 }
 
 /* Column change → reset values, update input state */
-vfEl.col.addEventListener('change', ()=>{
-  if(vfEl.col.value !== S.vf.col) vfClearAllPills(false);
-  const hasCol = !!vfEl.col.value;
+['change','input'].forEach(evt=>vfEl.col.addEventListener(evt, ()=>{
+  const selectedCol = comboValue(vfEl.col);
+  if(selectedCol !== S.vf.col) vfClearAllPills(false);
+  const hasCol = !!selectedCol;
   vfEl.input.disabled = !hasCol;
   vfEl.addBtn.disabled = !hasCol;
   if(hasCol) vfEl.input.focus();
   vfEl.dropdown.classList.remove('open');
   vfMaybeRerender();
-});
+}));
 
 /* Input → live dropdown */
 vfEl.input.addEventListener('input', vfRenderDropdown);
@@ -1832,7 +2392,7 @@ vfEl.clearAll.addEventListener('click', ()=>vfClearAllPills());
 
 /* Close dropdown on outside click */
 document.addEventListener('click', e=>{
-  if(!e.target.closest('.vf-combo-wrap') && !e.target.closest('#vfCol'))
+  if(!e.target.closest('.vf-combo-wrap') && !e.target.closest('#vfCol') && !e.target.closest('[data-clear-for="vfCol"]'))
     vfEl.dropdown.classList.remove('open');
 });
 
@@ -1847,26 +2407,37 @@ function vfRowPass(rowA, rowB){
 
 /* ────────────────────────────────── */
 
+
+refreshPresetSelect();
+el.presetSaveBtn.addEventListener('click', savePreset);
+el.presetLoadBtn.addEventListener('click', loadSelectedPreset);
+el.presetDeleteBtn.addEventListener('click', deleteSelectedPreset);
+el.presetSelect.addEventListener('change', ()=>{
+  const selected = el.presetSelect.value || '';
+  if(selected) el.presetName.value = selected;
+});
+
 el.clearBtn.addEventListener('click',()=>{
   vfClearAllPills(false);
-  vfEl.col.innerHTML='<option value="">— upload files first —</option>';
-  vfEl.col.disabled=true;
+  vfEl.col.value='';
+  setComboOptions(vfEl.col, [], '— upload files first —');
+  setComboDisabled(vfEl.col,true);
   vfEl.input.disabled=true;
   vfEl.addBtn.disabled=true;
   S.csvA={headers:[],rows:[]};S.csvB={headers:[],rows:[]};
-  S.diffs=[];S.onlyA=[];S.onlyB=[];S.matched=0;S.allKeys=[];
+  S.diffs=[];S.onlyA=[];S.onlyB=[];S.matched=0;S.allKeys=[];S.resultRows=[];S.lastVisibleCount=0; renderSummary(0);
   ['A','B'].forEach(w=>{
     const zone=w==='A'?el.zoneA:el.zoneB,nameEl=w==='A'?el.nameA:el.nameB,
           keyEl=w==='A'?el.keyA:el.keyB,fileEl=w==='A'?el.fileA:el.fileB,
           iconEl=w==='A'?el.iconA:el.iconB;
     zone.classList.remove('loaded');
     nameEl.className='fhint';nameEl.textContent='Click or drag to upload';
-    keyEl.disabled=true;keyEl.innerHTML=`<option>— upload CSV ${w} first —</option>`;
+    keyEl.value=''; setComboOptions(keyEl, [], `— upload CSV ${w} first —`); setComboDisabled(keyEl,true);
     fileEl.value='';iconEl.textContent=w==='A'?'🅰️':'🅱️';
   });
-  el.mapPosition.disabled=true; el.mapPosition.innerHTML='<option value="">— auto (uses key column) —</option>';
-  el.mapSurname.disabled=true;  el.mapSurname.innerHTML='<option value="">— not mapped —</option>';
-  el.mapDesc.disabled=true;     el.mapDesc.innerHTML='<option value="">— not mapped —</option>';
+  el.mapPosition.value=''; setComboOptions(el.mapPosition, [], '— auto (uses key column) —'); setComboDisabled(el.mapPosition,true);
+  el.mapSurname.value=''; setComboOptions(el.mapSurname, [], '— not mapped —'); setComboDisabled(el.mapSurname,true);
+  el.mapDesc.value=''; setComboOptions(el.mapDesc, [], '— not mapped —'); setComboDisabled(el.mapDesc,true);
   el.colGrid.innerHTML='<span class="cempty">Upload both files to see columns</span>';
   el.selAll.disabled=true;el.selNone.disabled=true;el.runBtn.disabled=true;
   el.rPanel.classList.add('hidden');
@@ -1896,6 +2467,20 @@ document.addEventListener('DOMContentLoaded', function wireModal(){
 
   let sourceCard = null;
   let closing    = false;
+
+  const scrollState = window.__cgpScrollLock || (window.__cgpScrollLock = { count: 0, y: 0 });
+  function lockPageScroll(){
+    if(scrollState.count === 0){
+      document.body.classList.add('modal-open');
+    }
+    scrollState.count += 1;
+  }
+  function unlockPageScroll(){
+    scrollState.count = Math.max(0, scrollState.count - 1);
+    if(scrollState.count === 0){
+      document.body.classList.remove('modal-open');
+    }
+  }
 
   /* ── helpers ── */
   function setRect(el, r, extra={}){
@@ -1981,7 +2566,7 @@ document.addEventListener('DOMContentLoaded', function wireModal(){
     setRect(modal, tgt, { opacity:'1', pointerEvents:'all' });
 
     overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    lockPageScroll();
   };
 
   /* ── close ── */
@@ -2005,7 +2590,7 @@ document.addEventListener('DOMContentLoaded', function wireModal(){
         sourceCard = null;
       }
       mBody.innerHTML = '';
-      document.body.style.overflow = '';
+      unlockPageScroll();
       closing = false;
     });
   }
@@ -2054,11 +2639,12 @@ document.addEventListener('DOMContentLoaded', function wireStepModal(){
         { icon: '☑️', label: 'Columns to Compare', text: 'Tick any columns you want the tool to check for changes. You can use <strong>Select All / None</strong> to bulk-toggle, or hand-pick just the fields that matter.' },
         { icon: '🔡', label: 'Ignore Case', text: 'When on, <strong>SMITH</strong> and <strong>smith</strong> are treated as equal. Useful for name or status fields where capitalisation may vary between exports.' },
         { icon: '✂️', label: 'Trim Whitespace', text: 'Strips leading and trailing spaces before comparing. Catches differences that are <strong>invisible to the eye</strong> but would otherwise show as a change.' },
+        { icon: '🗓️', label: 'Normalize Dates + Trailing Zeros', text: 'When on, common date formats such as <strong>2025-07-11</strong> and <strong>7/11/2025</strong> are compared as the same value, and numeric values like <strong>12.0</strong>, <strong>12.000</strong>, <strong>00135</strong>, and <strong>135</strong> are treated as equal across compared columns and key matching.' },
         { icon: '🟰', label: 'Treat Missing as Empty', text: 'If a column exists in one file but not the other, treat the missing side as an empty string instead of skipping the comparison entirely.' },
       ]
     },
-    '02b': {
-      num: '02b', title: 'Map Card Display Fields',
+    '03': {
+      num: '03', title: 'Card Display Mapping',
       lead: 'Optional — map columns to display labels so result cards show meaningful information instead of raw key values.',
       tips: [
         { icon: '🔢', label: 'Position / ID field', text: 'The column to show as the <strong>card number badge</strong> (e.g. Position #). Defaults to the key column value if left blank.' },
@@ -2067,8 +2653,8 @@ document.addEventListener('DOMContentLoaded', function wireStepModal(){
         { icon: '💡', label: 'Tip', text: 'These mappings are display-only and do not affect the comparison logic. You can change them at any time and re-run to refresh the card labels.' },
       ]
     },
-    '03': {
-      num: '03', title: 'Filter by Value',
+    '04': {
+      num: '04', title: 'Value Filter',
       lead: 'Optional — narrow results to specific rows by picking a column and adding one or more values as filter pills.',
       tips: [
         { icon: '🗂️', label: 'Pick a column', text: 'Choose any column from the union of both CSV headers. The filter will check that column\'s value in <strong>either</strong> CSV A or CSV B for each row.' },
@@ -2077,8 +2663,8 @@ document.addEventListener('DOMContentLoaded', function wireStepModal(){
         { icon: '⚡', label: 'Combined filters', text: 'The value filter works together with the type filter chips (Changed, Only A, Only B, Matched) — both must pass for a row to appear.' },
       ]
     },
-    '04': {
-      num: '04', title: 'Run & Review Results',
+    '05': {
+      num: '05', title: 'Run & Review Results',
       lead: 'Hit <strong>Run Comparison</strong> to start. Results appear instantly as colour-coded cards or a flat table.',
       tips: [
         { icon: '🟡', label: 'Changed', text: 'Rows present in <strong>both</strong> files but with at least one differing value in the compared columns. Changed fields are highlighted in yellow.' },
@@ -2093,6 +2679,20 @@ document.addEventListener('DOMContentLoaded', function wireStepModal(){
 
   let srcEl   = null;
   let closing = false;
+
+  const scrollState = window.__cgpScrollLock || (window.__cgpScrollLock = { count: 0, y: 0 });
+  function lockPageScroll(){
+    if(scrollState.count === 0){
+      document.body.classList.add('modal-open');
+    }
+    scrollState.count += 1;
+  }
+  function unlockPageScroll(){
+    scrollState.count = Math.max(0, scrollState.count - 1);
+    if(scrollState.count === 0){
+      document.body.classList.remove('modal-open');
+    }
+  }
 
   function setRect(el, r, extra={}){
     Object.assign(el.style, { top:r.top+'px', left:r.left+'px', width:r.width+'px', height:r.height+'px', ...extra });
@@ -2143,7 +2743,7 @@ document.addEventListener('DOMContentLoaded', function wireStepModal(){
     setRect(stepModal, tgt, { opacity:'1', pointerEvents:'all' });
 
     overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    lockPageScroll();
   }
 
   function closeStep(){
@@ -2158,7 +2758,7 @@ document.addEventListener('DOMContentLoaded', function wireStepModal(){
       stepModal.style.pointerEvents = 'none';
       if(srcEl){ srcEl.style.opacity=''; srcEl.style.transition=''; srcEl=null; }
       smBody.innerHTML = '';
-      document.body.style.overflow = '';
+      unlockPageScroll();
       closing = false;
     });
   }
@@ -2181,6 +2781,7 @@ document.addEventListener('DOMContentLoaded', function wireStepModal(){
 
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+renderSummary(0);
 })();
 </script>
 <!-- Step expand modal (reuses card-overlay) -->
@@ -2211,5 +2812,6 @@ function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
   <div class="modal-body" id="modalBody"></div>
 </div>
 
+<script>/* key normalization patch integrated above */</script>
 </body>
 </html>
