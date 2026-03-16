@@ -89,7 +89,8 @@ window.CGP = (function(){
 
   const STYLE_MODES = [
     { id:'classic', name:'Original Style', note:'Angular command-console look with grid texture and tactical edges.' },
-    { id:'modern', name:'Modern Web', note:'Softer cards, richer surfaces, rounded corners, and a cleaner app shell.' }
+    { id:'modern', name:'Modern Web', note:'Softer cards, richer surfaces, rounded corners, and a cleaner app shell.' },
+    { id:'light', name:'Light Mode', note:'Clean white shell with light panels. Accent colour carries over from your chosen theme.' }
   ];
 
   function getThemeById(id) {
@@ -103,18 +104,34 @@ window.CGP = (function(){
   function applyTheme(id) {
     const theme = getThemeById(id);
     const root = document.documentElement;
-    Object.entries(theme.vars).forEach(([k, v]) => root.style.setProperty(k, v));
 
-    const accent = theme.vars['--theme-accent'] || theme.swatch[0];
-    const bg = theme.vars['--background'] || '#080808';
-    root.style.setProperty('--bg', bg);
-    root.style.setProperty('--teal', accent);
-    root.style.setProperty('--theme-accent', accent);
+    // Always apply accent/swatch vars regardless of style mode
+    root.style.setProperty('--accent-a',       theme.vars['--accent-a']);
+    root.style.setProperty('--accent-b',       theme.vars['--accent-b']);
+    root.style.setProperty('--theme-accent',   theme.vars['--theme-accent']   || theme.swatch[0]);
     root.style.setProperty('--theme-accent-2', theme.vars['--theme-accent-2'] || theme.swatch[1]);
 
+    const accent = theme.vars['--theme-accent'] || theme.swatch[0];
+    root.style.setProperty('--teal', accent);
+
     if (document.body) {
-      document.body.style.setProperty('--cgp-theme-bg', bg);
+      document.body.style.setProperty('--cgp-theme-bg',     theme.vars['--background'] || '#080808');
       document.body.style.setProperty('--cgp-theme-accent', accent);
+    }
+
+    // Only apply dark background/panel/text tokens when NOT in light mode
+    // Check both the live attribute and the saved value for robustness
+    const liveMode = root.getAttribute('data-cgp-style-mode');
+    const currentMode = liveMode || getSavedStyleMode();
+    if (currentMode !== 'light') {
+      const bg = theme.vars['--background'] || '#080808';
+      root.style.setProperty('--bg',         bg);
+      root.style.setProperty('--background', bg);
+      root.style.setProperty('--panel',      theme.vars['--panel']      || 'rgba(14,14,14,.92)');
+      root.style.setProperty('--panel-soft', theme.vars['--panel-soft'] || 'rgba(22,22,22,.80)');
+      root.style.setProperty('--text',       theme.vars['--text']       || '#e8e8e8');
+      root.style.setProperty('--muted',      theme.vars['--muted']      || '#aaa');
+      root.style.setProperty('--border',     theme.vars['--border']     || 'rgba(255,255,255,.10)');
     }
 
     try { localStorage.setItem(THEME_STORAGE_KEY, id); } catch(e){}
@@ -138,6 +155,31 @@ window.CGP = (function(){
     if (document.body) {
       document.body.setAttribute('data-cgp-style-mode', mode.id);
     }
+
+    // Light mode: override the dark background/panel/text tokens so every page
+    // that reads --bg, --panel, --text, --muted, --border automatically goes light.
+    // We write onto :root so inherited vars cascade everywhere.
+    if (mode.id === 'light') {
+      root.style.setProperty('--bg',         '#f0f2f5');
+      root.style.setProperty('--background', '#f0f2f5');
+      root.style.setProperty('--panel',      'rgba(255,255,255,.95)');
+      root.style.setProperty('--panel-soft', 'rgba(240,242,245,.90)');
+      root.style.setProperty('--text',       '#111827');
+      root.style.setProperty('--muted',      '#6b7280');
+      root.style.setProperty('--border',     'rgba(0,0,0,.12)');
+    } else {
+      // Re-apply the current theme to restore dark tokens when switching away
+      const savedId = getSavedId();
+      const theme = getThemeById(savedId);
+      root.style.setProperty('--bg',         theme.vars['--background'] || '#080808');
+      root.style.setProperty('--background', theme.vars['--background'] || '#080808');
+      root.style.setProperty('--panel',      theme.vars['--panel']      || 'rgba(14,14,14,.92)');
+      root.style.setProperty('--panel-soft', theme.vars['--panel-soft'] || 'rgba(22,22,22,.80)');
+      root.style.setProperty('--text',       theme.vars['--text']       || '#e8e8e8');
+      root.style.setProperty('--muted',      theme.vars['--muted']      || '#aaa');
+      root.style.setProperty('--border',     theme.vars['--border']     || 'rgba(255,255,255,.10)');
+    }
+
     try { localStorage.setItem(STYLE_MODE_STORAGE_KEY, mode.id); } catch(e){}
 
     document.querySelectorAll('[data-style-mode-id]').forEach(el => {
@@ -157,7 +199,7 @@ window.CGP = (function(){
   }
 
   applyTheme(getSavedId());
-  applyStyleMode(getSavedStyleMode());
+  applyStyleMode(getSavedStyleMode()); // must be last — overrides dark tokens if light mode
 
   return {
     THEMES,
@@ -175,9 +217,9 @@ window.CGP = (function(){
 /* ── Page fade + lightweight navigation memory ── */
 document.addEventListener('DOMContentLoaded', () => {
   document.body.classList.add('fade-in');
-  /* Re-apply theme after DOM ready so CGP tool picks it up */
+  /* Re-apply in correct order: theme sets accent+dark tokens, style mode overrides if light */
   CGP.applyTheme(CGP.getSavedId());
-  CGP.applyStyleMode(CGP.getSavedStyleMode());
+  CGP.applyStyleMode(CGP.getSavedStyleMode()); // must be last
 
   try {
     const current = window.location.pathname.split('/').pop() || 'index.html';
