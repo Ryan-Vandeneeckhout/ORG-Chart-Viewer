@@ -10,7 +10,6 @@
   <meta property="og:type" content="website"/>
   <link rel="icon" href="favicon.svg" type="image/svg+xml"/>
   <link rel="apple-touch-icon" href="apple-touch-icon.svg"/>
-  <link rel="manifest" href="site.webmanifest"/>
 
   <title>PDF Form Filler — CommandGridPro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -456,6 +455,111 @@
     }
 
     .mapping-toolbar input[type="text"] { flex: 1; min-width: 200px; }
+
+    .map-preview-card {
+      margin: 0 16px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface2);
+      overflow: hidden;
+    }
+
+    .map-preview-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .map-preview-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .map-preview-subtitle, .map-preview-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .map-preview-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .map-preview-wrap {
+      max-height: 360px;
+      overflow: auto;
+    }
+
+    .map-preview-empty {
+      padding: 22px 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .map-preview-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .map-preview-table th, .map-preview-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .map-preview-table th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: color-mix(in srgb, var(--surface) 88%, black 12%);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+    }
+
+    .map-preview-field {
+      font-family: 'DM Mono', monospace;
+      color: var(--text);
+      font-size: 11.5px;
+    }
+
+    .map-preview-value {
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text);
+    }
+
+    .map-preview-meta {
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .map-preview-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      border: 1px solid var(--border2);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text2);
+      font-size: 10px;
+      font-weight: 700;
+      margin-right: 6px;
+      margin-bottom: 4px;
+    }
 
     table {
       border-collapse: collapse;
@@ -1425,9 +1529,9 @@
     .map-static-input {
       flex: 1;
       font-size: 12.5px;
-      padding: 4px 8px;
+      padding: 8px 10px;
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       background: var(--surface);
       color: var(--text);
       font-family: inherit;
@@ -1435,6 +1539,110 @@
       min-width: 0;
     }
     .map-static-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(37,99,235,.1); }
+
+    .map-field-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .mapped-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--ok-bg);
+      color: var(--ok);
+      border: 1px solid var(--ok-border);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .map-config-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--surface2) 86%, transparent);
+    }
+    .map-config-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .map-section-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .map-source-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+    .map-source-row {
+      display: grid;
+      grid-template-columns: auto auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      min-width: 0;
+    }
+    .map-source-index {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid var(--border2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text2);
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+    .map-source-row select { min-width: 0; width: 100%; }
+    .map-source-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .map-subgrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(120px, 1fr));
+      gap: 8px;
+    }
+    .map-subfield {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .map-subfield > span {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    @media (max-width: 720px) {
+      .map-source-row { grid-template-columns: auto auto 1fr; }
+      .map-source-actions { grid-column: 1 / -1; }
+      .map-subgrid { grid-template-columns: 1fr; }
+    }
 
     /* check/radio row */
     .map-check-row {
@@ -1784,7 +1992,25 @@
       <div class="action-bar">
         <button id="hardTestBtn" disabled>🔬 Hard Test (write "TEST")</button>
         <button id="testBtn" disabled>▶ Test Fill Row 1</button>
+        <button id="previewMappedBtn" disabled>👁 Preview Mapped Data</button>
         <span class="muted warn" id="dlWarn" style="display:none; font-size:12px;">⚠ Browser may ask permission for multiple downloads.</span>
+      </div>
+
+      <div id="mappingPreviewCard" class="map-preview-card" style="display:none;">
+        <div class="map-preview-toolbar">
+          <div class="map-preview-title-wrap">
+            <div class="map-preview-title">Mapped data preview</div>
+            <div class="map-preview-subtitle" id="mappingPreviewSummary">Load files to preview mapped output.</div>
+          </div>
+          <div class="map-preview-controls">
+            <label for="previewRowSelect" class="map-preview-label">Preview row</label>
+            <select id="previewRowSelect" disabled></select>
+            <button id="refreshPreviewBtn" type="button" class="sm" disabled>↻ Refresh</button>
+          </div>
+        </div>
+        <div id="mappingPreviewWrap" class="map-preview-wrap">
+          <div class="map-preview-empty">Load files and map fields to preview the resolved values.</div>
+        </div>
       </div>
     </div>
 
@@ -1879,6 +2105,7 @@
       if ($('frEnabled')) $('frEnabled').checked = isMulti;
       // refresh routing dropdown if CSVs already loaded
       if (csvBHeaders.length) frPopulateRouteCol();
+      renderMappedPreview();
     }
 
     function toggleAdv(sectionId) {
@@ -2029,7 +2256,7 @@
         .replace(/[^a-z0-9]+/g, "");
     }
 
-    // ── Key-normalisation: strip leading zeros ──
+    // ── Strong CSV value normalisation ──
     let stripLeadingZeros = false;
 
     function toggleStripZeros() {
@@ -2042,18 +2269,129 @@
       btn.style.color         = stripLeadingZeros ? "var(--accent)" : "";
     }
 
-    // Normalise a key value for join comparison.
-    // Always trims whitespace; optionally strips leading zeros.
-    // For purely numeric values, uses parseInt to handle "00135" === "135".
-    function normKey(v) {
-      let s = String(v ?? "").trim();
-      if (stripLeadingZeros) {
-        if (/^\d+$/.test(s)) {
-          s = String(parseInt(s, 10)); // "00135" → "135"
-        } else {
-          s = s.replace(/^0+(?=\d)/, "");
-        }
+    function pad2(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    function looksLikeDateString(s) {
+      const v = String(s ?? "").trim();
+      if (!v) return false;
+      return (
+        /^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}(?:[ T].*)?$/.test(v) ||
+        /^\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}(?:[ T].*)?$/.test(v) ||
+        /^\d{4}-\d{2}-\d{2}T/.test(v)
+      );
+    }
+
+    function normalizeDateString(input) {
+      const raw = String(input ?? "").trim();
+      if (!raw) return raw;
+
+      let s = raw.replace(/[.]/g, "/").replace(/\s+/g, " ").trim();
+      s = s.replace(/^(\d{4})-(\d{2})-(\d{2})T.*$/, "$1-$2-$3");
+
+      let m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})(?:\s+.*)?$/);
+      if (m) {
+        const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+        if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) return `${y}-${pad2(mo)}-${pad2(d)}`;
       }
+
+      m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})(?:\s+.*)?$/);
+      if (m) {
+        let a = Number(m[1]), b = Number(m[2]), y = Number(m[3]);
+        if (y < 100) y += (y >= 70 ? 1900 : 2000);
+        let mo = a, d = b; // default mm/dd/yyyy
+        if (a > 12 && b <= 12) { d = a; mo = b; }
+        else if (b > 12 && a <= 12) { mo = a; d = b; }
+        if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) return `${y}-${pad2(mo)}-${pad2(d)}`;
+      }
+
+      const parsed = new Date(raw);
+      if (!Number.isNaN(parsed.getTime())) {
+        return `${parsed.getFullYear()}-${pad2(parsed.getMonth() + 1)}-${pad2(parsed.getDate())}`;
+      }
+
+      return raw;
+    }
+
+    function stripZerosFromValue(input) {
+      let s = String(input ?? "").trim();
+      if (!s) return s;
+      if (looksLikeDateString(s)) return normalizeDateString(s);
+
+      // integers / decimals, signed or unsigned
+      if (/^[+-]?\d+(?:\.\d+)?$/.test(s)) {
+        const sign = s.startsWith("-") ? "-" : (s.startsWith("+") ? "+" : "");
+        const body = s.replace(/^[+-]/, "");
+        if (body.includes(".")) {
+          let [intPart, decPart] = body.split(".");
+          intPart = intPart.replace(/^0+(?=\d)/, "");
+          if (!intPart) intPart = "0";
+          return sign + intPart + "." + decPart;
+        }
+        s = body.replace(/^0+(?=\d)/, "");
+        if (!s) s = "0";
+        return sign + s;
+      }
+
+      // Mixed value beginning with digits, like 00123A → 123A
+      return s.replace(/^([+-]?)0+(?=\d)/, "$1");
+    }
+
+    function normalizeCsvCell(input) {
+      let s = String(input ?? "").trim();
+      if (!s) return "";
+      if (looksLikeDateString(s)) return normalizeDateString(s);
+      return stripZerosFromValue(s);
+    }
+
+    function normalizeCsvRows(rows) {
+      return (rows || []).map(row => {
+        const out = {};
+        for (const [key, value] of Object.entries(row || {})) {
+          out[key] = normalizeCsvCell(value);
+        }
+        return out;
+      });
+    }
+
+    function buildRowFingerprint(row, headers) {
+      const cols = (headers && headers.length ? headers : Object.keys(row || {})).slice();
+      return cols.map(h => `${h}=${normalizeCsvCell(row?.[h] ?? "")}`).join("");
+    }
+
+    function collapseExactDuplicateRows(rows, headers) {
+      const seen = new Set();
+      const unique = [];
+      let removed = 0;
+      for (const row of (rows || [])) {
+        const fp = buildRowFingerprint(row, headers);
+        if (seen.has(fp)) {
+          removed++;
+          continue;
+        }
+        seen.add(fp);
+        unique.push(row);
+      }
+      return { rows: unique, removed };
+    }
+
+    function buildRowGroupsByKey(rows, keyColName) {
+      const groups = new Map();
+      for (const row of (rows || [])) {
+        const key = normKey(row?.[keyColName]);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(row);
+      }
+      return groups;
+    }
+
+    // Normalise a key value for join comparison.
+    // Always trims whitespace, always normalises dates, and can additionally
+    // honour the UI toggle for explicit leading-zero handling.
+    function normKey(v) {
+      let s = normalizeDateString(String(v ?? "").trim());
+      if (stripLeadingZeros) s = stripZerosFromValue(s);
       return s;
     }
 
@@ -2172,6 +2510,8 @@
     let csvAHeaders = [];
     let csvBHeaders = [];
     let csvRows = [];    // merged rows (keyed join of A+B), used for generation
+    let currentKeyColA = "";
+    let currentKeyColB = "";
     let csvHeaders = []; // all headers with source prefix for mapping: "A::ColName" / "B::ColName"
     let pdfFieldNames = [];
     let pdfFieldTypes = {};  // fieldName -> "text"|"check"|"radio"|"select"|"other"
@@ -2183,16 +2523,52 @@
     // Normalise a mapping entry: old string format → new object format
     function normEntry(entry) {
       if (!entry) return null;
-      if (typeof entry === "string") return { type: "col", value: entry };
+      if (typeof entry === "string") return { type: "col", value: entry, values: [entry] };
+      if (entry.type === "col") {
+        const vals = Array.isArray(entry.values)
+          ? entry.values.filter(Boolean)
+          : (entry.value ? [entry.value] : []);
+        return { ...entry, values: vals, value: vals[0] || "" };
+      }
       return entry;
+    }
+
+    function getColRefs(entry) {
+      const e = normEntry(entry);
+      if (!e || e.type !== "col") return [];
+      return Array.isArray(e.values) ? e.values.filter(Boolean) : (e.value ? [e.value] : []);
+    }
+
+    function cleanColEntry(entry) {
+      if (!entry) return null;
+      const e = normEntry(entry);
+      if (!e) return null;
+      if (e.type === "col") {
+        const vals = getColRefs(e);
+        return vals.length ? { type: "col", value: vals[0], values: vals } : null;
+      }
+      return e;
+    }
+
+    function makeColEntry(values) {
+      const vals = (Array.isArray(values) ? values : [values]).filter(Boolean);
+      return vals.length ? { type: "col", value: vals[0], values: vals } : null;
+    }
+
+    function resolveColValues(entry, rowObj) {
+      return getColRefs(entry)
+        .map(key => rowObj[key] == null ? "" : String(rowObj[key]))
+        .map(v => v.trim())
+        .filter(Boolean);
     }
 
     // Write a mapping entry (object form) for a field
     function setMapping(fieldName, entry) {
-      if (!entry || (entry.type === "col" && !entry.value)) {
+      const clean = cleanColEntry(entry);
+      if (!clean) {
         delete mapping[fieldName];
       } else {
-        mapping[fieldName] = entry;
+        mapping[fieldName] = clean;
       }
       updateMappedPill();
     }
@@ -2210,14 +2586,129 @@
         // fixed true/false
         return e.checked ? (e.trueVal ?? "Yes") : (e.falseVal ?? "");
       }
-      // col (default)
-      return rowObj[e.value] == null ? "" : String(rowObj[e.value]);
+      // col (default) — supports multiple picked columns joined left-to-right
+      return resolveColValues(e, rowObj).join(" ");
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function getPreviewRows() {
+      return isChangeDetectActive() ? getFilteredRows() : csvRows;
+    }
+
+    function describeEntry(entry) {
+      const e = normEntry(entry);
+      if (!e) return "";
+      if (e.type === "col") {
+        const refs = getColRefs(e);
+        if (!refs.length) return "";
+        return refs.map(ref => {
+          const { source, col } = splitKey(ref);
+          return `<span class="map-preview-pill">${escapeHtml(source)} · ${escapeHtml(col)}</span>`;
+        }).join("");
+      }
+      if (e.type === "static") return '<span class="map-preview-pill">Static text</span>';
+      if (e.type === "check") return `<span class="map-preview-pill">Check${e.colMode ? ' · CSV-driven' : ' · Fixed'}</span>`;
+      if (e.type === "radio") return `<span class="map-preview-pill">Radio${e.colMode ? ' · CSV-driven' : ' · Fixed'}</span>`;
+      return `<span class="map-preview-pill">${escapeHtml(e.type)}</span>`;
+    }
+
+    function updatePreviewRowOptions(keepSelection = true) {
+      const sel = $("previewRowSelect");
+      if (!sel) return;
+      const rows = getPreviewRows();
+      const previous = keepSelection ? sel.value : "";
+      sel.innerHTML = "";
+      rows.forEach((_, idx) => {
+        sel.appendChild(new Option(`Row ${idx + 1}`, String(idx)));
+      });
+      if (rows.length) {
+        const wanted = previous && Number(previous) < rows.length ? previous : "0";
+        sel.value = wanted;
+      }
+      sel.disabled = rows.length === 0;
+      if ($("refreshPreviewBtn")) $("refreshPreviewBtn").disabled = rows.length === 0 || mappedCount() === 0;
+    }
+
+    function renderMappedPreview() {
+      const card = $("mappingPreviewCard");
+      const wrap = $("mappingPreviewWrap");
+      const summary = $("mappingPreviewSummary");
+      const btn = $("previewMappedBtn");
+      if (!card || !wrap || !summary || !btn) return;
+
+      const rows = getPreviewRows();
+      const mappedFields = pdfFieldNames.filter(name => isMappedEntry(mapping[name]));
+      btn.disabled = !(rows.length && mappedFields.length && currentMode !== "multi");
+
+      if (currentMode === "multi") {
+        card.style.display = "none";
+        return;
+      }
+
+      if (!csvRows.length || !pdfFieldNames.length) {
+        card.style.display = "none";
+        summary.textContent = "Load files to preview mapped output.";
+        wrap.innerHTML = '<div class="map-preview-empty">Load files and map fields to preview the resolved values.</div>';
+        return;
+      }
+
+      card.style.display = "block";
+      updatePreviewRowOptions(true);
+
+      if (!mappedFields.length) {
+        summary.textContent = `0 mapped fields across ${rows.length || csvRows.length} row${(rows.length || csvRows.length) === 1 ? '' : 's'}.`;
+        wrap.innerHTML = '<div class="map-preview-empty">Map at least one PDF field to preview the resolved output.</div>';
+        return;
+      }
+
+      if (!rows.length) {
+        summary.textContent = 'No rows match the current change-detection filter.';
+        wrap.innerHTML = '<div class="map-preview-empty">No rows are currently available to preview.</div>';
+        return;
+      }
+
+      const idx = Math.max(0, Math.min(rows.length - 1, Number($("previewRowSelect").value || 0)));
+      $("previewRowSelect").value = String(idx);
+      const row = rows[idx];
+      summary.textContent = `Showing ${mappedFields.length} mapped field${mappedFields.length === 1 ? '' : 's'} for row ${idx + 1} of ${rows.length}.`;
+
+      const body = mappedFields.map(fieldName => {
+        const entry = normEntry(mapping[fieldName]);
+        const resolved = resolveValue(entry, row);
+        const meta = describeEntry(entry);
+        return `
+          <tr>
+            <td class="map-preview-field">${escapeHtml(fieldName)}</td>
+            <td class="map-preview-value">${escapeHtml(resolved || '—')}</td>
+            <td class="map-preview-meta">${meta || '—'}</td>
+          </tr>`;
+      }).join('');
+
+      wrap.innerHTML = `
+        <table class="map-preview-table">
+          <thead>
+            <tr>
+              <th style="width:34%;">PDF field</th>
+              <th style="width:38%;">Resolved value</th>
+              <th style="width:28%;">Source / mode</th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>`;
     }
 
     function isMappedEntry(entry) {
       if (!entry) return false;
       const e = normEntry(entry);
-      if (e.type === "col")    return !!e.value;
+      if (e.type === "col")    return getColRefs(e).length > 0;
       if (e.type === "static") return true;
       if (e.type === "check" || e.type === "radio") return true;
       return false;
@@ -2244,19 +2735,25 @@
       const ftLabel = { text:"text", check:"check", radio:"radio", select:"select", other:"?" }[fieldType] || "?";
       const ftCls   = { text:"ftb-text", check:"ftb-check", radio:"ftb-radio", select:"ftb-select", other:"ftb-other" }[fieldType] || "ftb-other";
       const tdName = document.createElement("td");
-      tdName.style.cssText = "padding:5px 8px; border-bottom:1px solid var(--border); vertical-align:top;";
-      tdName.innerHTML = `<span class="mono" style="font-size:11.5px;">${fieldName}</span>`
+      tdName.style.cssText = "padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top;";
+      tdName.innerHTML = `<div class="map-field-name"><span class="mono" style="font-size:11.5px;">${fieldName}</span>`
         + `<span class="field-type-badge ${ftCls}">${ftLabel}</span>`
-        + (isMapped ? '<span class="mapped-tag">mapped</span>' : '');
+        + (isMapped ? '<span class="mapped-tag">mapped</span>' : '')
+        + `</div>`;
       tr.appendChild(tdName);
 
       // Col 2: value input with type tabs
       const tdVal = document.createElement("td");
-      tdVal.style.cssText = "padding:5px 8px; border-bottom:1px solid var(--border);";
+      tdVal.style.cssText = "padding:10px 12px; border-bottom:1px solid var(--border);";
       const outer = document.createElement("div");
-      outer.style.cssText = "display:flex; flex-direction:column; gap:5px;";
+      outer.className = "map-config-card";
 
       // Tab bar
+      const head = document.createElement("div");
+      head.className = "map-config-head";
+      const headLabel = document.createElement("div");
+      headLabel.className = "map-section-label";
+      headLabel.textContent = "Input mode";
       const tabBar = document.createElement("div");
       tabBar.className = "map-type-tabs";
       const makeTab = (label, type) => {
@@ -2277,25 +2774,34 @@
       tabBar.appendChild(makeTab("CSV col", "col"));
       tabBar.appendChild(makeTab("Static text", "static"));
       if (isCheckish) tabBar.appendChild(makeTab(fieldType === "radio" ? "Radio" : "Check", fieldType));
-      outer.appendChild(tabBar);
+      head.appendChild(headLabel);
+      head.appendChild(tabBar);
+      outer.appendChild(head);
 
       // Input area
       const inputArea = document.createElement("div");
       inputArea.className = "map-col2";
 
       if (curType === "static") {
+        const staticWrap = document.createElement("div");
+        staticWrap.className = "map-subfield";
+        const staticLbl = document.createElement("span");
+        staticLbl.textContent = "Static value";
         const inp = document.createElement("input");
         inp.className = "map-static-input";
         inp.type = "text";
         inp.placeholder = "Enter static text…";
         inp.value = entry?.value ?? "";
-        inp.oninput = () => setEntry({ type:"static", value:inp.value });
-        inputArea.appendChild(inp);
+        inp.oninput = () => setEntry({ type:"static", value:inp.value }, { rerender:false });
+        inp.onblur = () => setEntry({ type:"static", value:inp.value });
+        staticWrap.appendChild(staticLbl);
+        staticWrap.appendChild(inp);
+        inputArea.appendChild(staticWrap);
 
       } else if (curType === "check" || curType === "radio") {
         const colMode = !!entry?.colMode;
         const toggleWrap = document.createElement("div");
-        toggleWrap.className = "map-check-row";
+        toggleWrap.className = "map-config-card";
 
         if (!colMode) {
           const checkToggle = document.createElement("div");
@@ -2314,9 +2820,17 @@
           checkToggle.appendChild(trueBtn); checkToggle.appendChild(falseBtn);
           toggleWrap.appendChild(checkToggle);
 
+          const tfGrid = document.createElement("div");
+          tfGrid.className = "map-subgrid";
+          const trueWrap = document.createElement("label");
+          trueWrap.className = "map-subfield";
+          const falseWrap = document.createElement("label");
+          falseWrap.className = "map-subfield";
+          const trueLab = document.createElement("span"); trueLab.textContent = "True output";
+          const falseLab = document.createElement("span"); falseLab.textContent = "False output";
           const trueInp = document.createElement("input");
           const falseInp = document.createElement("input");
-          [trueInp, falseInp].forEach(i => { i.className="map-static-input"; i.style.cssText="width:76px;flex:0 0 auto;"; });
+          [trueInp, falseInp].forEach(i => { i.className="map-static-input"; });
           trueInp.placeholder="True val"; falseInp.placeholder="False val";
           trueInp.title="Value written when True (e.g. Yes, X, On)";
           falseInp.title="Value written when False (blank = skip)";
@@ -2324,18 +2838,24 @@
           falseInp.value = entry?.falseVal ?? "";
           const syncVals = () => setEntry({ ...(normEntry(getEntry())||{}), type:curType, trueVal:trueInp.value, falseVal:falseInp.value, colMode:false });
           trueInp.oninput = falseInp.oninput = syncVals;
-          toggleWrap.appendChild(trueInp);
-          const sp = document.createElement("span"); sp.style.cssText="font-size:11px;color:var(--muted);flex-shrink:0;"; sp.textContent="/";
-          toggleWrap.appendChild(sp); toggleWrap.appendChild(falseInp);
+          trueWrap.appendChild(trueLab);
+          trueWrap.appendChild(trueInp);
+          falseWrap.appendChild(falseLab);
+          falseWrap.appendChild(falseInp);
+          tfGrid.appendChild(trueWrap);
+          tfGrid.appendChild(falseWrap);
+          toggleWrap.appendChild(tfGrid);
         }
 
+        const footerActions = document.createElement("div");
+        footerActions.className = "map-source-actions";
         const colModeBtn = document.createElement("button");
         colModeBtn.type = "button";
         colModeBtn.className = "map-check-opt" + (colMode ? " col-on" : "");
         colModeBtn.style.cssText = "border:1px solid var(--border2);border-radius:5px;padding:3px 9px;font-size:11px;";
         colModeBtn.textContent = colMode ? "📊 CSV col ▾" : "📊 Use CSV col";
         colModeBtn.onclick = () => setEntry({ ...(normEntry(getEntry())||{}), type:curType, colMode:!colMode, value:entry?.value||"" });
-        toggleWrap.appendChild(colModeBtn);
+        footerActions.appendChild(colModeBtn);
 
         if (colMode) {
           const colSrc = entry?.colSrc || "A";
@@ -2350,36 +2870,152 @@
           rCS(colSrc);
           colTogBtn.onclick = () => {
             const ns = colSel.dataset.src==="A"?"B":"A";
-            colSel.dataset.src = ns; buildColumnOptions(colSel, ns, "");
-            setEntry({ ...(normEntry(getEntry())||{}), type:curType, colMode:true, colSrc:ns, value:ns+"::"+colSel.value }); rCS(ns);
+            const prev = colSel.value;
+            colSel.dataset.src = ns;
+            buildColumnOptions(colSel, ns, prev);
+            if (!colSel.value && colSel.options.length > 1) colSel.value = colSel.options[1].value;
+            setEntry({ ...(normEntry(getEntry())||{}), type:curType, colMode:true, colSrc:ns, value:ns+"::"+colSel.value });
+            rCS(ns);
           };
-          toggleWrap.appendChild(colSel); toggleWrap.appendChild(colTogBtn);
+          const csvWrap = document.createElement("div");
+          csvWrap.className = "map-source-row";
+          const csvNum = document.createElement("span");
+          csvNum.className = "map-source-index";
+          csvNum.textContent = "1";
+          const csvBadge = document.createElement("span");
+          csvBadge.className = "src-badge " + (colSrc === "A" ? "csv-a-badge" : "csv-b-badge");
+          csvBadge.textContent = colSrc;
+          const csvActions = document.createElement("div");
+          csvActions.className = "map-source-actions";
+          csvActions.appendChild(colTogBtn);
+          csvWrap.appendChild(csvNum);
+          csvWrap.appendChild(csvBadge);
+          csvWrap.appendChild(colSel);
+          csvWrap.appendChild(csvActions);
+          toggleWrap.appendChild(csvWrap);
         }
+        toggleWrap.appendChild(footerActions);
         inputArea.appendChild(toggleWrap);
 
       } else {
-        // CSV col (default)
-        const curKey = (entry?.type==="col" ? entry.value : "") || "";
-        const curSrc = curKey ? splitKey(curKey).source : "A";
-        const sel = document.createElement("select");
-        sel.style.cssText = "flex:1;font-size:12.5px;";
-        sel.dataset.src = curSrc;
-        buildColumnOptions(sel, curSrc, curKey);
-        sel.onchange = () => { const src=sel.dataset.src; setEntry(sel.value ? {type:"col",value:src+"::"+sel.value} : null); };
+        // CSV col (default) — supports multiple picked columns joined left-to-right
+        const currentRefs = getColRefs(entry);
+        const refs = currentRefs.length ? currentRefs : [""];
 
-        const badgeSpan = document.createElement("span");
-        badgeSpan.className = "src-badge "+(curSrc==="A"?"csv-a-badge":"csv-b-badge");
-        badgeSpan.textContent = curSrc;
-        const togBtn = document.createElement("button");
-        togBtn.type="button"; togBtn.className="src-toggle-btn";
-        const rS = (src) => { badgeSpan.className="src-badge "+(src==="A"?"csv-a-badge":"csv-b-badge"); badgeSpan.textContent=src; togBtn.textContent="⇄ "+(src==="A"?"B":"A"); };
-        rS(curSrc);
-        togBtn.onclick = () => {
-          const ns=sel.dataset.src==="A"?"B":"A"; const prev=sel.value;
-          sel.dataset.src=ns; buildColumnOptions(sel,ns,prev);
-          setEntry(sel.value?{type:"col",value:ns+"::"+sel.value}:null); rS(ns);
+        const rowsWrap = document.createElement("div");
+        rowsWrap.className = "map-source-list";
+
+        const syncRefs = (opts = {}) => {
+          const vals = [...rowsWrap.querySelectorAll("[data-col-map-row]")]
+            .map(row => {
+              const sel = row.querySelector("select");
+              if (!sel || !sel.value) return "";
+              return sel.dataset.src + "::" + sel.value;
+            })
+            .filter(Boolean);
+          setEntry(makeColEntry(vals), { rerender: opts.rerender !== false });
         };
-        inputArea.appendChild(sel); inputArea.appendChild(badgeSpan); inputArea.appendChild(togBtn);
+
+        const addColPickerRow = (refValue = "") => {
+          const row = document.createElement("div");
+          row.dataset.colMapRow = "1";
+          row.className = "map-source-row";
+
+          const startSrc = refValue ? splitKey(refValue).source : "A";
+          const startCol = refValue ? splitKey(refValue).col : "";
+
+          const sel = document.createElement("select");
+          sel.style.cssText = "flex:1;font-size:12.5px;min-width:0;";
+          sel.dataset.src = startSrc;
+          buildColumnOptions(sel, startSrc, refValue);
+          if (startCol) sel.value = startCol;
+
+          const orderSpan = document.createElement("span");
+          orderSpan.className = "map-source-index";
+          orderSpan.textContent = String(rowsWrap.children.length + 1);
+
+          const badgeSpan = document.createElement("span");
+          badgeSpan.className = "src-badge " + (startSrc === "A" ? "csv-a-badge" : "csv-b-badge");
+          badgeSpan.textContent = startSrc;
+
+          const togBtn = document.createElement("button");
+          togBtn.type = "button";
+          togBtn.className = "src-toggle-btn";
+          const renderSrc = (src) => {
+            badgeSpan.className = "src-badge " + (src === "A" ? "csv-a-badge" : "csv-b-badge");
+            badgeSpan.textContent = src;
+            togBtn.textContent = "⇄ " + (src === "A" ? "B" : "A");
+          };
+          renderSrc(startSrc);
+          togBtn.onclick = () => {
+            const nextSrc = sel.dataset.src === "A" ? "B" : "A";
+            const prev = sel.value;
+            sel.dataset.src = nextSrc;
+            buildColumnOptions(sel, nextSrc, prev);
+            // If the previous column name does not exist in the new source,
+            // keep the switch visible by selecting the first available header.
+            if (!sel.value && sel.options.length > 1) sel.value = sel.options[1].value;
+            renderSrc(nextSrc);
+            syncRefs({ rerender:true });
+          };
+
+          const delBtn = document.createElement("button");
+          delBtn.type = "button";
+          delBtn.className = "sm";
+          delBtn.textContent = "✕";
+          delBtn.title = "Remove this picked column";
+          delBtn.onclick = () => {
+            row.remove();
+            if (!rowsWrap.querySelector('[data-col-map-row]')) addColPickerRow("");
+            reindexRows();
+            syncRefs({ rerender:true });
+          };
+
+          sel.onchange = () => syncRefs({ rerender:true });
+
+          const actions = document.createElement("div");
+          actions.className = "map-source-actions";
+          actions.appendChild(togBtn);
+          actions.appendChild(delBtn);
+
+          row.appendChild(orderSpan);
+          row.appendChild(badgeSpan);
+          row.appendChild(sel);
+          row.appendChild(actions);
+          rowsWrap.appendChild(row);
+        };
+
+        const reindexRows = () => {
+          [...rowsWrap.querySelectorAll("[data-col-map-row]")].forEach((row, idx) => {
+            const idxEl = row.querySelector(".map-source-index");
+            if (idxEl) idxEl.textContent = String(idx + 1);
+          });
+        };
+
+        refs.forEach(ref => addColPickerRow(ref));
+        reindexRows();
+
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.className = "sm";
+        addBtn.textContent = "+ Add column";
+        addBtn.onclick = () => { addColPickerRow(""); reindexRows(); };
+
+        const help = document.createElement("div");
+        help.className = "hint";
+        help.textContent = "Columns are merged left-to-right with spaces, so you can build one field from several CSV values.";
+
+        const pickerHead = document.createElement("div");
+        pickerHead.className = "map-config-head";
+        const pickerLabel = document.createElement("div");
+        pickerLabel.className = "map-section-label";
+        pickerLabel.textContent = "Picked CSV columns";
+        pickerHead.appendChild(pickerLabel);
+        pickerHead.appendChild(addBtn);
+
+        inputArea.appendChild(pickerHead);
+        inputArea.appendChild(rowsWrap);
+        inputArea.appendChild(help);
       }
 
       outer.appendChild(inputArea);
@@ -2388,7 +3024,7 @@
 
       // Col 3: type label
       const tdType = document.createElement("td");
-      tdType.style.cssText = "padding:5px 8px;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px;color:var(--muted);vertical-align:top;";
+      tdType.style.cssText = "padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px;color:var(--muted);vertical-align:top;";
       if      (curType==="static") tdType.textContent="static";
       else if (curType==="check")  tdType.textContent="checkbox";
       else if (curType==="radio")  tdType.textContent="radio";
@@ -2426,12 +3062,14 @@
         const row = buildMappingRow(
           fieldName, ft,
           ()  => mapping[fieldName],
-          (e) => {
-            if (!e || (e.type==="col" && !e.value)) delete mapping[fieldName];
-            else mapping[fieldName] = e;
+          (e, opts = {}) => {
+            const clean = cleanColEntry(e);
+            if (!clean) delete mapping[fieldName];
+            else mapping[fieldName] = clean;
             updateMappedPill();
             if ($("autoSave").checked) saveMappingToLocal();
-            renderMappingUI();
+            renderMappedPreview();
+            if (opts.rerender !== false) renderMappingUI();
           }
         );
         tbody.appendChild(row);
@@ -2443,6 +3081,7 @@
       footer.textContent = `Showing ${visibleCount} of ${pdfFieldNames.length} fields`;
       wrap.appendChild(footer);
       updateMappedPill();
+      renderMappedPreview();
     }
 
 
@@ -2468,6 +3107,7 @@
       }
 
       updateNamePreview();
+      renderMappedPreview();
       if ($("autoSave").checked) saveMappingToLocal();
     }
 
@@ -2564,15 +3204,30 @@
       };
     }
 
-    // Three-pass auto-mapper — tries CSV A first, then CSV B
+    // Smart auto-mapper — prefers CSV A for Current fields and CSV B for Requested fields
     function autoMapSmart() {
-      // Build normalised lookup for both sources
-      const makeNormMap = (headers, src) => {
-        const entries = headers.map(h => ({ key: src + "::" + h, normalised: normalize(h) }));
-        return new Map(entries.map(x => [x.normalised, x.key]));
-      };
-      const normA = makeNormMap(csvAHeaders, "A");
-      const normB = makeNormMap(csvBHeaders, "B");
+      const buildHeaderMeta = (headers, src) => headers.map(h => ({
+        key: src + "::" + h,
+        src,
+        raw: h,
+        norm: normalize(h),
+        base: normalize(h)
+          .replace(/\b(current|requested|request|reqd|new|old|present|existing)\b/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+      }));
+
+      const metaA = buildHeaderMeta(csvAHeaders, "A");
+      const metaB = buildHeaderMeta(csvBHeaders, "B");
+      const allMeta = [...metaA, ...metaB];
+
+      const stripContext = (s) => normalize(s)
+        .replace(/\b(current|requested|request|reqd|new|old|present|existing)\b/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const hasCurrent = (s) => /\b(current|present|existing|old)\b/.test(normalize(s));
+      const hasRequested = (s) => /\b(requested|request|reqd|new)\b/.test(normalize(s));
 
       const knownAliases = [
         ["Last Name",       ["lastname", "surname", "familyname", "lname"]],
@@ -2584,45 +3239,65 @@
         ["DOB",             ["dob", "dateofbirth", "birthdate"]],
       ];
 
-      // Helper: find best match in A then B
-      const findMatch = (normKey) => normA.get(normKey) || normB.get(normKey) || null;
+      const choosePreferredPool = (fieldName) => {
+        if (hasRequested(fieldName)) return { first: metaB, second: metaA };
+        if (hasCurrent(fieldName)) return { first: metaA, second: metaB };
+        return { first: metaA, second: metaB };
+      };
+
+      const findSmartMatch = (fieldName) => {
+        const normField = normalize(fieldName);
+        const baseField = stripContext(fieldName);
+        const pools = choosePreferredPool(fieldName);
+
+        const exact = allMeta.find(h => h.norm === normField);
+        if (exact) return exact.key;
+
+        if (baseField) {
+          const exactPreferredBase = pools.first.find(h => h.base && h.base === baseField);
+          if (exactPreferredBase) return exactPreferredBase.key;
+
+          const exactOtherBase = pools.second.find(h => h.base && h.base === baseField);
+          if (exactOtherBase) return exactOtherBase.key;
+
+          const containsPreferred = pools.first.find(h => h.base && (h.base.includes(baseField) || baseField.includes(h.base)));
+          if (containsPreferred) return containsPreferred.key;
+
+          const containsOther = pools.second.find(h => h.base && (h.base.includes(baseField) || baseField.includes(h.base)));
+          if (containsOther) return containsOther.key;
+        }
+
+        for (const [pdfField, aliases] of knownAliases) {
+          if (normalize(pdfField) !== normField && stripContext(pdfField) !== baseField) continue;
+          for (const alias of aliases) {
+            const aliasPreferred = pools.first.find(h => h.base === alias || h.norm === alias);
+            if (aliasPreferred) return aliasPreferred.key;
+            const aliasOther = pools.second.find(h => h.base === alias || h.norm === alias);
+            if (aliasOther) return aliasOther.key;
+          }
+        }
+
+        if (normField.length >= 4) {
+          const broad = allMeta.find(h => h.norm.includes(normField) || normField.includes(h.norm));
+          if (broad) return broad.key;
+        }
+
+        return null;
+      };
 
       mapping = {};
       let matched = 0;
 
-      // Pass 1: exact normalised match
       for (const fieldName of pdfFieldNames) {
-        const hit = findMatch(normalize(fieldName));
-        if (hit) { mapping[fieldName] = { type:"col", value: hit }; matched++; }
-      }
-
-      // Pass 2: alias lookup
-      for (const [pdfField, aliases] of knownAliases) {
-        if (mapping[pdfField]) continue;
-        for (const alias of aliases) {
-          const hit = findMatch(alias);
-          if (hit) { mapping[pdfField] = { type:"col", value: hit }; matched++; break; }
+        const hit = findSmartMatch(fieldName);
+        if (hit) {
+          mapping[fieldName] = makeColEntry([hit]);
+          matched++;
         }
       }
 
-      // Pass 3: substring match
-      const allNorm = [
-        ...csvAHeaders.map(h => ({ key: "A::" + h, normalised: normalize(h) })),
-        ...csvBHeaders.map(h => ({ key: "B::" + h, normalised: normalize(h) })),
-      ];
-      for (const fieldName of pdfFieldNames) {
-        if (mapping[fieldName]) continue;
-        const key = normalize(fieldName);
-        if (!key || key.length < 6) continue;
-        const hit = allNorm.find(h => h.normalised.includes(key));
-        if (hit) { mapping[fieldName] = { type:"col", value: hit.key }; matched++; }
-      }
-
-      // Pass 4: auto-assign check/radio fields that were matched to a col
-      // (no change needed — they get col entries, user can switch to check mode manually)
-
       renderMappingUI();
-      setStatus(`Auto-map complete — ${matched} field${matched !== 1 ? "s" : ""} mapped.`, matched ? "ok" : "warn");
+      setStatus(`Auto-map complete — ${matched} field${matched !== 1 ? "s" : ""} mapped. Current fields prefer CSV A and requested fields prefer CSV B.`, matched ? "ok" : "warn");
     }
 
     function clearMapping() {
@@ -3599,19 +4274,9 @@
     function normaliseForCompare(v) {
       let s = String(v ?? "");
       if ($("cdTrimSpace")?.checked !== false) s = s.trim();
+      s = normalizeCsvCell(s);
       if ($("cdIgnoreCase")?.checked) s = s.toLowerCase();
-      if ($("cdStripZeros")?.checked) {
-        // Strip leading zeros from ANY value that is purely numeric (inc. decimal)
-        // e.g. "00135" → "135", "0010" → "10", "007.50" → "7.5"
-        if (/^\d+$/.test(s)) {
-          s = String(parseInt(s, 10));
-        } else if (/^\d+\.\d+$/.test(s)) {
-          s = String(parseFloat(s));
-        } else {
-          // Partial: strip leading zeros prefix only if followed by more digits
-          s = s.replace(/^0+(?=\d)/, "");
-        }
-      }
+      if ($("cdStripZeros")?.checked) s = stripZerosFromValue(s);
       return s;
     }
 
@@ -3705,9 +4370,21 @@
       return changed;
     }
 
+    function isMeaningfulJoinValue(v) {
+      return normalizeCsvCell(String(v ?? "")).trim() !== "";
+    }
+
+    function rowHasRequiredKeyData(rowObj) {
+      if (!rowObj) return false;
+      const bKeyVal = currentKeyColB ? rowObj["B::" + currentKeyColB] : "";
+      if (!isMeaningfulJoinValue(bKeyVal)) return false;
+      return true;
+    }
+
     function getFilteredRows() {
-      if (!isChangeDetectActive()) return csvRows;
-      return csvRows.filter(r => rowHasChanges(r));
+      const baseRows = csvRows.filter(r => rowHasRequiredKeyData(r));
+      if (!isChangeDetectActive()) return baseRows;
+      return baseRows.filter(r => rowHasChanges(r));
     }
 
     function updateChangeDetectSummary() {
@@ -4268,7 +4945,6 @@
         return;
       }
 
-      // Use rule.fieldTypes if available, fall back to "other"
       const ruleFieldTypes = rule.fieldTypes || {};
 
       const table = document.createElement("table");
@@ -4285,11 +4961,13 @@
         const row = buildMappingRow(
           fieldName, ft,
           ()  => rule.mapping[fieldName],
-          (e) => {
-            if (!e || (e.type === "col" && !e.value)) delete rule.mapping[fieldName];
-            else rule.mapping[fieldName] = e;
+          (e, opts = {}) => {
+            const clean = cleanColEntry(e);
+            if (!clean) delete rule.mapping[fieldName];
+            else rule.mapping[fieldName] = clean;
             frUpdateMappingBadge(rule);
-            frRenderRuleMapping(rule, wrap);
+            frRenderRulePreview(rule);
+            if (opts.rerender !== false) frRenderRuleMapping(rule, wrap);
           }
         );
         tbody.appendChild(row);
@@ -4297,7 +4975,15 @@
 
       table.appendChild(tbody);
 
-      // Toolbar
+      const layout = document.createElement("div");
+      layout.className = "fr-map-layout";
+
+      const mainCol = document.createElement("div");
+      mainCol.className = "fr-map-main";
+
+      const sideCol = document.createElement("div");
+      sideCol.className = "fr-map-side";
+
       const autoRow = document.createElement("div");
       autoRow.style.cssText = "display:flex; gap:6px; padding:8px 8px 4px; flex-wrap:wrap;";
       const autoBtn = document.createElement("button");
@@ -4308,11 +4994,111 @@
       clearBtn.type = "button"; clearBtn.className = "sm";
       clearBtn.textContent = "🗑 Clear";
       clearBtn.onclick = () => { rule.mapping = {}; frRenderRuleMapping(rule, wrap); };
+      const previewBtn = document.createElement("button");
+      previewBtn.type = "button"; previewBtn.className = "sm";
+      previewBtn.textContent = "↻ Refresh preview";
+      previewBtn.onclick = () => frRenderRulePreview(rule);
       autoRow.appendChild(autoBtn);
       autoRow.appendChild(clearBtn);
+      autoRow.appendChild(previewBtn);
 
-      wrap.appendChild(table);
-      wrap.appendChild(autoRow);
+      const previewSec = document.createElement("div");
+      previewSec.id = "fr-previewsec-" + rule.id;
+      previewSec.className = "map-preview-card-inline";
+      previewSec.style.cssText = "display:block;";
+      const previewHead = document.createElement("div");
+      previewHead.style.cssText = "display:flex; align-items:center; gap:8px; justify-content:space-between; padding:10px 12px; border-bottom:1px solid var(--border); flex-wrap:wrap;";
+      previewHead.innerHTML = `<div><div class="map-preview-title" style="font-size:13px;">Live mapped preview</div><div class="map-preview-subtitle">This updates beside the mapping card so you can immediately see what each mapped field resolves to.</div></div>`;
+      const previewControls = document.createElement("div");
+      previewControls.style.cssText = "display:flex; align-items:center; gap:8px; flex-wrap:wrap;";
+      const previewLabel = document.createElement("label");
+      previewLabel.textContent = "Preview row";
+      previewLabel.style.cssText = "font-size:12px; color:var(--muted);";
+      previewLabel.htmlFor = "fr-previewrow-" + rule.id;
+      const previewSel = document.createElement("select");
+      previewSel.id = "fr-previewrow-" + rule.id;
+      previewSel.className = "preview-row-select";
+      const rows = getPreviewRows();
+      rows.forEach((_, idx) => previewSel.appendChild(new Option(`Row ${idx + 1}`, String(idx))));
+      previewSel.disabled = rows.length === 0;
+      previewSel.onchange = () => frRenderRulePreview(rule);
+      const refreshBtn = document.createElement("button");
+      refreshBtn.type = "button"; refreshBtn.className = "sm";
+      refreshBtn.textContent = "↻ Refresh rows";
+      refreshBtn.onclick = () => {
+        const freshRows = getPreviewRows();
+        const cur = previewSel.value;
+        previewSel.innerHTML = "";
+        freshRows.forEach((_, idx) => previewSel.appendChild(new Option(`Row ${idx + 1}`, String(idx))));
+        if (freshRows.length) previewSel.value = Number(cur) < freshRows.length ? cur : "0";
+        previewSel.disabled = freshRows.length === 0;
+        frRenderRulePreview(rule);
+      };
+      previewControls.appendChild(previewLabel);
+      previewControls.appendChild(previewSel);
+      previewControls.appendChild(refreshBtn);
+      previewHead.appendChild(previewControls);
+      const previewWrap = document.createElement("div");
+      previewWrap.id = "fr-previewwrap-" + rule.id;
+      previewWrap.className = "map-preview-wrap";
+      previewWrap.style.display = "block";
+      previewWrap.innerHTML = '<div class="map-preview-empty">Map at least one field in this form to preview the resolved output.</div>';
+      previewSec.appendChild(previewHead);
+      previewSec.appendChild(previewWrap);
+
+      mainCol.appendChild(autoRow);
+      mainCol.appendChild(table);
+      sideCol.appendChild(previewSec);
+      layout.appendChild(mainCol);
+      layout.appendChild(sideCol);
+
+      wrap.appendChild(layout);
+      frRenderRulePreview(rule);
+    }
+
+    function frRenderRulePreview(rule, wrapEl) {
+      const host = wrapEl || document.getElementById("fr-previewwrap-" + rule.id);
+      if (!host) return;
+      if (!rule.fieldNames?.length) {
+        host.innerHTML = '<div class="map-preview-empty">Upload a PDF for this rule to preview mapped values.</div>';
+        return;
+      }
+      const rows = getPreviewRows();
+      const mappedFields = rule.fieldNames.filter(name => isMappedEntry(rule.mapping[name]));
+      if (!rows.length) {
+        host.innerHTML = '<div class="map-preview-empty">No CSV rows are currently available to preview.</div>';
+        return;
+      }
+      if (!mappedFields.length) {
+        host.innerHTML = '<div class="map-preview-empty">Map at least one field in this form to preview the resolved output.</div>';
+        return;
+      }
+      const sel = document.getElementById("fr-previewrow-" + rule.id);
+      const idx = Math.max(0, Math.min(rows.length - 1, Number(sel?.value || 0)));
+      if (sel) sel.value = String(idx);
+      const row = rows[idx];
+      const body = mappedFields.map(fieldName => {
+        const entry = normEntry(rule.mapping[fieldName]);
+        const resolved = resolveValue(entry, row);
+        const meta = describeEntry(entry);
+        return `
+          <tr>
+            <td class="map-preview-field">${escapeHtml(fieldName)}</td>
+            <td class="map-preview-value">${escapeHtml(resolved || '—')}</td>
+            <td class="map-preview-meta">${meta || '—'}</td>
+          </tr>`;
+      }).join('');
+      host.innerHTML = `
+        <table class="map-preview-table">
+          <thead>
+            <tr>
+              <th style="width:34%;">PDF field</th>
+              <th style="width:38%;">Resolved value</th>
+              <th style="width:28%;">Source / mode</th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>`;
     }
 
     function frUpdateMappingBadge(rule) {
@@ -4327,14 +5113,52 @@
 
     // ── Auto-map a single rule ────────────────────────────────────────────
     function frAutoMapRule(rule, wrapEl) {
-      const normA = new Map(csvAHeaders.map(h => [normalize(h), "A::"+h]));
-      const normB = new Map(csvBHeaders.map(h => [normalize(h), "B::"+h]));
-      const findMatch = k => normA.get(k) || normB.get(k) || null;
+      const buildHeaderMeta = (headers, src) => headers.map(h => ({
+        key: src + "::" + h,
+        src,
+        norm: normalize(h),
+        base: normalize(h)
+          .replace(/\b(current|requested|request|reqd|new|old|present|existing)\b/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+      }));
+      const metaA = buildHeaderMeta(csvAHeaders, "A");
+      const metaB = buildHeaderMeta(csvBHeaders, "B");
+      const allMeta = [...metaA, ...metaB];
+
+      const stripContext = (s) => normalize(s)
+        .replace(/\b(current|requested|request|reqd|new|old|present|existing)\b/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      const hasCurrent = (s) => /\b(current|present|existing|old)\b/.test(normalize(s));
+      const hasRequested = (s) => /\b(requested|request|reqd|new)\b/.test(normalize(s));
+
+      const findSmartMatch = (fieldName) => {
+        const normField = normalize(fieldName);
+        const baseField = stripContext(fieldName);
+        const first = hasRequested(fieldName) ? metaB : metaA;
+        const second = hasRequested(fieldName) ? metaA : metaB;
+
+        const exact = allMeta.find(h => h.norm === normField);
+        if (exact) return exact.key;
+
+        if (baseField) {
+          const exactBase = first.find(h => h.base && h.base === baseField) || second.find(h => h.base && h.base === baseField);
+          if (exactBase) return exactBase.key;
+
+          const containsBase = first.find(h => h.base && (h.base.includes(baseField) || baseField.includes(h.base)))
+            || second.find(h => h.base && (h.base.includes(baseField) || baseField.includes(h.base)));
+          if (containsBase) return containsBase.key;
+        }
+
+        return null;
+      };
+
       rule.mapping = {};
       let matched = 0;
       for (const f of rule.fieldNames) {
-        const hit = findMatch(normalize(f));
-        if (hit) { rule.mapping[f] = { type:"col", value: hit }; matched++; }
+        const hit = findSmartMatch(f);
+        if (hit) { rule.mapping[f] = makeColEntry([hit]); matched++; }
       }
       frRenderRuleMapping(rule, wrapEl);
       frUpdateMappingBadge(rule);
@@ -4650,6 +5474,13 @@
     // Wire up all the buttons and inputs
     $("mapSearch").addEventListener("input", () => renderMappingUI());
     $("mappedOnly").addEventListener("change", () => renderMappingUI());
+    $("previewMappedBtn").addEventListener("click", () => {
+      $("mappingPreviewCard").style.display = "block";
+      renderMappedPreview();
+      $("mappingPreviewCard").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    $("previewRowSelect").addEventListener("change", () => renderMappedPreview());
+    $("refreshPreviewBtn").addEventListener("click", () => renderMappedPreview());
     $("autoSave").addEventListener("change", () => {
       if ($("autoSave").checked) saveMappingToLocal();
     });
@@ -4745,8 +5576,8 @@
           pdfBytes = null; // each rule has its own bytes
         }
 
-        csvARows = await parseCsv(csvAFile);
-        csvBRows = await parseCsv(csvBFile);
+        csvARows = normalizeCsvRows(await parseCsv(csvAFile));
+        csvBRows = normalizeCsvRows(await parseCsv(csvBFile));
 
         if (!csvARows.length) return setStatus("CSV A has no data rows.", "warn");
         if (!csvBRows.length) return setStatus("CSV B has no data rows.", "warn");
@@ -4759,19 +5590,26 @@
 
         const keyColAName = csvAHeaders.includes(keyColAName_sel) ? keyColAName_sel : csvAHeaders[0];
         const keyColBName = csvBHeaders.includes(keyColBName_sel) ? keyColBName_sel : csvBHeaders[0];
+        currentKeyColA = keyColAName;
+        currentKeyColB = keyColBName;
         const keyPosA = csvAHeaders.indexOf(keyColAName);
         const keyPosB = csvBHeaders.indexOf(keyColBName);
 
-        const aLookup = new Map();
-        for (const row of csvARows) {
-          const k = normKey(row[keyColAName]);
-          if (!aLookup.has(k)) aLookup.set(k, row);
-        }
+        const dedupeA = collapseExactDuplicateRows(csvARows, csvAHeaders);
+        const dedupeB = collapseExactDuplicateRows(csvBRows, csvBHeaders);
+        csvARows = dedupeA.rows;
+        csvBRows = dedupeB.rows;
+
+        const aGroups = buildRowGroupsByKey(csvARows, keyColAName);
+        const aUseIndex = new Map();
 
         csvRows = csvBRows.map(bRow => {
           const k = normKey(bRow[keyColBName]);
-          const aRow = aLookup.get(k) || {};
-          const merged = {};
+          const aBucket = aGroups.get(k) || [];
+          const idx = aUseIndex.get(k) || 0;
+          const aRow = aBucket[idx] || {};
+          if (aBucket[idx]) aUseIndex.set(k, idx + 1);
+          const merged = { __matchKey: k, __matchOccurrence: idx + 1 };
           for (const h of csvAHeaders) merged["A::" + h] = aRow[h] ?? "";
           for (const h of csvBHeaders) merged["B::" + h] = bRow[h] ?? "";
           return merged;
@@ -4795,7 +5633,11 @@
           pdfFieldNames = [];
         }
 
-        const noMatchCount = csvBRows.filter(r => !aLookup.has(normKey(r[keyColBName]))).length;
+        const noMatchCount = csvBRows.filter(r => {
+          const keyVal = r[keyColBName];
+          if (!isMeaningfulJoinValue(keyVal)) return false;
+          return !aGroups.has(normKey(keyVal));
+        }).length;
 
         $("rowCountPill").textContent    = `Rows: ${csvRows.length}`;
         $("fieldCountPill").textContent  = isMulti ? `Forms: ${frRules.length}` : `Fields: ${pdfFieldNames.length}`;
@@ -4847,29 +5689,36 @@
         const joinNote = noMatchCount > 0
           ? `\n⚠ ${noMatchCount} CSV B row${noMatchCount !== 1 ? "s" : ""} had no matching key in CSV A — those A:: fields will be blank.`
           : `\n✓ All ${csvRows.length} CSV B rows matched a CSV A row.`;
+        const dedupeBits = [];
+        if (dedupeA.removed) dedupeBits.push(`${dedupeA.removed} exact duplicate row${dedupeA.removed !== 1 ? "s" : ""} removed from CSV A`);
+        if (dedupeB.removed) dedupeBits.push(`${dedupeB.removed} exact duplicate row${dedupeB.removed !== 1 ? "s" : ""} removed from CSV B`);
+        const dedupeNote = dedupeBits.length ? `\n✓ Safe duplicate cleanup: ${dedupeBits.join("; ")}.` : "";
 
         if (isMulti) {
           renderMappingUI(); // shows "mapping lives in rule cards" message
           setStatus(
             `CSVs loaded — ${csvRows.length} rows.\n` +
             `Multi-PDF mode: set a routing column and upload PDFs in the Form Rules panel above.` +
-            joinNote,
+            joinNote +
+            dedupeNote,
             "ok"
           );
         } else {
           const restored = restoreMappingFromLocal();
           if (!restored) {
             renderMappingUI();
+          renderMappedPreview();
             setStatus(
               `Loaded ${pdfFieldNames.length} PDF fields.\n` +
               `CSV B: ${csvBRows.length} rows (key col ${keyPosB + 1} = "${keyColBName}") — drives PDF generation\n` +
               `CSV A: ${csvARows.length} rows (key col ${keyPosA + 1} = "${keyColAName}") — joined as reference` +
               joinNote +
+              dedupeNote +
               `\nMap the fields below. Use ⇄ to switch a field between CSV A and CSV B.`,
               "ok"
             );
           } else {
-            setStatus(`Restored saved mapping (${mappedCount()} mapped).` + joinNote, "ok");
+            setStatus(`Restored saved mapping (${mappedCount()} mapped).` + joinNote + dedupeNote, "ok");
           }
           $("genBtn").disabled  = mappedCount() === 0;
           $("testBtn").disabled = mappedCount() === 0;
