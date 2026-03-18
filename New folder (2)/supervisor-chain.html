@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supervisor Chain — CommandGridPro</title>
+  <meta name="description" content="Supervisor Chain — find any member, trace the full reporting chain, and export to PDF." />
+  <meta name="theme-color" content="#00ffd1"/>
+  <meta property="og:title" content="Supervisor Chain — CommandGridPro"/>
+  <meta property="og:description" content="Supervisor Chain — find any member, trace the full reporting chain, and export to PDF."/>
+  <meta property="og:type" content="website"/>
+  <link rel="icon" href="./webparts/favicon.svg" type="image/svg+xml"/>
+  <link rel="apple-touch-icon" href="./webparts/apple-touch-icon.svg"/>
+  <link rel="manifest" href="./webparts/site.webmanifest"/>
+  <link rel="stylesheet" href="./css/shared.css"/>
+  <style>
+    :root{
+      --background:#080808;
+      --panel:rgba(14,14,14,.92);
+      --panel-soft:rgba(22,22,22,.8);
+      --text:#e8e8e8;
+      --muted:#aaaaaa;
+      --border:rgba(255,255,255,.10);
+      --accent-a:rgba(0,255,209,.95);
+      --accent-b:rgba(0,200,164,.85);
+      --theme-accent:#00FFD1;
+      --theme-accent-2:#00C8A4;
+      --bg:var(--background);
+      --teal:var(--theme-accent);
+      --danger:#ff6b6b;
+      --success:#7dffb3;
+      --warning:#ffd166;
+      --radius:18px;
+      --shadow:0 20px 60px rgba(0,0,0,.35);
+      --glow:0 0 0 1px color-mix(in srgb, var(--theme-accent) 25%, transparent), 0 0 28px color-mix(in srgb, var(--theme-accent) 12%, transparent);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      min-height:100%;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top, color-mix(in srgb, var(--theme-accent) 10%, transparent), transparent 34%),
+        linear-gradient(180deg, color-mix(in srgb, var(--background) 82%, black), var(--background));
+      font:14px/1.45 Inter, Segoe UI, Arial, sans-serif;
+      transition:background .25s ease,color .25s ease;
+    }
+    .mono{font-family:"Share Tech Mono", Consolas, monospace; letter-spacing:.12em; text-transform:uppercase}
+    .page{max-width:1440px; margin:0 auto; padding:24px}
+    .shell{display:grid; grid-template-columns:380px minmax(0,1fr); gap:22px; align-items:start}
+    .panel{
+      background:linear-gradient(180deg, color-mix(in srgb, var(--panel) 88%, black), var(--panel-soft));
+      border:1px solid color-mix(in srgb, var(--theme-accent) 12%, var(--border));
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+    .header.panel{padding:18px 22px; margin-bottom:22px}
+    .header-bar{display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+    .logo{
+      width:46px;height:46px; border-radius:12px;
+      border:1px solid color-mix(in srgb, var(--theme-accent) 55%, transparent);
+      background:linear-gradient(135deg, color-mix(in srgb, var(--theme-accent) 22%, transparent), color-mix(in srgb, var(--theme-accent-2) 10%, transparent));
+      display:grid; place-items:center; color:var(--theme-accent);
+      box-shadow:0 0 20px color-mix(in srgb, var(--theme-accent) 16%, transparent);
+      flex:0 0 auto;
+    }
+    .title-wrap{min-width:260px; flex:1}
+    h1{margin:0; font-size:26px; line-height:1.05; letter-spacing:.02em}
+    h1 span{color:var(--theme-accent)}
+    .tagline{margin:6px 0 0; color:var(--muted); font-size:12px}
+    .header-actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .status-pill,.theme-pill,.metric-pill{
+      display:inline-flex; align-items:center; gap:8px; padding:9px 12px;
+      border-radius:999px; border:1px solid color-mix(in srgb, var(--theme-accent) 24%, transparent);
+      background:color-mix(in srgb, var(--theme-accent) 8%, transparent);
+      color:var(--text); font-size:12px;
+    }
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--theme-accent); box-shadow:0 0 12px var(--theme-accent)}
+
+    .sidebar{padding:18px; position:sticky; top:20px}
+    .main{padding:20px}
+    .section + .section{margin-top:18px}
+    .section-head{display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-bottom:10px}
+    .section-title{font-weight:700; font-size:15px}
+    .section-note{font-size:12px; color:var(--muted)}
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:7px}
+    input[type="text"], select{
+      width:100%; padding:12px 13px; border-radius:14px;
+      border:1px solid color-mix(in srgb, var(--theme-accent) 18%, var(--border));
+      background:rgba(0,0,0,.22); color:var(--text); outline:none;
+      transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease, background .18s ease;
+    }
+    select{
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      padding-right:42px;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%),
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      background-position:
+        calc(100% - 18px) calc(50% - 2px),
+        calc(100% - 12px) calc(50% - 2px),
+        0 0;
+      background-size:6px 6px, 6px 6px, 100% 100%;
+      background-repeat:no-repeat;
+    }
+    select option{
+      background:#101823;
+      color:#eef5ff;
+    }
+    input[type="file"]{
+      width:100%; color:var(--muted); padding:10px 12px; border-radius:16px;
+      border:1px solid color-mix(in srgb, var(--theme-accent) 18%, var(--border));
+      background:rgba(0,0,0,.18);
+    }
+    input[type="file"]::file-selector-button{
+      appearance:none; border:none; cursor:pointer; margin-right:12px;
+      padding:10px 14px; border-radius:12px; font-weight:700; color:var(--text);
+      background:linear-gradient(135deg, color-mix(in srgb, var(--theme-accent) 18%, transparent), color-mix(in srgb, var(--theme-accent-2) 10%, transparent));
+      border:1px solid color-mix(in srgb, var(--theme-accent) 34%, transparent);
+      box-shadow:0 0 0 1px color-mix(in srgb, var(--theme-accent) 14%, transparent);
+      transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    input[type="file"]::file-selector-button:hover{
+      transform:translateY(-1px);
+      border-color:color-mix(in srgb, var(--theme-accent) 48%, transparent);
+      box-shadow:var(--glow);
+      filter:brightness(1.05);
+    }
+    input[type="text"]:focus, select:focus, input[type="file"]:focus{
+      border-color:var(--theme-accent);
+      box-shadow:0 0 0 4px color-mix(in srgb, var(--theme-accent) 10%, transparent);
+    }
+    *{
+      scrollbar-width:thin;
+      scrollbar-color:color-mix(in srgb, var(--theme-accent) 55%, transparent) rgba(255,255,255,.06);
+    }
+    *::-webkit-scrollbar{width:12px; height:12px}
+    *::-webkit-scrollbar-track{
+      background:rgba(255,255,255,.04);
+      border-radius:999px;
+    }
+    *::-webkit-scrollbar-thumb{
+      background:linear-gradient(180deg, color-mix(in srgb, var(--theme-accent) 55%, transparent), color-mix(in srgb, var(--theme-accent-2) 42%, transparent));
+      border-radius:999px;
+      border:2px solid rgba(8,12,18,.75);
+    }
+    *::-webkit-scrollbar-thumb:hover{
+      background:linear-gradient(180deg, color-mix(in srgb, var(--theme-accent) 72%, transparent), color-mix(in srgb, var(--theme-accent-2) 58%, transparent));
+    }
+    *::-webkit-scrollbar-corner{background:transparent}
+    .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+    .toolbar{display:flex; gap:10px; flex-wrap:wrap}
+    .supervisor-chain-page button{
+      appearance:none; border:none; cursor:pointer; color:var(--text);
+      background:rgba(255,255,255,.04); border:1px solid var(--border);
+      padding:11px 14px; border-radius:14px; transition:.18s ease;
+      font-weight:600;
+    }
+    .supervisor-chain-page button:hover{transform:translateY(-1px); border-color:color-mix(in srgb, var(--theme-accent) 40%, transparent)}
+    .supervisor-chain-page button.sc-btn-primary{background:linear-gradient(135deg, color-mix(in srgb, var(--theme-accent) 20%, transparent), color-mix(in srgb, var(--theme-accent-2) 12%, transparent)); border-color:color-mix(in srgb, var(--theme-accent) 42%, transparent); box-shadow:var(--glow)}
+    .supervisor-chain-page button.sc-btn-soft{background:color-mix(in srgb, var(--theme-accent) 8%, transparent); color:var(--text)}
+    .supervisor-chain-page button.sc-btn-ghost{background:transparent}
+    .supervisor-chain-page button.active{outline:1px solid color-mix(in srgb, var(--theme-accent) 55%, transparent); box-shadow:var(--glow)}
+    .supervisor-chain-page button:disabled{opacity:.45; cursor:not-allowed; transform:none; box-shadow:none}
+    .small{font-size:12px; color:var(--muted)}
+    .status-line{margin-top:8px; min-height:20px; font-size:12px; color:var(--muted)}
+    .status-line.ok{color:var(--success)}
+    .status-line.warn{color:var(--warning)}
+    .status-line.err{color:var(--danger)}
+    .theme-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; max-height:320px; overflow:auto; padding-right:4px}
+    .theme-card{padding:10px; text-align:left; border-radius:16px}
+    .theme-card.active{box-shadow:var(--glow)}
+    .theme-swatch{height:34px; border-radius:12px; margin-bottom:8px}
+    .theme-name{font-size:12px; font-weight:700}
+    .theme-note{font-size:11px; color:var(--muted)}
+    .mapping-wrap{display:grid; grid-template-columns:1fr; gap:10px}
+    .map-row{display:grid; grid-template-columns:130px 1fr; gap:10px; align-items:center}
+    .results{display:flex; flex-direction:column; gap:8px; max-height:260px; overflow:auto}
+    .result-item{
+      padding:12px; border-radius:14px; border:1px solid var(--border);
+      background:rgba(255,255,255,.02); cursor:pointer;
+    }
+    .result-item:hover,.result-item.active{border-color:color-mix(in srgb, var(--theme-accent) 55%, transparent); background:color-mix(in srgb, var(--theme-accent) 7%, transparent)}
+    .result-title{font-weight:700}
+    .result-meta{font-size:12px; color:var(--muted); margin-top:4px}
+
+    .hero{padding:18px; margin-bottom:18px}
+    .hero-top{display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:flex-start}
+    .hero-title{font-size:24px; font-weight:800}
+    .hero-copy{font-size:13px; color:var(--muted); max-width:820px; margin-top:8px}
+    .hero-actions{display:flex; gap:10px; flex-wrap:wrap}
+    .control-row{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin:18px 0 22px; padding:10px 0 12px}
+    .control-group{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+    .stage{padding:8px 0 0}
+    .chain-wrap{display:flex; flex-direction:column; gap:12px}
+    .chain-item{
+      position:relative; padding:16px; border-radius:18px;
+      border:1px solid color-mix(in srgb, var(--theme-accent) 14%, var(--border));
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+    }
+    .chain-item.selected{background:linear-gradient(180deg, color-mix(in srgb, var(--theme-accent) 11%, transparent), rgba(255,255,255,.03)); border-color:color-mix(in srgb, var(--theme-accent) 48%, transparent); box-shadow:var(--glow)}
+    .role-badge{display:inline-flex; padding:6px 10px; border-radius:999px; font-size:11px; margin-bottom:12px; color:var(--text); background:color-mix(in srgb, var(--theme-accent) 10%, transparent); border:1px solid color-mix(in srgb, var(--theme-accent) 20%, transparent)}
+    .card-head{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start}
+    .card-title{font-size:22px; font-weight:800; line-height:1.1}
+    .card-subtitle{font-size:13px; color:var(--muted); margin-top:4px}
+    .mini-pills{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
+    .mini-pills span{padding:6px 10px; border-radius:999px; font-size:11px; background:rgba(255,255,255,.04); border:1px solid var(--border)}
+    .card-grid{display:grid; grid-template-columns:repeat(4, minmax(120px,1fr)); gap:10px; margin-top:14px}
+    .meta-box{padding:10px 12px; border-radius:14px; background:rgba(0,0,0,.18); border:1px solid var(--border)}
+    .meta-k{font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.14em}
+    .meta-v{font-size:13px; margin-top:5px; word-break:break-word}
+    .card-actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+    .connector{display:flex; justify-content:center; align-items:center; height:30px; position:relative}
+    .connector::before{content:""; width:2px; height:100%; background:linear-gradient(180deg, color-mix(in srgb, var(--theme-accent) 60%, transparent), transparent)}
+    .subs{margin-top:14px; padding-top:14px; border-top:1px dashed color-mix(in srgb, var(--theme-accent) 20%, var(--border))}
+    .subs-title{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.14em; margin-bottom:10px}
+    .subs-list{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{padding:9px 10px; border-radius:999px; font-size:12px; background:rgba(255,255,255,.04); border:1px solid var(--border)}
+    .chip button, button.chip{padding:9px 10px; border-radius:999px}
+    .empty{padding:28px; text-align:center; color:var(--muted); border:1px dashed var(--border); border-radius:18px; background:rgba(255,255,255,.02)}
+    .footer-note{margin-top:16px; color:var(--muted); font-size:12px}
+
+    .create-card-panel{padding:16px; margin:0 0 18px; display:none}
+    .create-card-panel.open{display:block}
+    .create-card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; flex-wrap:wrap}
+    .create-card-title{font-size:16px; font-weight:800}
+    .create-card-note{font-size:12px; color:var(--muted); margin-top:4px}
+
+    @media (max-width: 1120px){
+      .shell{grid-template-columns:1fr}
+      .sidebar{position:static}
+      .card-grid{grid-template-columns:repeat(2,minmax(120px,1fr))}
+    }
+    @media (max-width: 760px){
+      .page{padding:14px}
+      .header.panel,.sidebar,.main,.hero{padding:14px}
+      .grid-2,.grid-3,.map-row{grid-template-columns:1fr}
+      .theme-grid{grid-template-columns:1fr 1fr}
+      .card-grid{grid-template-columns:1fr}
+      .hero-title{font-size:21px}
+      .card-title{font-size:19px}
+    }
+
+    body{
+      font-family: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      opacity: 0;
+      transition: opacity .3s ease, background .25s ease, color .25s ease;
+    }
+    body.fade-in{opacity:1}
+    body.fade-out{opacity:0}
+    .supervisor-main{
+      width:min(1440px, 100%);
+      margin:0 auto;
+      padding:clamp(18px,2.5vw,28px);
+    }
+    .page{max-width:none; padding:0}
+    .shell{margin-top:0}
+    .sidebar{top:92px}
+    .header.panel{display:none}
+
+  </style>
+</head>
+<body class="supervisor-chain-page">
+  <div class="page">
+    <header data-cgp-header data-tagline="Supervisor Chain · local-only CSV chain viewer"></header>
+    <main class="supervisor-main">
+      <div class="shell">
+      <aside class="sidebar panel">
+        <div class="section">
+          <div class="section-head">
+            <div>
+              <div class="section-title">1. Load CSV</div>
+              <div class="section-note">Personnel or org CSV file.</div>
+            </div>
+          </div>
+          <input id="csvFile" type="file" accept=".csv,text/csv" />
+          <div id="fileStatus" class="status-line">No CSV loaded.</div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <div>
+              <div class="section-title">2. Map fields</div>
+              <div class="section-note">Auto-detected. Override any field below.</div>
+            </div>
+          </div>
+          <div class="mapping-wrap" id="mappingWrap"></div>
+          <div class="toolbar" style="margin-top:10px;">
+            <button id="applyMappingBtn" class="sc-btn-primary" type="button" disabled>Apply Mapping</button>
+            <button id="autoMapBtn" class="sc-btn-soft" type="button" disabled>Auto Map</button>
+          </div>
+          <div id="mappingStatus" class="status-line">Upload a CSV to begin.</div>
+        </div>
+
+      </aside>
+
+      <main class="main panel">
+        <section class="hero panel" style="margin:0;">
+          <div class="hero-top">
+            <div>
+              <div class="hero-title">Supervisor Chain</div>
+              <div class="hero-copy">
+                Select a member to see their full reporting chain — starting at the root and flowing down to the selected person, with direct reports shown below each card. Click any card to re-anchor the view.
+              </div>
+            </div>
+            <div class="hero-actions">
+              <button id="reverseBtn" class="sc-btn-soft" type="button" disabled>Reverse Chain</button>
+              <button id="exportPdfBtn" class="sc-btn-primary" type="button" disabled>Download PDF</button>
+            </div>
+          </div>
+          <div class="mini-pills" id="summaryPills" style="margin-top:14px;">
+            <span>No card selected</span>
+          </div>
+        </section>
+
+        <section class="panel" style="padding:18px; margin:18px 0 0;">
+          <div class="section-head">
+            <div>
+              <div class="section-title">3. Find a member</div>
+              <div class="section-note">Name, position, rank, title, section, or unit.</div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label for="searchInput">Search</label>
+              <input id="searchInput" type="text" placeholder="Name or position…" disabled />
+            </div>
+            <div>
+              <label>&nbsp;</label>
+              <div class="toolbar">
+                <button id="searchBtn" class="sc-btn-primary" type="button" disabled>Show Chain</button>
+                <button id="useSelectedBtn" class="sc-btn-soft" type="button" disabled>Use Selected</button>
+                <button id="clearSelectedBtn" class="sc-btn-ghost" type="button" disabled>Clear</button>
+              </div>
+            </div>
+          </div>
+          <div id="searchStatus" class="status-line">Load and map a CSV first.</div>
+          <div class="results" id="resultsList" style="margin-top:10px;"></div>
+        </section>
+
+        <div class="control-row">
+          <div class="control-group">
+            <button id="backBtn" class="sc-btn-ghost" type="button" disabled>Back</button>
+            <button id="addCardBtn" class="sc-btn-soft" type="button" disabled>Add New Position</button>
+          </div>
+          <div class="small">Step back through selections or add a record manually.</div>
+        </div>
+
+        <section class="panel create-card-panel" id="createCardPanel">
+          <div class="create-card-head">
+            <div>
+              <div class="create-card-title">Create New Position</div>
+              <div class="create-card-note" id="createCardPrefillNote">New position will be added to the current dataset.</div>
+            </div>
+            <div class="toolbar">
+              <button id="cancelCreateBtn" class="sc-btn-ghost" type="button">Cancel</button>
+              <button id="saveCreateBtn" class="sc-btn-primary" type="button">Create Position</button>
+            </div>
+          </div>
+          <div class="grid-3">
+            <div>
+              <label for="createPosition">Position</label>
+              <input id="createPosition" type="text" placeholder="Position number" />
+            </div>
+            <div>
+              <label for="createReportsTo">Reports To</label>
+              <input id="createReportsTo" type="text" placeholder="Parent position number" />
+            </div>
+            <div>
+              <label for="createReportsToDescription">Reports To Description</label>
+              <input id="createReportsToDescription" type="text" placeholder="Supervisor name or title" />
+            </div>
+            <div>
+              <label for="createName">Name</label>
+              <input id="createName" type="text" placeholder="Full name" />
+            </div>
+            <div>
+              <label for="createTitle">Title / Occupation</label>
+              <input id="createTitle" type="text" placeholder="Job title" />
+            </div>
+            <div>
+              <label for="createRank">Rank</label>
+              <input id="createRank" type="text" placeholder="Rank" />
+            </div>
+            <div>
+              <label for="createSection">Section</label>
+              <input id="createSection" type="text" placeholder="Section" />
+            </div>
+            <div>
+              <label for="createUnit">Unit</label>
+              <input id="createUnit" type="text" placeholder="Unit" />
+            </div>
+          </div>
+        </section>
+
+        <section class="stage" id="stage">
+          <div class="empty">Load a CSV, map your columns, then pick a member.</div>
+        </section>
+        <div class="footer-note mono">Runs locally · nothing leaves your browser</div>
+      </main>
+      </div>
+    </main>
+    <footer data-cgp-footer data-page="Supervisor Chain" data-version="v1.0.0"></footer>
+  </div>
+
+  <script src="./app-javascript/shared.js"></script>
+  <script src="./app-javascript/shared-normalize.js"></script>
+  <script>
+
+    const MAPPING_FIELDS = [
+      { key:'position', label:'Position', guesses:['position','position number','posn','pos','position nbr'] },
+      { key:'reportsTo', label:'Reports To', guesses:['reports to','reportsto','manager','supervisor','reports to position'] },
+      { key:'reportsToDescription', label:'Reports To Description', guesses:['reports to description','reports to desc','supervisor name','manager name','supervisor description','manager description','reports to title'] },
+      { key:'name', label:'Name', guesses:['name','full name','member name','employee name'] },
+      { key:'title', label:'Title / Occupation', guesses:['title','occupation','job title','position title'] },
+      { key:'rank', label:'Rank', guesses:['rank'] },
+      { key:'section', label:'Section', guesses:['section','section description','organization','org'] },
+      { key:'unit', label:'Unit', guesses:['unit','uic','organization unit','wing'] }
+    ];
+
+    const state = {
+      headers: [],
+      rows: [],
+      mapped: {},
+      nodes: [],
+      nodesByPosition: new Map(),
+      childrenByPosition: new Map(),
+      selectedRowIndex: null,
+      chainReversed: true,
+      selectionHistory: [],
+      createParentPosition: ''
+    };
+
+    const el = {
+      csvFile: document.getElementById('csvFile'),
+      fileStatus: document.getElementById('fileStatus'),
+      mappingWrap: document.getElementById('mappingWrap'),
+      mappingStatus: document.getElementById('mappingStatus'),
+      applyMappingBtn: document.getElementById('applyMappingBtn'),
+      autoMapBtn: document.getElementById('autoMapBtn'),
+      searchInput: document.getElementById('searchInput'),
+      searchBtn: document.getElementById('searchBtn'),
+      useSelectedBtn: document.getElementById('useSelectedBtn'),
+      clearSelectedBtn: document.getElementById('clearSelectedBtn'),
+      searchStatus: document.getElementById('searchStatus'),
+      resultsList: document.getElementById('resultsList'),
+      reverseBtn: document.getElementById('reverseBtn'),
+      exportPdfBtn: document.getElementById('exportPdfBtn'),
+      summaryPills: document.getElementById('summaryPills'),
+      stage: document.getElementById('stage'),
+      backBtn: document.getElementById('backBtn'),
+      addCardBtn: document.getElementById('addCardBtn'),
+      createCardPanel: document.getElementById('createCardPanel'),
+      cancelCreateBtn: document.getElementById('cancelCreateBtn'),
+      saveCreateBtn: document.getElementById('saveCreateBtn'),
+      createCardPrefillNote: document.getElementById('createCardPrefillNote'),
+      createPosition: document.getElementById('createPosition'),
+      createReportsTo: document.getElementById('createReportsTo'),
+      createReportsToDescription: document.getElementById('createReportsToDescription'),
+      createName: document.getElementById('createName'),
+      createTitle: document.getElementById('createTitle'),
+      createRank: document.getElementById('createRank'),
+      createSection: document.getElementById('createSection'),
+      createUnit: document.getElementById('createUnit')
+    };
+
+    function esc(v){
+      return String(v ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+    function normalizeText(v){
+      return String(v ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+    }
+    function normalizePosition(v){
+      return window.CGPNormalize.normalizePosition(v);
+    }
+    function guessHeader(headers, guesses){
+      const normalized = headers.map(h => ({ raw:h, norm:normalizeText(h) }));
+      for (const guess of guesses) {
+        const found = normalized.find(h => h.norm === guess);
+        if (found) return found.raw;
+      }
+      for (const guess of guesses) {
+        const found = normalized.find(h => h.norm.includes(guess));
+        if (found) return found.raw;
+      }
+      return '';
+    }
+    function setStatus(target, text, cls=''){
+      target.className = `status-line${cls ? ' ' + cls : ''}`;
+      target.textContent = text;
+    }
+    function parseCsv(text){
+      const rows = [];
+      let row = [];
+      let cell = '';
+      let inQuotes = false;
+      for (let i=0; i<text.length; i++) {
+        const ch = text[i];
+        const next = text[i+1];
+        if (inQuotes) {
+          if (ch === '"' && next === '"') { cell += '"'; i++; }
+          else if (ch === '"') inQuotes = false;
+          else cell += ch;
+        } else {
+          if (ch === '"') inQuotes = true;
+          else if (ch === ',') { row.push(cell); cell=''; }
+          else if (ch === '\n') { row.push(cell); rows.push(row); row=[]; cell=''; }
+          else if (ch === '\r') { continue; }
+          else cell += ch;
+        }
+      }
+      row.push(cell);
+      rows.push(row);
+      while (rows.length && rows[rows.length - 1].every(v => !String(v).trim())) rows.pop();
+      if (!rows.length) return { headers: [], rows: [] };
+      const headers = rows[0].map((h, i) => String(h || `Column ${i+1}`).trim() || `Column ${i+1}`);
+      const records = rows.slice(1).filter(r => r.some(v => String(v).trim())).map((r, idx) => {
+        const obj = { __rowIndex: idx };
+        headers.forEach((h, i) => obj[h] = String(r[i] ?? '').trim());
+        return obj;
+      });
+      return { headers, rows: records };
+    }
+
+    function renderMappingControls(){
+      el.mappingWrap.innerHTML = '';
+      MAPPING_FIELDS.forEach(field => {
+        const row = document.createElement('div');
+        row.className = 'map-row';
+        const label = document.createElement('div');
+        label.innerHTML = `<div class="small mono">${esc(field.label)}</div>`;
+        const select = document.createElement('select');
+        select.dataset.mapKey = field.key;
+        select.innerHTML = `<option value="">— none —</option>` + state.headers.map(h => `<option value="${esc(h)}">${esc(h)}</option>`).join('');
+        select.value = state.mapped[field.key] || '';
+        select.addEventListener('change', () => { state.mapped[field.key] = select.value; });
+        row.append(label, select);
+        el.mappingWrap.appendChild(row);
+      });
+    }
+
+    function autoMap(){
+      const mapped = {};
+      MAPPING_FIELDS.forEach(field => mapped[field.key] = guessHeader(state.headers, field.guesses));
+      state.mapped = mapped;
+      renderMappingControls();
+    }
+
+    function buildOrg(){
+      const req = ['position','reportsTo'];
+      for (const key of req) {
+        if (!state.mapped[key]) {
+          setStatus(el.mappingStatus, `Map ${MAPPING_FIELDS.find(f => f.key === key).label} before applying.`, 'err');
+          return false;
+        }
+      }
+      const seen = new Set();
+      const nodes = state.rows.map((row) => {
+        const node = {
+          rowIndex: row.__rowIndex,
+          raw: row,
+          Position: normalizePosition(row[state.mapped.position]),
+          ReportsTo: normalizePosition(row[state.mapped.reportsTo]),
+          ReportsToDescription: state.mapped.reportsToDescription ? row[state.mapped.reportsToDescription] : '',
+          Name: state.mapped.name ? row[state.mapped.name] : '',
+          Title: state.mapped.title ? row[state.mapped.title] : '',
+          Rank: state.mapped.rank ? row[state.mapped.rank] : '',
+          Section: state.mapped.section ? row[state.mapped.section] : '',
+          Unit: state.mapped.unit ? row[state.mapped.unit] : ''
+        };
+        node.DisplayTitle = node.Name || node.Title || node.Position || 'Record';
+        node.SearchBlob = normalizeText([node.Position, node.ReportsTo, node.ReportsToDescription, node.Name, node.Title, node.Section, node.Rank, node.Unit].join(' | '));
+        return node;
+      }).filter(node => node.Position);
+
+      state.nodesByPosition = new Map();
+      state.childrenByPosition = new Map();
+      const deduped = [];
+      for (const node of nodes) {
+        if (seen.has(node.Position)) continue;
+        seen.add(node.Position);
+        deduped.push(node);
+        state.nodesByPosition.set(node.Position, node);
+      }
+      deduped.forEach(node => {
+        if (!node.ReportsTo) return;
+        if (!state.childrenByPosition.has(node.ReportsTo)) state.childrenByPosition.set(node.ReportsTo, []);
+        state.childrenByPosition.get(node.ReportsTo).push(node.Position);
+      });
+      state.nodes = deduped;
+      state.selectedRowIndex = null;
+      state.selectionHistory = [];
+      setStatus(el.mappingStatus, `Mapped ${deduped.length} unique positions.`, 'ok');
+      el.searchInput.disabled = false;
+      el.searchBtn.disabled = false;
+      el.useSelectedBtn.disabled = false;
+      el.clearSelectedBtn.disabled = false;
+      el.reverseBtn.disabled = false;
+      searchAndRenderResults();
+      renderSummary();
+      renderChain();
+      updateControlState();
+      return true;
+    }
+
+    function searchNodes(query){
+      const q = normalizeText(query);
+      let results = state.nodes.slice();
+      if (q) results = results.filter(node => node.SearchBlob.includes(q));
+      results.sort((a,b) => String(a.Name || a.Position).localeCompare(String(b.Name || b.Position), undefined, { sensitivity:'base' }));
+      return results.slice(0, 50);
+    }
+
+    function searchAndRenderResults(){
+      if (!state.nodes.length) { el.resultsList.innerHTML = ''; return; }
+      const query = el.searchInput.value || '';
+      const matches = searchNodes(query);
+      el.resultsList.innerHTML = '';
+      matches.forEach(node => {
+        const item = document.createElement('div');
+        item.className = 'result-item' + (state.selectedRowIndex === node.rowIndex ? ' active' : '');
+        item.innerHTML = `<div class="result-title">${esc(node.Name || node.Position || 'Record')}</div><div class="result-meta">${esc([node.Position, node.Title, node.Rank, node.Section, node.ReportsToDescription].filter(Boolean).join(' • ') || 'No extra details')}</div>`;
+        item.addEventListener('click', () => {
+          selectRow(node.rowIndex, `Selected ${node.Name || node.Position}.`);
+        });
+        el.resultsList.appendChild(item);
+      });
+      if (!matches.length) {
+        el.resultsList.innerHTML = '<div class="empty">No matching results.</div>';
+      }
+    }
+
+
+    function pushSelection(rowIndex){
+      if (typeof rowIndex !== 'number' || Number.isNaN(rowIndex)) return;
+      const history = state.selectionHistory;
+      if (history[history.length - 1] !== rowIndex) history.push(rowIndex);
+      if (history.length > 100) history.shift();
+      updateControlState();
+    }
+
+    function selectRow(rowIndex, statusText=''){
+      state.selectedRowIndex = Number(rowIndex);
+      pushSelection(state.selectedRowIndex);
+      searchAndRenderResults();
+      renderSummary();
+      renderChain();
+      if (statusText) setStatus(el.searchStatus, statusText, 'ok');
+    }
+
+    function updateControlState(){
+      const hasNodes = !!state.nodes.length;
+      el.backBtn.disabled = state.selectionHistory.length < 2;
+      el.addCardBtn.disabled = !hasNodes;
+    }
+
+    function getSelectedNode(){
+      return state.nodes.find(node => node.rowIndex === state.selectedRowIndex) || null;
+    }
+
+    function resolveSearchNode(raw){
+      const query = normalizeText(raw);
+      if (!query) return getSelectedNode();
+      return state.nodes.find(n => normalizeText(n.Position) === query)
+        || state.nodes.find(n => normalizeText(n.Name) === query)
+        || state.nodes.find(n => n.SearchBlob.includes(query))
+        || null;
+    }
+
+    function buildBaseChain(selectedNode){
+      const chain = [];
+      let current = selectedNode;
+      let depth = 0;
+      const visited = new Set();
+      while (current && depth < 20 && !visited.has(current.Position)) {
+        visited.add(current.Position);
+        chain.push(current);
+        if (!current.ReportsTo || !state.nodesByPosition.has(current.ReportsTo)) break;
+        current = state.nodesByPosition.get(current.ReportsTo);
+        depth += 1;
+      }
+      return chain;
+    }
+
+    function createSubordinateSection(node){
+      const children = (state.childrenByPosition.get(node.Position) || []).map(pos => state.nodesByPosition.get(pos)).filter(Boolean);
+      if (!children.length) return '';
+      const chips = children.slice(0,8).map(child => `<button class="chip" type="button" data-sub-row="${child.rowIndex}"><strong>${esc(child.Name || child.Position)}</strong> · ${esc(child.Position || '—')}</button>`).join('');
+      const extra = children.length > 8 ? `<span class="chip">+${children.length - 8} more</span>` : '';
+      return `<div class="subs"><div class="subs-title">${children.length === 1 ? 'Direct report' : `Direct reports (${children.length})`}</div><div class="subs-list">${chips}${extra}</div></div>`;
+    }
+
+    function clearCreateCardForm(){
+      state.createParentPosition = '';
+      el.createPosition.value = '';
+      el.createReportsTo.value = '';
+      el.createReportsToDescription.value = '';
+      el.createName.value = '';
+      el.createTitle.value = '';
+      el.createRank.value = '';
+      el.createSection.value = '';
+      el.createUnit.value = '';
+      el.createCardPrefillNote.textContent = 'Fill in the card below to add a new position.';
+    }
+
+    function openCreateCard(parentNode=null){
+      const selected = parentNode || getSelectedNode();
+      clearCreateCardForm();
+      if (selected) {
+        state.createParentPosition = selected.Position || '';
+        el.createReportsTo.value = selected.Position || '';
+        el.createReportsToDescription.value = selected.Name || selected.Title || '';
+        el.createSection.value = selected.Section || '';
+        el.createUnit.value = selected.Unit || '';
+        el.createCardPrefillNote.textContent = `Creating a child under ${selected.Name || selected.Position}. Reports To was pre-filled from that card.`;
+      }
+      el.createCardPanel.classList.add('open');
+      el.createCardPanel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      setTimeout(() => el.createPosition.focus(), 0);
+    }
+
+    function closeCreateCard(){
+      el.createCardPanel.classList.remove('open');
+      clearCreateCardForm();
+    }
+
+    function saveCreateCard(){
+      const position = normalizePosition(el.createPosition.value || '');
+      if (!position) {
+        setStatus(el.searchStatus, 'Enter a position number for the new card.', 'warn');
+        el.createPosition.focus();
+        return;
+      }
+      if (state.nodesByPosition.has(position)) {
+        setStatus(el.searchStatus, `Position ${position} already exists.`, 'warn');
+        el.createPosition.focus();
+        return;
+      }
+      const reportsTo = normalizePosition(el.createReportsTo.value || '');
+      const reportsToDescription = (el.createReportsToDescription.value || '').trim();
+      const name = (el.createName.value || '').trim();
+      const title = (el.createTitle.value || '').trim();
+      const rank = (el.createRank.value || '').trim();
+      const section = (el.createSection.value || '').trim();
+      const unit = (el.createUnit.value || '').trim();
+      const newRowIndex = state.rows.length;
+      const raw = { __rowIndex: newRowIndex };
+      if (state.mapped.position) raw[state.mapped.position] = position;
+      if (state.mapped.reportsTo) raw[state.mapped.reportsTo] = reportsTo;
+      if (state.mapped.reportsToDescription) raw[state.mapped.reportsToDescription] = reportsToDescription;
+      if (state.mapped.name) raw[state.mapped.name] = name;
+      if (state.mapped.title) raw[state.mapped.title] = title;
+      if (state.mapped.rank) raw[state.mapped.rank] = rank;
+      if (state.mapped.section) raw[state.mapped.section] = section;
+      if (state.mapped.unit) raw[state.mapped.unit] = unit;
+      state.headers.forEach(h => { if (!(h in raw)) raw[h] = ''; });
+      state.rows.push(raw);
+      buildOrg();
+      closeCreateCard();
+      const node = state.nodesByPosition.get(position);
+      if (node) selectRow(node.rowIndex, `Added new position ${name || position}.`);
+    }
+
+    function renderSummary(){
+      const selected = getSelectedNode();
+      if (!selected) {
+        el.summaryPills.innerHTML = '<span>No card selected</span>';
+        el.exportPdfBtn.disabled = true;
+        return;
+      }
+      const baseChain = buildBaseChain(selected);
+      const chain = state.chainReversed ? baseChain.slice().reverse() : baseChain.slice();
+      const topVisible = baseChain[baseChain.length - 1] || null;
+      el.exportPdfBtn.disabled = false;
+      el.summaryPills.innerHTML = [
+        `<span class="metric-pill">Selected: <strong>${esc(selected.Name || selected.Position)}</strong></span>`,
+        `<span class="metric-pill">Chain length: <strong>${chain.length}</strong></span>`,
+        `<span class="metric-pill">Top visible: <strong>${esc((topVisible && (topVisible.Name || topVisible.Position)) || 'None')}</strong></span>`,
+        `<span class="metric-pill">Direction: <strong>${state.chainReversed ? 'Root to person' : 'Person to root'}</strong></span>`
+      ].join('');
+      el.reverseBtn.textContent = state.chainReversed ? 'Show Person to Root' : 'Show Root to Person';
+      el.reverseBtn.classList.toggle('active', state.chainReversed);
+    }
+
+    function renderChain(){
+      const selected = getSelectedNode();
+      if (!selected) {
+        el.stage.innerHTML = '<div class="empty">Pick a member from the search results.</div>';
+        return;
+      }
+      const baseChain = buildBaseChain(selected);
+      const chain = state.chainReversed ? baseChain.slice().reverse() : baseChain.slice();
+      el.stage.innerHTML = `<div class="chain-wrap">${chain.map((node, index) => {
+        const distance = baseChain.findIndex(item => item.rowIndex === node.rowIndex);
+        const roleLabel = distance === 0 ? 'Selected Card' : distance === 1 ? 'Immediate Supervisor' : distance === baseChain.length - 1 ? 'Top Visible Supervisor' : `Supervisor ${distance}`;
+        const isSelected = node.rowIndex === selected.rowIndex;
+        const extraFields = Object.entries(node.raw).filter(([k,v]) => String(v ?? '').trim()).filter(([k]) => !Object.values(state.mapped).includes(k)).slice(0, 4);
+        return `
+          <article class="chain-item${isSelected ? ' selected' : ''}" data-row-index="${node.rowIndex}">
+            <div class="role-badge mono">${esc(roleLabel)}</div>
+            <div class="card-head">
+              <div>
+                <div class="card-title">${esc(node.Name || node.Title || node.Position || 'Record')}</div>
+                <div class="card-subtitle">${esc([node.Position, node.Title, node.Rank].filter(Boolean).join(' • ') || 'No title details')}</div>
+              </div>
+              <div class="mini-pills">
+                ${node.Unit ? `<span>${esc(node.Unit)}</span>` : ''}
+                ${node.Section ? `<span>${esc(node.Section)}</span>` : ''}
+                ${node.ReportsTo ? `<span>Reports To ${esc(node.ReportsTo)}</span>` : '<span>No parent</span>'}
+                ${node.ReportsToDescription ? `<span>${esc(node.ReportsToDescription)}</span>` : ''}
+              </div>
+            </div>
+            <div class="card-grid">
+              <div class="meta-box"><div class="meta-k">Position</div><div class="meta-v">${esc(node.Position || '—')}</div></div>
+              <div class="meta-box"><div class="meta-k">Name</div><div class="meta-v">${esc(node.Name || '—')}</div></div>
+              <div class="meta-box"><div class="meta-k">Title</div><div class="meta-v">${esc(node.Title || '—')}</div></div>
+              <div class="meta-box"><div class="meta-k">Rank</div><div class="meta-v">${esc(node.Rank || '—')}</div></div>
+              <div class="meta-box"><div class="meta-k">Section</div><div class="meta-v">${esc(node.Section || '—')}</div></div>
+              <div class="meta-box"><div class="meta-k">Reports To Description</div><div class="meta-v">${esc(node.ReportsToDescription || '—')}</div></div>
+              <div class="meta-box"><div class="meta-k">Unit</div><div class="meta-v">${esc(node.Unit || '—')}</div></div>
+              ${extraFields.map(([k,v]) => `<div class="meta-box"><div class="meta-k">${esc(k)}</div><div class="meta-v">${esc(v)}</div></div>`).join('')}
+            </div>
+            <div class="card-actions">
+              <button class="sc-btn-soft" type="button" data-select-row="${node.rowIndex}">Select Chain From Here</button>
+              <button class="sc-btn-ghost" type="button" data-create-child="${node.rowIndex}">Create Child</button>
+            </div>
+            ${createSubordinateSection(node)}
+          </article>
+          ${index < chain.length - 1 ? '<div class="connector" aria-hidden="true"></div>' : ''}`;
+      }).join('')}</div>`;
+
+      el.stage.querySelectorAll('[data-select-row]').forEach(btn => btn.addEventListener('click', () => {
+        selectRow(Number(btn.dataset.selectRow));
+      }));
+      el.stage.querySelectorAll('[data-sub-row]').forEach(btn => btn.addEventListener('click', () => {
+        selectRow(Number(btn.dataset.subRow));
+      }));
+      el.stage.querySelectorAll('[data-create-child]').forEach(btn => btn.addEventListener('click', () => {
+        const node = state.nodes.find(item => item.rowIndex === Number(btn.dataset.createChild));
+        openCreateCard(node || null);
+      }));
+      const selectedEl = el.stage.querySelector('.chain-item.selected');
+      selectedEl?.scrollIntoView({ behavior:'smooth', block:'center' });
+        }
+
+    function pdfEscape(value){
+      return String(value ?? '')
+        .replace(/[—–]/g,' / ')
+        .replace(/[•]/g,' - ')
+        .replace(/[‘’]/g, "'")
+        .replace(/[“”]/g, '"')
+        .replace(/…/g,'...')
+        .replace(/ /g,' ')
+        .replace(/\\/g,'\\\\')
+        .replace(/\(/g,'\\(')
+        .replace(/\)/g,'\\)')
+    }
+    function pdfBytes(str){ return new TextEncoder().encode(str); }
+    function parseCssColor(value, fallback){
+      const raw = String(value || '').trim();
+      const hex = raw.match(/^#([0-9a-f]{6})$/i);
+      if (hex) {
+        const h = hex[1];
+        return [parseInt(h.slice(0,2),16)/255, parseInt(h.slice(2,4),16)/255, parseInt(h.slice(4,6),16)/255];
+      }
+      return fallback;
+    }
+    function wrapText(text, maxChars){
+      const words = String(text || '').split(/\s+/).filter(Boolean);
+      const lines = [];
+      let line = '';
+      words.forEach(word => {
+        const next = line ? `${line} ${word}` : word;
+        if (next.length > maxChars && line) { lines.push(line); line = word; }
+        else line = next;
+      });
+      if (line) lines.push(line);
+      return lines.length ? lines : [''];
+    }
+    function exportPdf(){
+      const selected = getSelectedNode();
+      if (!selected) return;
+      const baseChain = buildBaseChain(selected);
+      const chain = state.chainReversed ? baseChain.slice().reverse() : baseChain.slice();
+      const accent = [0,0,0];
+      const bg = [1,1,1];
+      const panel = [1,1,1];
+      const panel2 = [1,1,1];
+      const text = [0.08,0.08,0.08];
+      const muted = [0.38,0.38,0.38];
+      const lightLine = [0.82,0.82,0.82];
+      const soft = [0.96,0.96,0.96];
+
+      const objs = [];
+      const addObj = str => { objs.push(str); return objs.length; };
+      const pageW = 595.28;
+      const pageH = 841.89;
+      const cardW = 332;
+      const marginX = (pageW - cardW) / 2;
+      const badgeW = 70;
+      const metaGap = 5;
+      const metaCols = 3;
+      const metaW = (cardW - 24 - metaGap * (metaCols - 1)) / metaCols;
+
+      const selectedHeaderTitle = [selected.Position ? `Position: ${selected.Position}` : '', selected.Section ? `Section: ${selected.Section}` : ''].filter(Boolean).join(' / ') || 'Supervisor Chain';
+      const cards = chain.map((node) => {
+        const distance = baseChain.findIndex(item => item.rowIndex === node.rowIndex);
+        const roleLabel = distance === 0 ? 'Selected Card' : distance === 1 ? 'Immediate Supervisor' : distance === baseChain.length - 1 ? 'Top Visible Supervisor' : `Supervisor ${distance}`;
+        const extraFields = Object.entries(node.raw)
+          .filter(([k,v]) => String(v ?? '').trim())
+          .filter(([k]) => !Object.values(state.mapped).includes(k))
+          .filter(([k]) => !/^(?:_+)?row\s*index$/i.test(String(k || '').trim()))
+          .filter(([k]) => !/^__?rowindex$/i.test(String(k || '').replace(/\s+/g,'')))
+          .slice(0, 2);
+        const metaPairs = [
+          ['Position', node.Position],
+          ['Name', node.Name],
+          ['Title', node.Title],
+          ['Rank', node.Rank],
+          ['Section', node.Section],
+          ['Reports To', node.ReportsTo],
+          ['Reports To Description', node.ReportsToDescription],
+          ['Unit', node.Unit],
+          ...extraFields.map(([k,v]) => [k, String(v || '')])
+        ].filter(([,v]) => String(v ?? '').trim());
+        const titleLines = wrapText(node.Name || node.Title || node.Position || 'Record', 34).slice(0,2);
+        const subtitleText = [node.Position, node.Title, node.Rank].filter(Boolean).join(' / ');
+        const subtitleLines = subtitleText ? wrapText(subtitleText, 52).slice(0,2) : [];
+        const pillParts = []; // keep Reports To and Unit in dedicated meta boxes for PDF clarity
+        const pillLines = pillParts.length ? wrapText(pillParts.join('   '), 52).slice(0,2) : [];
+        const metaRows = Math.max(1, Math.ceil(metaPairs.length / metaCols));
+        const cardH = 56 + (subtitleLines.length ? subtitleLines.length * 8 + 6 : 0) + (pillLines.length ? pillLines.length * 10 + 6 : 0) + metaRows * 18;
+        return { node, roleLabel, titleLines, subtitleLines, pillLines, metaPairs, cardH };
+      });
+
+      const pages = [];
+      let current = [];
+      let yCursor = 722;
+      cards.forEach((card) => {
+        const connectorSpace = current.length ? 18 : 0;
+        if (yCursor - connectorSpace - card.cardH < 64) {
+          pages.push(current);
+          current = [];
+          yCursor = 722;
+        }
+        current.push(card);
+        yCursor -= connectorSpace + card.cardH;
+      });
+      if (current.length) pages.push(current);
+
+      const font1 = addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+      const font2 = addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
+
+      const pageEntries = [];
+      pages.forEach((pageCards, pageIndex) => {
+        const pageContent = [];
+        pageContent.push(`${bg[0]} ${bg[1]} ${bg[2]} rg 0 0 ${pageW} ${pageH} re f`);
+        pageContent.push(`${accent[0]} ${accent[1]} ${accent[2]} RG 0.8 w ${marginX} 780 ${cardW} 18 re S`);
+        const headerLines = wrapText(selectedHeaderTitle, 48).slice(0, 2);
+        headerLines.forEach((line, idx) => {
+          pageContent.push(`BT /F2 ${idx === 0 ? 9 : 7.5} Tf ${text[0]} ${text[1]} ${text[2]} rg 1 0 0 1 ${marginX + 10} ${786 - idx*8} Tm (${pdfEscape(line)}) Tj ET`);
+        });
+        pageContent.push(`BT /F1 6 Tf ${muted[0]} ${muted[1]} ${muted[2]} rg 1 0 0 1 ${pageW - marginX - 48} 786 Tm (Page ${pageIndex + 1}/${pages.length}) Tj ET`);
+
+        let y = 722;
+        pageCards.forEach((card, idx) => {
+          if (idx > 0) {
+            const cyTop = y + 9;
+            pageContent.push(`0.8 w ${accent[0]} ${accent[1]} ${accent[2]} RG ${pageW/2} ${cyTop} m ${pageW/2} ${cyTop - 8} l S`);
+            pageContent.push(`0.8 w ${accent[0]} ${accent[1]} ${accent[2]} RG ${pageW/2} ${cyTop - 8} m ${pageW/2 - 2.5} ${cyTop - 5.5} l S`);
+            pageContent.push(`0.8 w ${accent[0]} ${accent[1]} ${accent[2]} RG ${pageW/2} ${cyTop - 8} m ${pageW/2 + 2.5} ${cyTop - 5.5} l S`);
+          }
+
+          const top = y;
+          const bottom = y - card.cardH;
+          pageContent.push(`0.8 w ${accent[0]} ${accent[1]} ${accent[2]} RG ${panel[0]} ${panel[1]} ${panel[2]} rg ${marginX} ${bottom} ${cardW} ${card.cardH} re B`);
+          pageContent.push(`${soft[0]} ${soft[1]} ${soft[2]} rg ${marginX + 10} ${top - 16} ${badgeW} 9 re f`);
+          pageContent.push(`BT /F1 5 Tf ${text[0]} ${text[1]} ${text[2]} rg 1 0 0 1 ${marginX + 14} ${top - 11} Tm (${pdfEscape(card.roleLabel)}) Tj ET`);
+
+          card.titleLines.forEach((line, i) => {
+            pageContent.push(`BT /F2 9 Tf ${text[0]} ${text[1]} ${text[2]} rg 1 0 0 1 ${marginX + 10} ${top - 28 - i*10} Tm (${pdfEscape(line)}) Tj ET`);
+          });
+          card.subtitleLines.forEach((line, i) => {
+            pageContent.push(`BT /F1 6 Tf ${muted[0]} ${muted[1]} ${muted[2]} rg 1 0 0 1 ${marginX + 10} ${top - 44 - i*8} Tm (${pdfEscape(line)}) Tj ET`);
+          });
+          const pillBaseY = top - 44 - (card.subtitleLines.length * 8) - (card.subtitleLines.length ? 6 : 0);
+          card.pillLines.forEach((line, i) => {
+            pageContent.push(`${soft[0]} ${soft[1]} ${soft[2]} rg ${marginX + 10} ${pillBaseY - 6 - i*10} ${cardW - 20} 8 re f`);
+            pageContent.push(`BT /F1 5 Tf ${text[0]} ${text[1]} ${text[2]} rg 1 0 0 1 ${marginX + 13} ${pillBaseY - 1 - i*10} Tm (${pdfEscape(line)}) Tj ET`);
+          });
+
+          const metaStartY = pillBaseY - (card.pillLines.length ? (card.pillLines.length * 10 + 8) : 4);
+          card.metaPairs.forEach((pair, i) => {
+            const col = i % metaCols;
+            const row = Math.floor(i / metaCols);
+            const x = marginX + 10 + col * (metaW + metaGap);
+            const boxY = metaStartY - row * 18;
+            pageContent.push(`0.45 w ${lightLine[0]} ${lightLine[1]} ${lightLine[2]} RG ${panel2[0]} ${panel2[1]} ${panel2[2]} rg ${x} ${boxY} ${metaW} 14 re B`);
+            pageContent.push(`BT /F1 4.5 Tf ${muted[0]} ${muted[1]} ${muted[2]} rg 1 0 0 1 ${x + 4} ${boxY + 9.5} Tm (${pdfEscape(pair[0].toUpperCase())}) Tj ET`);
+            const valueLine = wrapText(pair[1], 15)[0] || '';
+            pageContent.push(`BT /F1 5.5 Tf ${text[0]} ${text[1]} ${text[2]} rg 1 0 0 1 ${x + 4} ${boxY + 3.2} Tm (${pdfEscape(valueLine)}) Tj ET`);
+          });
+
+          y = bottom - 10;
+        });
+
+        pageContent.push(`BT /F1 6 Tf ${muted[0]} ${muted[1]} ${muted[2]} rg 1 0 0 1 ${pageW/2 - 83} 20 Tm (Generated locally from the visible supervisor chain) Tj ET`);
+        const contentStream = pageContent.join('\n');
+        const content = addObj(`<< /Length ${pdfBytes(contentStream).length} >>\nstream\n${contentStream}\nendstream`);
+        pageEntries.push({ content });
+      });
+
+      const pagesId = objs.length + pageEntries.length + 1;
+      pageEntries.forEach((entry) => {
+        entry.page = addObj(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /Font << /F1 ${font1} 0 R /F2 ${font2} 0 R >> >> /Contents ${entry.content} 0 R >>`);
+      });
+      const pagesObj = addObj(`<< /Type /Pages /Count ${pageEntries.length} /Kids [${pageEntries.map(p => `${p.page} 0 R`).join(' ')}] >>`);
+      const catalog = addObj(`<< /Type /Catalog /Pages ${pagesObj} 0 R >>`);
+
+      let pdf = '%PDF-1.4\n';
+      const offsets = [0];
+      objs.forEach((obj, i) => {
+        offsets.push(pdfBytes(pdf).length);
+        pdf += `${i+1} 0 obj\n${obj}\nendobj\n`;
+      });
+      const xrefPos = pdfBytes(pdf).length;
+      pdf += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+      for (let i = 1; i < offsets.length; i++) pdf += `${String(offsets[i]).padStart(10,'0')} 00000 n \n`;
+      pdf += `trailer\n<< /Size ${objs.length + 1} /Root ${catalog} 0 R >>\nstartxref\n${xrefPos}\n%%EOF`;
+
+      const blob = new Blob([pdfBytes(pdf)], { type:'application/pdf' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${(selected.Name || selected.Position || 'supervisor-chain').replace(/[^a-z0-9-_]+/gi,'-')}.pdf`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    function handleCsvLoad(file){
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const { headers, rows } = parseCsv(String(reader.result || ''));
+        state.headers = headers;
+        state.rows = rows;
+        autoMap();
+        renderMappingControls();
+        el.applyMappingBtn.disabled = !headers.length;
+        el.autoMapBtn.disabled = !headers.length;
+        setStatus(el.fileStatus, `${file.name} · ${rows.length} rows · ${headers.length} columns`, 'ok');
+        setStatus(el.mappingStatus, 'Check the detected mapping and apply.', rows.length ? 'warn' : '');
+      };
+      reader.onerror = () => setStatus(el.fileStatus, 'Failed to read file.', 'err');
+      reader.readAsText(file);
+    }
+
+    el.csvFile.addEventListener('change', e => handleCsvLoad(e.target.files?.[0]));
+    el.autoMapBtn.addEventListener('click', () => {
+      autoMap();
+      renderMappingControls();
+      setStatus(el.mappingStatus, 'Auto-map refreshed.', 'ok');
+    });
+    el.applyMappingBtn.addEventListener('click', () => buildOrg());
+    el.searchInput.addEventListener('input', () => {
+      searchAndRenderResults();
+      setStatus(el.searchStatus, el.searchInput.value.trim() ? 'Matching records.' : 'All records.', '');
+    });
+    el.searchBtn.addEventListener('click', () => {
+      const node = resolveSearchNode(el.searchInput.value);
+      if (!node) {
+        setStatus(el.searchStatus, `No supervisor chain match found for “${el.searchInput.value.trim()}”.`, 'err');
+        return;
+      }
+      selectRow(node.rowIndex, `Chain: ${node.Name || node.Position}.`);
+    });
+    el.useSelectedBtn.addEventListener('click', () => {
+      const node = getSelectedNode();
+      if (!node) {
+        setStatus(el.searchStatus, 'Select a result first.', 'warn');
+        return;
+      }
+      renderSummary();
+      renderChain();
+      setStatus(el.searchStatus, `Anchored to ${node.Name || node.Position}.`, 'ok');
+    });
+    el.clearSelectedBtn.addEventListener('click', () => {
+      state.selectedRowIndex = null;
+      state.selectionHistory = [];
+      searchAndRenderResults();
+      renderSummary();
+      renderChain();
+      updateControlState();
+      setStatus(el.searchStatus, 'Selection cleared.', '');
+    });
+    el.reverseBtn.addEventListener('click', () => {
+      state.chainReversed = !state.chainReversed;
+      renderSummary();
+      renderChain();
+    });
+    el.exportPdfBtn.addEventListener('click', exportPdf);
+el.backBtn.addEventListener('click', () => {
+      if (state.selectionHistory.length < 2) return;
+      state.selectionHistory.pop();
+      const prev = state.selectionHistory[state.selectionHistory.length - 1];
+      state.selectedRowIndex = prev;
+      searchAndRenderResults();
+      renderSummary();
+      renderChain();
+      updateControlState();
+      const node = getSelectedNode();
+      setStatus(el.searchStatus, node ? `Returned to ${node.Name || node.Position}.` : 'Previous selection.', 'ok');
+    });
+
+    el.addCardBtn.addEventListener('click', () => {
+      openCreateCard();
+    });
+    el.cancelCreateBtn.addEventListener('click', closeCreateCard);
+    el.saveCreateBtn.addEventListener('click', saveCreateCard);
+
+    if (window.CGP) { CGP.applyTheme(CGP.getSavedId()); }
+    renderMappingControls();
+    updateControlState();
+  
+</script>
+</body>
+</html>
